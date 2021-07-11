@@ -1,0 +1,100 @@
+<!doctype html>
+<html xmlns="https://www.w3.org/1999/xhtml/" lang="en" xml:lang="en" class="js Chrome 88">
+
+<head>
+  <title>NSE Stock Watch - RAJA VIJAYA KUMAR</title>
+  <link rel="shortcut icon" type="image/x-icon" href="icon.png" />
+  <!---->
+  <link rel="stylesheet" href="https://cdn.webix.com/materialdesignicons/5.8.95/css/materialdesignicons.min.css"/>
+  <link rel="stylesheet" href="https://cdn.webix.com/8.3/webix.css" type="text/css">
+  <script src="https://cdn.webix.com/8.3/webix.js" type="text/javascript"></script>
+
+  <script src="https://cdn.amcharts.com/lib/3/amcharts.js"></script>
+  <script src="https://cdn.amcharts.com/lib/3/serial.js"></script>
+  <link rel="stylesheet" href="css/nse-styles.css" type="text/css">
+
+  <!-- 
+  <link rel="stylesheet" href="css/materialdesignicons.min.css" />
+  <link rel="stylesheet" href="css/webix.css" type="text/css">
+  <link rel="stylesheet" href="css/nse-styles.css" type="text/css">
+  <script src="js/webix.js" type="text/javascript"></script>
+
+  <script src="js/amcharts.js"></script>
+  <script src="js/serial.js"></script>
+-->
+  <style>
+    div[view_id='payoffTableId'] {
+      width: 100% !important
+    }
+
+    .multiline {
+      line-height: 20px !important;
+      position: relative;
+      top: 24px;
+    }
+
+    .rows .webix_cell:nth-child(2n) {
+      background-color: #d5f1cd !important;
+    }
+
+    .rows .webix_cell.webix_row_select {
+      color: #FFF;
+      background: #8bb1c7 !important;
+    }
+
+    .webix_hs_center {
+      width: 100% !important
+    }
+
+    div[view_id='optionChainToolbarId'] {
+      background-color: aliceblue;
+    }
+
+    div[view_id='mainToolbarId'] {
+      background-color: lightblue;
+    }
+
+    div[view_id='strategyChartToolbarId'] {
+      background-color: #b4ddf7;
+    }
+
+    div[view_id='strategyWinToolbarId'] {
+      background-color: #abe8a7;
+    }
+
+    .myhover {
+      background: #F0DCB6;
+    }
+
+    .putBgColor {
+      background: #efc6e7;
+    }
+
+    .callBgColor {
+      background: #a8efd0;
+    }
+
+    div[view_id^="$suggest"] {
+      width: 250px !important
+    }
+    
+    div[view_id='underlyingVal'] {
+      background-color: inherit;
+    }
+    table{border-spacing: 0px;}
+
+    .optionChainTable tr:hover td { background-color:#c9f3ce !important}
+
+    div[view_id='optionChainTemplateId']>.webix_template {padding: 0px 0px !important}
+
+  </style>
+</head>
+
+<body>
+  <input type="text" id="scriptInputId" hidden="true"/>
+  <input type="text" id="refreshOptionChainId" hidden="true"/>
+  <script src="js/option_stratagies.js" type="text/javascript"></script>
+
+</body>
+
+</html>
