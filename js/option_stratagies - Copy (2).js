@@ -14,16 +14,16 @@ let CE_OTM = []
 let CE_ITM = []
 let Underlying_Value = 0
 let SelectedScript = ''
-let SelectedExpiryDate = ''
+let selectedExpieryDate = ''
 
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
 
-let OptionChainData = webix.storage.local.get('OptionChainData')
-if (!OptionChainData) {
-  OptionChainData = {}
-  webix.storage.local.put('OptionChainData', OptionChainData)
+let optionChainData = webix.storage.local.get('optionChainData')
+if (!optionChainData) {
+  optionChainData = {}
+  webix.storage.local.put('optionChainData', optionChainData)
 }
 let strategiesObj = {
 
@@ -71,31 +71,19 @@ let labels = {
 }
 let optionViews = {
   cols: [
-    { view: "label", label: '', width: 150, align: "center" },
+    { view: "label", label: '', align: "center" },
     { view: "text", align: "center", width: 90, inputAlign: "center", },
-    { view: "text", align: "center", width: 70, inputAlign: "center", },
-    { view: "text", align: "center", width: 70, inputAlign: "center", value: 1, 
-      on: {
-        onBlur: function() {
-        let v = this.getValue().trim()
-        if(v == '' || isNaN(v) || v < 1 ) {
-          this.setValue(1)
-        } else {
-          this.setValue(v)
-        }
-      }
-    }},
+    { view: "text", align: "center", width: 90, inputAlign: "center", }
   ]
 };
 
 let keyIds = ['buyCall', 'sellCall', 'buyPut', 'sellPut', 'buyStock', 'sellStock'];
 let strikeIds = ['buyCallStrike_', 'sellCallStrike_', 'buyPutStrike_', 'sellPutStrike_', 'buyStockStrike_', 'sellStockStrike_'];
 let premiumIds = ['buyCallPremium_', 'sellCallPremium_', 'buyPutPremium_', 'sellPutPremium_'];
-let lotIds = ['buyCallLot_', 'sellCallLot_', 'buyPutLot_', 'sellPutLot_'];
 
 let submitButton = {
   cols: [
-    { view: "label", label: '', width: 150, align: "center" },
+    { view: "label", label: '', align: "center" },
     {
       view: "button", label: 'Done', align: "center", width: 90, click: function (id, event) {
         let arr = [[], [], [], [], [], []];
@@ -105,7 +93,7 @@ let submitButton = {
               let obj = {
                 strikePrice: parseFloat($$(strikeIds[k] + i).getValue()),
                 premium: $$(premiumIds[k] + i) != undefined ? parseFloat($$(premiumIds[k] + i).getValue()) : 0,
-                lotSize: $$(lotIds[k] + i) != undefined ? parseFloat($$(lotIds[k] + i).getValue()) : 1
+                lotSize: $$(strikeIds[k] + i).getParentView().config.lotSize
               };
               arr[k].push(obj);
             }
@@ -116,7 +104,7 @@ let submitButton = {
       }
     },
     {
-      view: "button", label: 'Reset', width: 70, align: "center", click: function (id, event) {
+      view: "button", label: 'Reset', width: 90, align: "center", click: function (id, event) {
 
         $$('payoffViewId').getBody().reconstruct();
         $$('payoffChartId').refresh();
@@ -131,7 +119,7 @@ let submitButton = {
         }
 
       }
-    },{ view: "label", label: '', align: "center" },]
+    }]
 };
 
 function buyCall(strikePrice, premium, expiryStrikePrice) {
@@ -258,11 +246,13 @@ function calculatePayoffTable(buyCallArr, sellCallArr, buyPutArr, sellPutArr, bu
     let t = 0;
     val.substr(val.indexOf(',') + 1).split(' , ').forEach(function (v) { if (v.length > 0) { t = t + parseFloat(v.trim()) } })
     val += parseFloat(t).toFixed(2);
+    //console.dir(val);
     fullData.push(Object.assign({}, val.split(',')));
     if (i == tempLowerStrike || (t == 0)) {
       if (t != 0 || (i == tempLowerStrike && (t == 0))) {
         tempLowerStrike += 50;
       }
+
       data.push(Object.assign({}, val.split(',')));
     }
   }
@@ -283,22 +273,21 @@ function prepareStrategy(obj) {
       let val = obj[arr[i]];
       for (let j = 0; j < val.length; j++) {
         let rowView = JSON.parse(JSON.stringify(optionViews));
-        rowView.cols[0].label = labels[arr[i]] + (obj[arr[i] + 'Label'] !== undefined ? ' ' + obj[arr[i] + 'Label'][j] : '') + ' @';
+        rowView.cols[0].label = labels[arr[i]] + (obj[arr[i] + 'Label'] !== undefined ? ' ' + obj[arr[i] + 'Label'][j] : '') + ' (' + val[j] + ' lot)';
         rowView.cols[0].id = webix.uid();
         rowView.cols[1].id = strikeIds[index] + j;
         if (premiumIds[index]) {
           rowView.cols[2].id = premiumIds[index] + j;
-          rowView.cols[3].id = lotIds[index] + j;
-          rowView.cols[3].value = val[j]
-          rowView.cols[3]['on'] = optionViews['cols'][3]['on']
         } else {
           rowView.cols[2].view = 'label';
-          rowView.cols[3].view = 'label';
         }
-        $$('inputViewId').getBody().addView(rowView);
+
+        let viewId = $$('inputViewId').getBody().addView(rowView);
+        $$(viewId).config.lotSize = val[j];
       }
     }
   }
+
   $$('inputViewId').getBody().addView(submitButton);
 }
 
@@ -384,20 +373,17 @@ function displayChart(data) {
 
 function addCustomRow(config, label, strikeId, premiumId) {
   let rowView = JSON.parse(JSON.stringify(optionViews))
-  rowView.cols[0].label = label + ' @'
+  rowView.cols[0].label = label + ' (1 lot)'
   rowView.cols[0].id = webix.uid()
   rowView.cols[1].id = strikeIds[strikeId] + config.count
   if (premiumIds[0]) {
     rowView.cols[2].id = premiumIds[premiumId] + config.count
-    rowView.cols[3].id = lotIds[premiumId] + config.count
-    rowView.cols[3].value = 1
-    rowView.cols[3]['on'] = optionViews['cols'][3]['on']
   } else {
     rowView.cols[2].view = 'label'
-    rowView.cols[3].view = 'label'
   }
 
   let viewId = $$('inputViewId').getBody().addView(rowView)
+  $$(viewId).config.lotSize = 1
   config.count = config.count + 1
 
 }
@@ -440,20 +426,20 @@ function downloadOptionChain(symbol) {
         }
         json.data = formattedData
         //webix.storage.local.put('optionChain', json)
-        OptionChainData[symbol] = json
-        webix.storage.local.put('OptionChainData', OptionChainData)
+        optionChainData[symbol] = json
+        webix.storage.local.put('optionChainData', optionChainData)
         console.dir(json)
-        let sData = OptionChainData[SelectedScript]
+        let sData = optionChainData[SelectedScript]
         Underlying_Value = sData.underlyingValue
-        $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+        $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
       }
       webix.message({text: symbol + " download completed :-)", type:"success"})
     })
     .catch(err => {$$('mainWinId').hideProgress(); webix.message({text: "Error while downloading  "+symbol+" :-(", type:"error", }); console.error(err)});
 
-    let sData = OptionChainData[SelectedScript]
+    let sData = optionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+    $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
     
 }
 
@@ -474,9 +460,9 @@ function prepareStrikeWithPremium() {
   CE_OTM = []
   CE_ITM = []
 
-  let sData = OptionChainData[SelectedScript]
+  let sData = optionChainData[SelectedScript]
   Underlying_Value = parseInt(sData.underlyingValue)
-  let ocArr = sData.data[SelectedExpiryDate]
+  let ocArr = sData.data[selectedExpieryDate]
   for (let i = 0; i < ocArr.length; i++) {
     let stPrice = Object.keys(ocArr[i])[0]
     let pe = ocArr[i][stPrice]['PE']
@@ -652,7 +638,7 @@ function displayShortGamma() {
     head: {
       view: "toolbar", id:'strategyWinToolbarId', cols: [
         { width: 4 },
-        { view: "label", label: "Short Gamma Spread: "+ SelectedScript + '  [' + SelectedExpiryDate + ']' },
+        { view: "label", label: "Short Gamma Spread: "+ SelectedScript + '  [' + selectedExpieryDate + ']' },
         { view: "label", id: 'spotPriceId', label: SelectedScript + " Spot Price (SP): " + Underlying_Value },
         { view: "button", label: 'X', width: 50, align: 'right', click: function () { $$('strategyWinId').close(); } }
       ]
@@ -710,7 +696,7 @@ function displayShortGamma() {
             head: {
               view: "toolbar", id: 'strategyChartToolbarId', cols: [
                 { width: 4 },
-                { view: "label", label: "Short Gamma Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+                { view: "label", label: "Short Gamma Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
                 { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                   if ($$("inputInfoId").isVisible()) {
                     $$("inputInfoId").hide();
@@ -977,21 +963,13 @@ webix.ready(function () {
   let refreshOptionChainId = document.querySelector('#refreshOptionChainId')
   refreshOptionChainId.addEventListener('change', (e) => {
     let tempData = webix.storage.local.get('tempData')
-    if(SelectedExpiryDate == '') {
-      let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
-      $$('expiryDateId').define('options', expiryDates)
-      tempData.SelectedExpiryDate = expiryDates[0].id
-      SelectedExpiryDate = tempData.SelectedExpiryDate
-      $$('expiryDateId').setValue(SelectedExpiryDate)
-    } else {
-      tempData.SelectedExpiryDate = SelectedExpiryDate
-    }
-    
-    OptionChainData[SelectedScript] = tempData
-    webix.storage.local.put('OptionChainData', OptionChainData)
-    let sData = OptionChainData[SelectedScript]
+    tempData.selectedExpieryDate = selectedExpieryDate
+    optionChainData[SelectedScript] = tempData
+    webix.storage.local.put('optionChainData', optionChainData)
+    let sData = optionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+    tempData.selectedExpieryDate = selectedExpieryDate
+    $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
 
   })
 
@@ -1005,7 +983,7 @@ webix.ready(function () {
   var menu_data_multi = [];
   menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'});
   menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies });
-  menu_data_multi.push({ id: 'worldMarket', value: 'World Market'});
+  
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1035,58 +1013,49 @@ webix.ready(function () {
             data: menu_data_multi, on: {
               onAfterSelect: function (id) {
                 if(id === 'optionChain') {
-                  $$('strategyViewId').hide()
-                  $$('worldMarketViewId').hide()
-                  $$('optionChainViewId').show()
-                } else if(id == 'worldMarket') {
-                  $$('strategyViewId').hide()
-                  $$('optionChainViewId').hide()
-                  $$('worldMarketViewId').show()
-                  let e = new Event("change")
-                  let element = document.querySelector('#worldMarketId')
-                  element.dispatchEvent(e)
+                  $$('strategyViewId').hide();
+                  $$('optionChainViewId').show();
                 } else {
-                  $$('worldMarketViewId').hide()
-                  $$('optionChainViewId').hide()
-                  $$('strategyViewId').show()
+                  $$('optionChainViewId').hide();
+                  $$('strategyViewId').show();
 
-                  $$('inputViewId').getBody().reconstruct()
-                  let strategyLabel = 'Custom Strategy'
-                  if (id === 'customStrategy') {
-                    $$('inputViewId').getBody().addView({
-                      cols: [
-                        {
-                          view: 'button', label: 'BuyCall', count: 0, click: function () {
-                            addCustomRow(this.config, 'Buy Call', 0, 0)
-                          }
-                        },
-                        {
-                          view: 'button', label: 'SellCall', count: 0, click: function () {
-                            addCustomRow(this.config, 'Sell Call', 1, 1)
-                          }
-                        },
-                        {
-                          view: 'button', label: 'BuyPut', count: 0, click: function () {
-                            addCustomRow(this.config, 'Buy Put', 2, 2)
-                          }
-                        },
-                        {
-                          view: 'button', label: 'SellPut', count: 0, click: function () {
-                            addCustomRow(this.config, 'Sell Put', 3, 3)
-                          }
-                        }]
-                    });
+                  $$('inputViewId').getBody().reconstruct();
+                let strategyLabel = 'Custom Strategy'
+                if (id === 'customStrategy') {
+                  $$('inputViewId').getBody().addView({
+                    cols: [
+                      {
+                        view: 'button', label: 'BuyCall', count: 0, click: function () {
+                          addCustomRow(this.config, 'Buy Call', 0, 0)
+                        }
+                      },
+                      {
+                        view: 'button', label: 'SellCall', count: 0, click: function () {
+                          addCustomRow(this.config, 'Sell Call', 1, 1)
+                        }
+                      },
+                      {
+                        view: 'button', label: 'BuyPut', count: 0, click: function () {
+                          addCustomRow(this.config, 'Buy Put', 2, 2)
+                        }
+                      },
+                      {
+                        view: 'button', label: 'SellPut', count: 0, click: function () {
+                          addCustomRow(this.config, 'Sell Put', 3, 3)
+                        }
+                      }]
+                  });
 
-                    $$('inputViewId').getBody().addView(submitButton);
+                  $$('inputViewId').getBody().addView(submitButton);
 
-                  } else {
-                    strategyLabel = strategiesObj[id].label
-                    prepareStrategy(strategiesObj[id])
-                  }
-                  $$('inputHeaderId').setHTML('<center><b>' + strategyLabel + '</b></center>')
-                  $$('payoffViewId').getBody().reconstruct()
-                  $$('payoffViewId').getBody().removeView('payoffLabelId')
-                  $$('payoffChartId').refresh()
+                } else {
+                  strategyLabel = strategiesObj[id].label;
+                  prepareStrategy(strategiesObj[id]);
+                }
+                $$('inputHeaderId').setHTML('<center><b>' + strategyLabel + '</b></center>');
+                $$('payoffViewId').getBody().reconstruct();
+                $$('payoffViewId').getBody().removeView('payoffLabelId');
+                $$('payoffChartId').refresh();
                 }
               }
             }
@@ -1102,7 +1071,7 @@ webix.ready(function () {
                     {
                       view: "toolbar", padding: 3, id:'optionChainToolbarId', elements: [
                         { view: "label", label: "Option Chain" },
-                        {
+                        { 
                           view:"combo", width:200, labelWidth:50, id:"scriptId",
                           label: 'Script:',  placeholder:"Please Select",
                           options:[ 
@@ -1115,31 +1084,23 @@ webix.ready(function () {
                               if(id == '') {
                                 $$('algoStrategyId').setValue('')
                                 $$('underlyingVal').setHTML('')
-                                $$('expiryDateId').define('options', [])
-                                $$('expiryDateId').setValue('')
-                                SelectedExpiryDate = ''
                               } else {
-                                let sData = OptionChainData[SelectedScript]
-                                if(!sData) {
-                                  $$('expiryDateId').define('options', [])
-                                  $$('expiryDateId').setValue('')
-                                  SelectedExpiryDate = ''
-                                }
+                                let sData = optionChainData[SelectedScript]
                                 if(SelectedScript && sData) {
-                                  let sData = OptionChainData[SelectedScript]
+                                  let sData = optionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
 
                                   let expiryDates = Object.keys(sData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
                                   $$('expiryDateId').define('options', expiryDates)
                                   
-                                  if(sData.SelectedExpiryDate){
-                                    SelectedExpiryDate = sData.SelectedExpiryDate
+                                  if(sData.selectedExpieryDate){
+                                    selectedExpieryDate = sData.selectedExpieryDate
                                   } else {
-                                    SelectedExpiryDate = expiryDates[0].id
+                                    selectedExpieryDate = expiryDates[0].id
                                   }
                                   
-                                  $$('expiryDateId').setValue(SelectedExpiryDate)
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  $$('expiryDateId').setValue(selectedExpieryDate)
+                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
                                 } else {
                                   $$('expiryDateId').define('options', [])
                                   webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
@@ -1156,12 +1117,12 @@ webix.ready(function () {
                             onChange: function(id){
                               console.dir(id)
                               if(id != '') {
-                                if(SelectedExpiryDate != id) {
-                                  SelectedExpiryDate = id
-                                  let sData = OptionChainData[SelectedScript]
+                                if(selectedExpieryDate != id) {
+                                  selectedExpieryDate = id
+                                  let sData = optionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
-                                  sData.SelectedExpiryDate = SelectedExpiryDate
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  sData.selectedExpieryDate = selectedExpieryDate
+                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
                                 }
                               }
                             }
@@ -1177,7 +1138,7 @@ webix.ready(function () {
                               webix.message({ text: "Please select script :-)", type:"info "})
                             } else {
                               //downloadOptionChain(s)
-                              let sData = OptionChainData[SelectedScript]
+                              let sData = optionChainData[SelectedScript]
                               if(sData) {
                                 let d = new Date(sData.fetchTime)
                                 let now = new Date()
@@ -1188,13 +1149,8 @@ webix.ready(function () {
                                   element.dispatchEvent(e)
                                 } else {
                                   Underlying_Value = sData.underlyingValue
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
                                 }
-                              } else {
-                                let e = new Event("change")
-                                let element = document.querySelector('#scriptInputId')
-                                element.value = s
-                                element.dispatchEvent(e)
                               }
                             }
                           }
@@ -1367,7 +1323,7 @@ webix.ready(function () {
                 cols: [
                   {
                     view: "scrollview",
-                    width: 380,
+                    width: 320,
                     scroll: "auto",
                     id: 'inputViewId',
                     body: {
@@ -1375,10 +1331,10 @@ webix.ready(function () {
                         { view: 'template', id: 'inputHeaderId', height: 30, template: '' },
                         {
                           cols: [
-                            { view: "label", label: '', width: 150, align: "center" },
+                            { view: "label", label: '', align: "center" },
                             { view: "label", label: 'Strike', width: 90, align: "center" },
-                            { view: "label", label: 'Premium', width: 70, align: "center" },
-                            { view: "label", label: 'Lot(s)', width: 70, align: "center" },
+                            { view: "label", label: 'Price(1 lot)', width: 90, align: "center" },
+    
                           ]
                         },
                       ]
@@ -1399,26 +1355,6 @@ webix.ready(function () {
                   },
                   { width: 5 }
                 ]
-              },
-              {
-                view: "scrollview",
-                scroll: "auto",
-                id: 'worldMarketViewId',
-                hidden: true,
-                body: {
-                  rows: [
-                    {view: "button", type: "icon", icon: "mdi mdi-refresh", height:35, width: 37, align: "center",
-                    click: function () {
-                      $('#worldMarket').empty();
-                      $('#worldMarket').append('Loading ...');
-                      let e = new Event("change")
-                      let element = document.querySelector('#worldMarketId')
-                      element.dispatchEvent(e)
-                    }},
-                    {
-                      view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="worldMarket" style="margin-left: 10%;margin-right: 10%;">Loading ...</div</div>'
-                    }]
-                }
               },
             ]
           }
@@ -1482,7 +1418,7 @@ function displayShortStrangle() {
       position: 'center',
       head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
             { width:4 },
-            { view:"label", label: "Short Strangle: " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+            { view:"label", label: "Short Strangle: " + SelectedScript + '  [' + selectedExpieryDate + ']'},
             { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
             { view:"button", label: 'X', width: 50, align: 'left', click:function(){ $$('strategyWinId').close(); }}
           ]
@@ -1524,7 +1460,7 @@ function displayShortStrangle() {
               head: {
                 view: "toolbar", id: 'strategyChartToolbarId', cols: [
                   { width: 4 },
-                  { view: "label", label: "Short Strangle : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+                  { view: "label", label: "Short Strangle : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
                   { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                     if ($$("inputInfoId").isVisible()) {
                       $$("inputInfoId").hide();
@@ -1671,7 +1607,7 @@ function displayIronConderStrangle() {
       zIndex:9999,
       head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
             { width:4 },
-            { view:"label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+            { view:"label", label: "Iron Condor Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
             { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
             { view:"button", label: 'X', width: 30, align: 'left', click:function(){ $$('strategyWinId').close(); }}
           ]
@@ -1716,7 +1652,7 @@ function displayIronConderStrangle() {
               head: {
                 view: "toolbar", id: 'strategyChartToolbarId', cols: [
                   { width: 4 },
-                  { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+                  { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
                   { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                     if ($$("inputInfoId").isVisible()) {
                       $$("inputInfoId").hide();

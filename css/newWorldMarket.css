@@ -1,0 +1,99 @@
+.main-table-div {
+    overflow-x: auto
+}
+
+.main-table {
+    width: 100%;
+    border: 0;
+    border-right: 1px solid #ececec;
+    border-bottom: 1px solid #ececec;
+    margin-bottom: 5px;
+    white-space: nowrap
+}
+
+.main-table td {
+    padding: 4px 6px;
+    border: 0;
+    border-left: 1px solid #ececec;
+    border-top: 1px solid #ececec;
+    text-align: center
+}
+
+.main-table thead td {
+    background: #f7f7f7;
+    color: grey;
+    font-size: 90%;
+    padding: 5px 6px
+}
+
+.main-table thead td.one-half,tr td.one-half {
+    width: 50%;
+    max-width: 50%
+}
+
+.main-table thead td.one-third,tr td.one-third {
+    width: 33%;
+    max-width: 33%
+}
+
+.main-table thead td.one-fourth,tr td.one-fourth {
+    width: 25%;
+    max-width: 25%
+}
+
+.main-table thead td.one-fifth,tr td.one-fifth {
+    width: 20%;
+    max-width: 20%
+}
+
+.main-table thead td.one-sixth,tr td.one-sixth {
+    width: 16.66%;
+    max-width: 16.66%
+}
+
+.main-table td.main-change {
+    font-size: 1.5em
+}
+
+.main-table td.main-sub {
+    font-size: 1.2em
+}
+
+.main-table td.main-sub {
+    font-size: 1.2em
+}
+
+.main-meta {
+    padding-bottom: 13px;
+    width: 100%;
+    color: grey;
+    font-size: 80%
+}
+
+.main-meta-big {
+    color: #38d;
+    font-weight: 700
+}
+small,.small,td.small,.main-table td.small {
+    font-size: .8em
+}
+.align-left,.main-table td.align-left {
+    text-align: left
+}
+.negative {
+    color: #dc0001
+}
+
+.positive {
+    color: #2a8215
+}
+i.fa-clock-o {
+    color: #296284
+}
+
+i.fa-clock-o.fa-flip-horizontal {
+    color: rgba(0,0,0,.2)
+}
+:root .fa-rotate-90,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-flip-horizontal,:root .fa-flip-vertical {
+    filter: none
+}
