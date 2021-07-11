@@ -14,16 +14,16 @@ let CE_OTM = []
 let CE_ITM = []
 let Underlying_Value = 0
 let SelectedScript = ''
-let selectedExpieryDate = ''
+let SelectedExpiryDate = ''
 
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
 
-let optionChainData = webix.storage.local.get('optionChainData')
-if (!optionChainData) {
-  optionChainData = {}
-  webix.storage.local.put('optionChainData', optionChainData)
+let OptionChainData = webix.storage.local.get('OptionChainData')
+if (!OptionChainData) {
+  OptionChainData = {}
+  webix.storage.local.put('OptionChainData', OptionChainData)
 }
 let strategiesObj = {
 
@@ -440,20 +440,20 @@ function downloadOptionChain(symbol) {
         }
         json.data = formattedData
         //webix.storage.local.put('optionChain', json)
-        optionChainData[symbol] = json
-        webix.storage.local.put('optionChainData', optionChainData)
+        OptionChainData[symbol] = json
+        webix.storage.local.put('OptionChainData', OptionChainData)
         console.dir(json)
-        let sData = optionChainData[SelectedScript]
+        let sData = OptionChainData[SelectedScript]
         Underlying_Value = sData.underlyingValue
-        $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+        $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
       }
       webix.message({text: symbol + " download completed :-)", type:"success"})
     })
     .catch(err => {$$('mainWinId').hideProgress(); webix.message({text: "Error while downloading  "+symbol+" :-(", type:"error", }); console.error(err)});
 
-    let sData = optionChainData[SelectedScript]
+    let sData = OptionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
     
 }
 
@@ -474,9 +474,9 @@ function prepareStrikeWithPremium() {
   CE_OTM = []
   CE_ITM = []
 
-  let sData = optionChainData[SelectedScript]
+  let sData = OptionChainData[SelectedScript]
   Underlying_Value = parseInt(sData.underlyingValue)
-  let ocArr = sData.data[selectedExpieryDate]
+  let ocArr = sData.data[SelectedExpiryDate]
   for (let i = 0; i < ocArr.length; i++) {
     let stPrice = Object.keys(ocArr[i])[0]
     let pe = ocArr[i][stPrice]['PE']
@@ -652,7 +652,7 @@ function displayShortGamma() {
     head: {
       view: "toolbar", id:'strategyWinToolbarId', cols: [
         { width: 4 },
-        { view: "label", label: "Short Gamma Spread: "+ SelectedScript + '  [' + selectedExpieryDate + ']' },
+        { view: "label", label: "Short Gamma Spread: "+ SelectedScript + '  [' + SelectedExpiryDate + ']' },
         { view: "label", id: 'spotPriceId', label: SelectedScript + " Spot Price (SP): " + Underlying_Value },
         { view: "button", label: 'X', width: 50, align: 'right', click: function () { $$('strategyWinId').close(); } }
       ]
@@ -710,7 +710,7 @@ function displayShortGamma() {
             head: {
               view: "toolbar", id: 'strategyChartToolbarId', cols: [
                 { width: 4 },
-                { view: "label", label: "Short Gamma Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
+                { view: "label", label: "Short Gamma Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
                 { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                   if ($$("inputInfoId").isVisible()) {
                     $$("inputInfoId").hide();
@@ -977,13 +977,21 @@ webix.ready(function () {
   let refreshOptionChainId = document.querySelector('#refreshOptionChainId')
   refreshOptionChainId.addEventListener('change', (e) => {
     let tempData = webix.storage.local.get('tempData')
-    tempData.selectedExpieryDate = selectedExpieryDate
-    optionChainData[SelectedScript] = tempData
-    webix.storage.local.put('optionChainData', optionChainData)
-    let sData = optionChainData[SelectedScript]
+    if(SelectedExpiryDate == '') {
+      let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+      $$('expiryDateId').define('options', expiryDates)
+      tempData.SelectedExpiryDate = expiryDates[0].id
+      SelectedExpiryDate = tempData.SelectedExpiryDate
+      $$('expiryDateId').setValue(SelectedExpiryDate)
+    } else {
+      tempData.SelectedExpiryDate = SelectedExpiryDate
+    }
+    
+    OptionChainData[SelectedScript] = tempData
+    webix.storage.local.put('OptionChainData', OptionChainData)
+    let sData = OptionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    tempData.selectedExpieryDate = selectedExpieryDate
-    $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
 
   })
 
@@ -1098,23 +1106,31 @@ webix.ready(function () {
                               if(id == '') {
                                 $$('algoStrategyId').setValue('')
                                 $$('underlyingVal').setHTML('')
+                                $$('expiryDateId').define('options', [])
+                                $$('expiryDateId').setValue('')
+                                SelectedExpiryDate = ''
                               } else {
-                                let sData = optionChainData[SelectedScript]
+                                let sData = OptionChainData[SelectedScript]
+                                if(!sData) {
+                                  $$('expiryDateId').define('options', [])
+                                  $$('expiryDateId').setValue('')
+                                  SelectedExpiryDate = ''
+                                }
                                 if(SelectedScript && sData) {
-                                  let sData = optionChainData[SelectedScript]
+                                  let sData = OptionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
 
                                   let expiryDates = Object.keys(sData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
                                   $$('expiryDateId').define('options', expiryDates)
                                   
-                                  if(sData.selectedExpieryDate){
-                                    selectedExpieryDate = sData.selectedExpieryDate
+                                  if(sData.SelectedExpiryDate){
+                                    SelectedExpiryDate = sData.SelectedExpiryDate
                                   } else {
-                                    selectedExpieryDate = expiryDates[0].id
+                                    SelectedExpiryDate = expiryDates[0].id
                                   }
                                   
-                                  $$('expiryDateId').setValue(selectedExpieryDate)
-                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+                                  $$('expiryDateId').setValue(SelectedExpiryDate)
+                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 } else {
                                   $$('expiryDateId').define('options', [])
                                   webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
@@ -1131,12 +1147,12 @@ webix.ready(function () {
                             onChange: function(id){
                               console.dir(id)
                               if(id != '') {
-                                if(selectedExpieryDate != id) {
-                                  selectedExpieryDate = id
-                                  let sData = optionChainData[SelectedScript]
+                                if(SelectedExpiryDate != id) {
+                                  SelectedExpiryDate = id
+                                  let sData = OptionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
-                                  sData.selectedExpieryDate = selectedExpieryDate
-                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+                                  sData.SelectedExpiryDate = SelectedExpiryDate
+                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 }
                               }
                             }
@@ -1152,7 +1168,7 @@ webix.ready(function () {
                               webix.message({ text: "Please select script :-)", type:"info "})
                             } else {
                               //downloadOptionChain(s)
-                              let sData = optionChainData[SelectedScript]
+                              let sData = OptionChainData[SelectedScript]
                               if(sData) {
                                 let d = new Date(sData.fetchTime)
                                 let now = new Date()
@@ -1163,8 +1179,13 @@ webix.ready(function () {
                                   element.dispatchEvent(e)
                                 } else {
                                   Underlying_Value = sData.underlyingValue
-                                  $$('optionChainTemplateId').setValues({data: sData.data[selectedExpieryDate], timestamp: sData.timestamp})
+                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 }
+                              } else {
+                                let e = new Event("change")
+                                let element = document.querySelector('#scriptInputId')
+                                element.value = s
+                                element.dispatchEvent(e)
                               }
                             }
                           }
@@ -1432,7 +1453,7 @@ function displayShortStrangle() {
       position: 'center',
       head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
             { width:4 },
-            { view:"label", label: "Short Strangle: " + SelectedScript + '  [' + selectedExpieryDate + ']'},
+            { view:"label", label: "Short Strangle: " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
             { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
             { view:"button", label: 'X', width: 50, align: 'left', click:function(){ $$('strategyWinId').close(); }}
           ]
@@ -1474,7 +1495,7 @@ function displayShortStrangle() {
               head: {
                 view: "toolbar", id: 'strategyChartToolbarId', cols: [
                   { width: 4 },
-                  { view: "label", label: "Short Strangle : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
+                  { view: "label", label: "Short Strangle : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
                   { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                     if ($$("inputInfoId").isVisible()) {
                       $$("inputInfoId").hide();
@@ -1621,7 +1642,7 @@ function displayIronConderStrangle() {
       zIndex:9999,
       head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
             { width:4 },
-            { view:"label", label: "Iron Condor Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
+            { view:"label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
             { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
             { view:"button", label: 'X', width: 30, align: 'left', click:function(){ $$('strategyWinId').close(); }}
           ]
@@ -1666,7 +1687,7 @@ function displayIronConderStrangle() {
               head: {
                 view: "toolbar", id: 'strategyChartToolbarId', cols: [
                   { width: 4 },
-                  { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + selectedExpieryDate + ']'},
+                  { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
                   { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
                     if ($$("inputInfoId").isVisible()) {
                       $$("inputInfoId").hide();
