@@ -622,8 +622,10 @@ function shortGammaCal(peOTM, ceOTM) {
             buyCallPre: buyCall.premium,
 
             peLS: buyPut.strikePrice - sellPut.strikePrice,
-            ceSL: sellCall.strikePrice - buyCall.strikePrice
+            ceSL: sellCall.strikePrice - buyCall.strikePrice,
 
+            upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
+            downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
           })
         }
       }
@@ -672,16 +674,12 @@ function displayShortGamma() {
             return obj.uppderBound
           }
         },
-        { id: "premiumRec", header: ["Premium Rec", { content: "numberFilter" }], width: 100, sort: "int", },
+        { id: "premiumRec", header: ["Premium Rec", { content: "numberFilter" }], width: 150, sort: "int", },
 
-        { id: "sellPutSt", header: "PE Short St", width: 100, sort: "int", },
-        { id: "buyPutSt", header: "PE Long St", width: 100, sort: "int", },
-
-        { id: "buyCallSt", header: "CE Long St", width: 100, sort: "int", },
-        { id: "sellCallSt", header: "CE Short St", width: 100, sort: "int", },
-
-        { id: "peLS", header: ["PE Long-Short", { content: "numberFilter" }], width: 100, sort: "int", },
-        { id: "ceSL", header: ["CE Short-Long", { content: "numberFilter" }], width: 100, sort: "int", },
+        { id: "peLS", header: ["PE Long-Short", { content: "numberFilter" }], width: 150, sort: "int", },
+        { id: "ceSL", header: ["CE Short-Long", { content: "numberFilter" }], width: 150, sort: "int", },
+        { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
+        { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
         { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
 
       ],
@@ -971,9 +969,7 @@ function supportResistenceGraph() {
   }
   return guides
 }
-
-webix.ready(function () {
-
+function initEventListeners() {
   let refreshOptionChainId = document.querySelector('#refreshOptionChainId')
   refreshOptionChainId.addEventListener('change', (e) => {
     let tempData = webix.storage.local.get('tempData')
@@ -995,7 +991,46 @@ webix.ready(function () {
 
   })
 
-  var menu_strategies = [];
+  let optionHistoryId = document.querySelector('#optionHistoryResId')
+  optionHistoryId.addEventListener('change', (e) => {
+    let optionHistory = webix.storage.local.get('optionHistory')
+    console.dir(optionHistory)
+    let input = webix.storage.local.get('optionHistoryInput')
+    let d = []
+
+    
+    let t = optionHistory.data
+    for(let i=0; i<t.length-1; i++) {
+      let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE']) / t[i+1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
+      d.push({'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%', changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE'])).toFixed(2)})
+    }
+    webix.ui({
+      view:"window",
+      height:450,
+      width:400,
+      move: true,
+      modal: true,
+      id: 'optionHisWinId',
+      head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
+        { width:4 },
+        { view:"label", label: "Type: " + input.optionType + ", " + input.strikePrice + ", " + input.expiryDate + ", " + input.symbol },
+        { view:"button", label: 'X', width: 50, align: 'left', click:function(){ $$('optionHisWinId').close(); }}
+      ]
+      },
+      position:"center",
+      body:{
+        view:"datatable",hover:"myhover",css: "rows",
+        columns:[{id: 'dateId', header: 'Date'},{id:'priceId', header: 'Price'},
+        {id:'changeId', header: 'Change'}, {id: 'perId', header: '%', fillspace:true}],
+        data: d
+      }
+    }).show();
+
+  })
+}
+webix.ready(function () {
+  initEventListeners()
+  var menu_strategies = []
   menu_strategies.push({ id: 'customStrategy', value: 'Custom Strategy' });
   var sArr = Object.keys(strategiesObj);
   for (var i = 0; i < sArr.length; i++) {
@@ -1315,9 +1350,12 @@ webix.ready(function () {
                               peChangeTx = ' greenTxt'
                             }
 
+                            let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
+                            let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
+
                             let r = `
                             <tr>
-                            <td width="2.34%"></td>
+                            <td width="2.34%">${ceHis}</td>
                             <td width="5.14%" class="${ceClass}">${DecimalFixed(ce.openInterest, true)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.changeinOpenInterest, true)}</td>
                             <td width="5.54%" class="${ceClass}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
@@ -1341,7 +1379,7 @@ webix.ready(function () {
                             <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.changeinOpenInterest, true)}</td>
                             <td width="5.14%" class="${peClass}">${DecimalFixed(pe.openInterest, true)}</td>
-                            <td width="2.34%"></td>
+                            <td width="2.34%">${peHis}</td>
                             </tr>`
                             start = start + r
                           }
@@ -1497,9 +1535,9 @@ function displayShortStrangle() {
           { id:"uppderBound",	header: ["Upper Bound", { content: "numberFilter" }],width:120, sort:"int", template: function(obj) {
               return obj.uppderBoundDiff
           }},
-          { id:"pePre", header: ["PE Premium", { content: "numberFilter" }], width:70, sort:"int", },
-          { id:"cePre",	header: ["CE Premium", { content: "numberFilter" }], width:70, sort:"int",},
-          { id:"premiumRec",	header:"Premium Received" , width:150,	sort:"int"},
+          { id:"pePre", header: ["PE Premium", { content: "numberFilter" }], width:150, sort:"int", },
+          { id:"cePre",	header: ["CE Premium", { content: "numberFilter" }], width:150, sort:"int",},
+          { id:"premiumRec",	header:["Premium Received", { content: "numberFilter" }] , width:160,	sort:"int"},
           { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
           { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
           { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
@@ -1651,6 +1689,9 @@ function ironConderCal(peOTM, ceOTM) {
               cePre: sellCall.premium,
               peSt: sellPut.strikePrice,
               pePre: sellPut.premium,
+
+              upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
+              downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
           })
         }
       }
@@ -1686,10 +1727,11 @@ function displayIronConderStrangle() {
           { id:"uppderBound",	header: ["Upper Bound", { content: "numberFilter" }],width:120, sort:"int", template: function(obj) {
               return obj.uppderBoundDiff
           }},
-          { id:"pePre", header: ["PE Premium", { content: "numberFilter" }], width:70, sort:"int", },
-          { id:"cePre",	header: ["CE Premium", { content: "numberFilter" }], width:70, sort:"int",},
-          { id:"premiumRec",	header:"Premium Received" , width:150,	sort:"int"},
+
+          { id:"premiumRec",	header:["Premium Received", { content: "numberFilter" }] , width:160,	sort:"int"},
           { id:"maxLoss",	header:"Max Loss", width:100,	sort:"int"},
+          { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
+          { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
           { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
         ],
         select:"row",
@@ -1777,4 +1819,11 @@ function DecimalFixed(val) {
       maximumFractionDigits: noDecimal ? 0 : 2
   });
   return num;
+}
+
+function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
+  webix.storage.local.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
+  let e = new Event("change")
+  let element = document.querySelector('#optionHistoryId')
+  element.dispatchEvent(e)
 }
