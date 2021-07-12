@@ -477,19 +477,27 @@ function prepareStrikeWithPremium() {
   let sData = OptionChainData[SelectedScript]
   Underlying_Value = parseInt(sData.underlyingValue)
   let ocArr = sData.data[SelectedExpiryDate]
+  let allOcs = []
+  for (let i = 0; i < ocArr.length; i++) {
+    allOcs.push(Object.keys(ocArr[i])[0])
+  }
+  let closest = allOcs.reduce(function (prev, curr) {
+      return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+  });
+
   for (let i = 0; i < ocArr.length; i++) {
     let stPrice = Object.keys(ocArr[i])[0]
     let pe = ocArr[i][stPrice]['PE']
     let ce = ocArr[i][stPrice]['CE']
     if (pe) {
-      if (pe.strikePrice < Underlying_Value) {
+      if (pe.strikePrice <= closest) {
         PE_OTM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest])
       } else {
         PE_ITM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest])
       }
     }
     if (ce) {
-      if (ce.strikePrice < Underlying_Value) {
+      if (ce.strikePrice <= closest) {
         CE_ITM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest])
       } else {
         CE_OTM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest])
@@ -1019,7 +1027,7 @@ function initEventListeners() {
       },
       position:"center",
       body:{
-        view:"datatable",hover:"myhover",css: "rows",
+        view:"datatable", hover:"myhover",css: "rows",
         columns:[{id: 'dateId', header: 'Date'},{id:'priceId', header: 'Price'},
         {id:'changeId', header: 'Change'}, {id: 'perId', header: '%', fillspace:true}],
         data: d
@@ -1041,6 +1049,12 @@ webix.ready(function () {
   menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'});
   menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies });
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'});
+  menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
+    {id:'liveTV', value: 'Live TV'},
+    {id:'indianMarket', value:'Indian Market'},
+    {id:'resultCalender', value:'Result Calendar'},
+    {id:'trendlyne', value:'Trendlyne'},
+  ]});
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1080,7 +1094,17 @@ webix.ready(function () {
                   let e = new Event("change")
                   let element = document.querySelector('#worldMarketId')
                   element.dispatchEvent(e)
-                } else {
+                } else if(id === 'liveTV') {
+                  window.open('https://www.cnbctv18.com/live-tv/')
+                }  else if(id === 'indianMarket') {
+                  window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')
+                } else if(id === 'resultCalender') {
+                  window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')
+                } else if(id === 'trendlyne') {
+                  window.open('https://trendlyne.com/my-trendlyne/recommended/')
+                }
+                
+                else {
                   $$('worldMarketViewId').hide()
                   $$('optionChainViewId').hide()
                   $$('strategyViewId').show()
@@ -1290,7 +1314,7 @@ webix.ready(function () {
                     },
                     { view: 'template', id: 'optionChainTemplateId', template: function(obj) {
                       //console.dir(obj)
-
+                      
                       let start = `<div class="optionChainApp1" style="overflow:auto;width:100%;height:100%;"><div class="customTable-width optionChainTable wordBreak borderTD">
                       <table id="optionChainTable-indices" class="common_table w-100">
                         <thead>
@@ -1325,18 +1349,30 @@ webix.ready(function () {
                         </thead>
                         <tbody id="indices-body">`
                         if(Object.keys(obj).length > 0) {
+                          prepareStrikeWithPremium()
+                          let [S1, S2, R1, R2] = findSupportResistence()
                           let arr = obj.data
 
                           let fivePerLower = Underlying_Value - (Underlying_Value * 5 /100)
                           let fivePerHigher = Underlying_Value + (Underlying_Value * 5 /100)
+
+                          let sData = OptionChainData[SelectedScript]
+                          let ocArr = sData.data[SelectedExpiryDate]
+                          let allOcs = []
+                          for (let i = 0; i < ocArr.length; i++) {
+                            allOcs.push(Object.keys(ocArr[i])[0])
+                          }
+                          let closest = allOcs.reduce(function (prev, curr) {
+                              return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+                          })
 
                           for(let i=0; i<arr.length; i++) {
                             let row = arr[i]
                             let st = Object.keys(row)[0]
                             let ce = row[st]['CE'] || {}
                             let pe = row[st]['PE'] || {}
-                            let ceClass = st<=Underlying_Value ? 'bg-yellow' : ''
-                            let peClass = st>Underlying_Value ? 'bg-yellow' : ''
+                            let ceClass = st<=closest ? 'bg-yellow' : ''
+                            let peClass = st>closest ? 'bg-yellow' : ''
                             let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
                             if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
                               stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
@@ -1353,10 +1389,28 @@ webix.ready(function () {
                             let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
                             let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
 
+                            let ceOI1 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == R1) {
+                              ceOI1 = 'green1'
+                            }
+                            let ceOI2 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == R2) {
+                              ceOI2 = 'green2'
+                            }
+
+                            let peOI1 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == S1) {
+                              peOI1 = 'green1'
+                            }
+                            let peOI2 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == S2) {
+                              peOI2 = 'green2'
+                            }
+
                             let r = `
                             <tr>
                             <td width="2.34%">${ceHis}</td>
-                            <td width="5.14%" class="${ceClass}">${DecimalFixed(ce.openInterest, true)}</td>
+                            <td width="5.14%" class="${ceClass} ${ceOI1} ${ceOI2}">${DecimalFixed(ce.openInterest, true)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.changeinOpenInterest, true)}</td>
                             <td width="5.54%" class="${ceClass}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
                             <td width="3.34%" class="${ceClass}">${DecimalFixed(ce.impliedVolatility)}</td>
@@ -1378,7 +1432,7 @@ webix.ready(function () {
                             <td width="3.34%" class="${peClass}">${DecimalFixed(pe.impliedVolatility)}</td>
                             <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.changeinOpenInterest, true)}</td>
-                            <td width="5.14%" class="${peClass}">${DecimalFixed(pe.openInterest, true)}</td>
+                            <td width="5.14%" class="${peClass} ${peOI1} ${peOI2}">${DecimalFixed(pe.openInterest, true)}</td>
                             <td width="2.34%">${peHis}</td>
                             </tr>`
                             start = start + r
@@ -1827,3 +1881,17 @@ function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
   let element = document.querySelector('#optionHistoryId')
   element.dispatchEvent(e)
 }
+
+let GlobalMarketHeader = [{id: 'country', header:'Country'}, {id: 'exchange', header: 'Stock Exchange'},
+{id:'index', header: 'Index'}, {id:'openTime', header: 'Opening Time (India Time)'}, {id:'closeTime', header: 'Closing Time (India Time)'}]
+let GlobalMarketTimings = [
+  {country: 'Japan', exchange: 'Japan Exchange Group', index: 'Nikkei', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
+  {country: 'Australia', exchange: 'Australian Securities Exchange', index: 'S&P ASX', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
+  {country: 'South Korea', exchange: 'KRX Korean Exchange', index: 'Kospi', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
+  {country: 'Hong Kong', exchange: 'HKEX Hong Kong Exchange', index: 'Hang Seng', openTime:'6 : 45 AM', closeTime: '1 : 30 PM'},
+  {country: 'China', exchange: 'Shanghai Stock Exchange & Shenzen stock Exchange', index: 'SSE', openTime:'7 : 00 AM', closeTime: '12 : 30 PM'},
+  {country: 'India', exchange: 'NSE & BSE ', index: 'Nifty & Sensex', openTime:'9 : 15 AM', closeTime: '3 : 30 PM'},
+  {country: 'Germany', exchange: 'Deutsche Börse AG', index: 'DAX', openTime:'12 : 30 PM', closeTime: '2 : 30 AM'},
+  {country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime:'1 : 30 PM', closeTime: '10 : 00 PM'},
+  {country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime:'7 : 00 PM', closeTime: '1 : 30 AM'}
+]
