@@ -15,9 +15,15 @@ let CE_ITM = []
 let Underlying_Value = 0
 let SelectedScript = ''
 let SelectedExpiryDate = ''
-
+let CalenderUI = {}
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
+}
+
+let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
+if (!ScriptHistoryData) {
+  ScriptHistoryData = {}
+  webix.storage.local.put('ScriptHistoryData', ScriptHistoryData)
 }
 
 let OptionChainData = webix.storage.local.get('OptionChainData')
@@ -999,13 +1005,12 @@ function initEventListeners() {
 
   })
 
-  let optionHistoryId = document.querySelector('#optionHistoryResId')
-  optionHistoryId.addEventListener('change', (e) => {
+  let optionHistoryResId = document.querySelector('#optionHistoryResId')
+  optionHistoryResId.addEventListener('change', (e) => {
     let optionHistory = webix.storage.local.get('optionHistory')
     console.dir(optionHistory)
     let input = webix.storage.local.get('optionHistoryInput')
     let d = []
-
     
     let t = optionHistory.data
     for(let i=0; i<t.length-1; i++) {
@@ -1035,26 +1040,42 @@ function initEventListeners() {
     }).show();
 
   })
+  
+  let etDatepickerResId = document.querySelector('#etDatepickerResId')
+  etDatepickerResId.addEventListener('change', (e) => {
+    let jsonArr = webix.storage.local.get('tempETDatepickerRes')
+    $$('etDatatableId').clearAll()
+    $$('etDatatableId').parse(jsonArr.searchResult)
+  })
 }
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
-  menu_strategies.push({ id: 'customStrategy', value: 'Custom Strategy' });
-  var sArr = Object.keys(strategiesObj);
+  menu_strategies.push({ id: 'customStrategy', value: 'Custom Strategy' })
+  var sArr = Object.keys(strategiesObj)
   for (var i = 0; i < sArr.length; i++) {
-    menu_strategies.push({ id: sArr[i], value: strategiesObj[sArr[i]].label });
+    menu_strategies.push({ id: sArr[i], value: strategiesObj[sArr[i]].label })
   }
 
-  var menu_data_multi = [];
-  menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'});
-  menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies });
-  menu_data_multi.push({ id: 'worldMarket', value: 'World Market'});
+  var menu_data_multi = []
+  menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'})
+  menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
+  menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
   menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
     {id:'liveTV', value: 'Live TV'},
     {id:'indianMarket', value:'Indian Market'},
-    {id:'resultCalender', value:'Result Calendar'},
+    {id:'resultCalendar', value:'Result Calendar'},
     {id:'trendlyne', value:'Trendlyne'},
-  ]});
+    {id:'niftyMaxPain', value:'Nifty Max Pain'},
+  ]})
+  menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
+    {id:'calendarWise', value: 'Calendar Wise'},
+  ]})
+  menu_data_multi.push({ id: 'usefulWebsites', value: 'Useful Websites', data: [
+    {id:'opstraId', value: 'Opstra Options Analysis'},{id:'neostoxId', value: 'Neostox'},
+    {id:'pasiId', value: 'Pasi Technologies'},{id:'eqsisId', value:'Eqsis'},{id:'niftyIndicesId', value:'Nifty Indices'},
+  ]})
+  menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1083,32 +1104,25 @@ webix.ready(function () {
             view: "sidebar", id: "sidebarId", width: 155, scroll: "auto", hidden:true,
             data: menu_data_multi, on: {
               onAfterSelect: function (id) {
-                if(id === 'optionChain') {
-                  $$('strategyViewId').hide()
-                  $$('worldMarketViewId').hide()
-                  $$('optionChainViewId').show()
-                } else if(id == 'worldMarket') {
-                  $$('strategyViewId').hide()
-                  $$('optionChainViewId').hide()
-                  $$('worldMarketViewId').show()
-                  let e = new Event("change")
-                  let element = document.querySelector('#worldMarketId')
-                  element.dispatchEvent(e)
-                } else if(id === 'liveTV') {
-                  window.open('https://www.cnbctv18.com/live-tv/')
-                }  else if(id === 'indianMarket') {
-                  window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')
-                } else if(id === 'resultCalender') {
-                  window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')
-                } else if(id === 'trendlyne') {
-                  window.open('https://trendlyne.com/my-trendlyne/recommended/')
-                }
-                
+                if(id === 'optionChain') {showViewId('optionChainViewId')}
+                 else if(id == 'worldMarket') {
+                  showViewId('worldMarketViewId')
+                  dispatchChangeEvent('#worldMarketId')
+                } else if(id === 'liveTV') {window.open('https://www.cnbctv18.com/live-tv/')}
+                 else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')}
+                 else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
+                 else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
+                 else if(id === 'calendarWise') { showViewId('calendarWiseViewId')}
+                 else if(id == 'niftyMaxPain') {window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty')}
+                else if(id == 'opstraId') { window.open('https://opstra.definedge.com/')}
+                else if(id == 'neostoxId') {window.open('https://neostox.com/')}
+                else if(id == 'pasiId') {window.open('http://www.pasitechnologies.com/')}
+                else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
+                else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
+                else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
                 else {
-                  $$('worldMarketViewId').hide()
-                  $$('optionChainViewId').hide()
                   $$('strategyViewId').show()
-
+                  showViewId('strategyViewId')
                   $$('inputViewId').getBody().reconstruct()
                   let strategyLabel = 'Custom Strategy'
                   if (id === 'customStrategy') {
@@ -1164,11 +1178,8 @@ webix.ready(function () {
                         {
                           view:"combo", width:200, labelWidth:50, id:"scriptId",
                           label: 'Script:',  placeholder:"Please Select",
-                          options:[ 
-                            { id:"NIFTY", value:"NIFTY" },
-                            { id:"BANKNIFTY", value:"BANKNIFTY" }, 
-                            { id:"BHARTIARTL", value:"BHARTIARTL" }
-                          ],on:{
+                          options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
+                          on:{
                             onChange: function(id){
                               SelectedScript = id
                               if(id == '') {
@@ -1210,10 +1221,9 @@ webix.ready(function () {
                         {
                           view:"combo", width:210, labelWidth:85, id:"expiryDateId",
                           label: 'Expiry Date:',  placeholder:"Please Select",
-                          options:[ 
-                          ],on:{
+                          options:[],on:{
                             onChange: function(id){
-                              console.dir(id)
+                              //console.dir(id)
                               if(id != '') {
                                 if(SelectedExpiryDate != id) {
                                   SelectedExpiryDate = id
@@ -1508,8 +1518,121 @@ webix.ready(function () {
                       element.dispatchEvent(e)
                     }},
                     {
-                      view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="worldMarket" style="margin-left: 10%;margin-right: 10%;">Loading ...</div</div>'
+                      view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="worldMarket" style="margin-left: 10%;margin-right: 10%;">Loading ...</div</div>'
                     }]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'calendarWiseViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      cols:[
+                        {view:"combo", width:180, labelWidth:50, id:"scriptCalendarId",
+                        label: 'Script:',  placeholder:"Please Select",
+                        options: ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
+                        on:{
+                          onChange: function(id){
+                            CalenderUI = processDataForCalenderUI(id)
+                            $$('script_calendar').refresh()
+                          }
+                          }
+                        },
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-download",
+                          width: 37, align: "left",
+                          click: function () {
+                            let id = $$('scriptCalendarId').getValue()
+                            if(id != '') {
+                              let e = new Event("change")
+                              let element = document.querySelector('#scriptHistoryId')
+                              element.value = id
+                              element.dispatchEvent(e)
+                            } else {
+
+                            }
+                          }
+                        },{},
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-download",label: 'Download All',
+                          width: 130, align: "left",
+                          click: function () {
+                            if(window.confirm('Are you sure to download all sripts')) {
+                              let e = new Event("change")
+                              let element = document.querySelector('#scriptHistoryId')
+                              element.value = ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() 
+                              element.dispatchEvent(e)
+                            }
+                          }
+                        },{width: 15}
+                    ]
+                  },
+
+                  {
+                    view:"calendar",
+                    id:"script_calendar",
+                    //date:new Date(2021,5,23),
+                    calendarHeader: "%F, %Y",
+                    weekHeader:true,
+                    skipEmptyWeeks: true,
+                    cellHeight: 70,
+                    events:webix.Date.isHoliday,
+                    //width:650,
+                    //height:400,
+                    align: 'center',
+                    //borderless: false,
+                    
+                    dayTemplate: function(date){
+                        //console.dir(date)
+                        let dArr = date.toDateString().split(' ')
+                        let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
+
+                        var html = "<div class='day'>"+date.getDate()+"</div>";
+                        if(CalenderUI[dStr]) {
+                            let per = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0]) / CalenderUI[dStr][0] * 100).toFixed(2)
+                            let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
+                            
+                            if(pol > 0) {
+                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                            } else {
+                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                            }
+                        }
+                        return html;
+                    },
+                },
+                {height:10},
+                  ]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'etResultCalendarViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    { height: 40,
+                      cols:[{},
+                        { view:"datepicker", id:'etDatepickerId', value: new Date(),stringResult:true, width: 150 },
+                        {view: "button", type: "icon", icon: "mdi mdi-download", height:35, width: 37, align: "center",
+                      click: function () {
+                        let sDate = $$('etDatepickerId').getValue().substr(0,10)
+                        dispatchChangeEvent('#etDatepickerReqId', sDate)
+                      }},{}
+                     ]
+                  },
+                    {
+                      view:"align", align:"middle,center",
+                      body:{ view:'datatable', hover:"myhover",css: "rows", id:'etDatatableId', height: 500, width: 900, 
+                      data: [{name: 'Hint :-)', event:'Please select date and click download'}], 
+                      columns: [{id:'name', header: 'Company Name', width: 200}, {id:'event', header: 'Event', width: 450, fillspace:true}]   }
+                    },
+                    {height: 30}
+                  ]
                 }
               },
             ]
@@ -1877,9 +2000,7 @@ function DecimalFixed(val) {
 
 function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
   webix.storage.local.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
-  let e = new Event("change")
-  let element = document.querySelector('#optionHistoryId')
-  element.dispatchEvent(e)
+  dispatchChangeEvent('#optionHistoryId')
 }
 
 let GlobalMarketHeader = [{id: 'country', header:'Country'}, {id: 'exchange', header: 'Stock Exchange'},
@@ -1895,3 +2016,38 @@ let GlobalMarketTimings = [
   {country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime:'1 : 30 PM', closeTime: '10 : 00 PM'},
   {country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime:'7 : 00 PM', closeTime: '1 : 30 AM'}
 ]
+
+function fetchScriptHistory() {
+  dispatchChangeEvent('#scriptHistoryId')
+}
+
+function dispatchChangeEvent(elementId, eleVal) {
+  let e = new Event("change")
+  let element = document.querySelector(elementId)
+  if(eleVal) {
+    element.value = eleVal
+  }
+  element.dispatchEvent(e)
+}
+
+function processDataForCalenderUI(id) {
+  let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
+  let data = ScriptHistoryData[id]
+  let cData = {}
+  data.forEach(function(currentValue, index, arr){
+      if(data[index + 1]) {
+          cData[currentValue[0]] = [data[index + 1][4], currentValue[4]]
+      }
+  })
+  return cData;
+}
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId']
+function showViewId(id) {
+  ViewIds.forEach(v => {
+    if(v == id) {
+      $$(v).show()
+    } else {
+      $$(v).hide()
+    }
+  })
+}

@@ -94,6 +94,19 @@
 
     .green1 {background-color: rgb(10, 245, 10) !important;}
     .green2 {background-color: rgb(194, 243, 194) !important;}
+
+    div[view_id="script_calendar"], div[view_id="calendarWiseViewId"] {
+      background-color: aliceblue !important;
+    }
+    div[view_id="sidebarId"] {
+      background-color: azure !important;
+    }
+
+    div[view_id="sidebarId"] .webix_selected {
+      background-color: #b4efad !important;
+    }
+
+    
   </style>
 </head>
 
@@ -103,8 +116,12 @@
   <input type="text" id="worldMarketId" hidden="true"/>
   <input type="text" id="optionHistoryId" hidden="true"/>
   <input type="text" id="optionHistoryResId" hidden="true"/>
-  
+  <input type="text" id="scriptHistoryId" hidden="true"/>
 
+  <input type="text" id="etDatepickerReqId" hidden="true"/>
+  <input type="text" id="etDatepickerResId" hidden="true"/>
+  
+  <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
 
 </body>
