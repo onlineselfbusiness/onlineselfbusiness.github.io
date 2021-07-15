@@ -1534,13 +1534,19 @@ webix.ready(function () {
                     click: function () {
                       $('#worldMarket').empty();
                       $('#worldMarket').append('Loading ...');
+                      $('#sgxNifty').empty();
+                      $('#sgxNifty').append('Loading ...');
                       let e = new Event("change")
                       let element = document.querySelector('#worldMarketId')
                       element.dispatchEvent(e)
                     }},
                     {
-                      view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="worldMarket" style="margin-left: 10%;margin-right: 10%;">Loading ...</div</div>'
-                    }]
+                      cols:[
+                        {view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="worldMarket">Loading ...</div</div>'},
+                        {view:'template', width:400, template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="sgxNifty">Loading ...</div</div>'},
+                      ]
+                    }
+                  ]
                 }
               },
               {
