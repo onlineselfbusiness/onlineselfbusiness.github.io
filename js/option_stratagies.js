@@ -20,6 +20,12 @@ function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
 
+let ContinuousWiseData = webix.storage.local.get('ContinuousWiseData')
+if (!ContinuousWiseData) {
+  ContinuousWiseData = {}
+  webix.storage.local.put('ContinuousWiseData', ContinuousWiseData)
+}
+
 let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
 if (!ScriptHistoryData) {
   ScriptHistoryData = {}
@@ -1047,7 +1053,13 @@ function initEventListeners() {
     $$('etDatatableId').clearAll()
     $$('etDatatableId').parse(jsonArr.searchResult)
   })
+  
+  let messageStatusId = document.querySelector('#messageStatusId')
+  messageStatusId.addEventListener('change', (e) => {
+    webix.message({ text: e.target.value, type:"info", expire: 500})
+  })
 }
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'continuousWiseViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1067,15 +1079,18 @@ webix.ready(function () {
     {id:'resultCalendar', value:'Result Calendar'},
     {id:'trendlyne', value:'Trendlyne'},
     {id:'niftyMaxPain', value:'Nifty Max Pain'},
+    {id:'niftyTaDesk', value:'Nifty TA Desk'},
   ]})
   menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
     {id:'calendarWise', value: 'Calendar Wise'},
+    { id: 'continuousWiseId', value: 'Continuous Wise'}
   ]})
   menu_data_multi.push({ id: 'usefulWebsites', value: 'Useful Websites', data: [
     {id:'opstraId', value: 'Opstra Options Analysis'},{id:'neostoxId', value: 'Neostox'},
     {id:'pasiId', value: 'Pasi Technologies'},{id:'eqsisId', value:'Eqsis'},{id:'niftyIndicesId', value:'Nifty Indices'},
   ]})
   menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
+
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1101,7 +1116,7 @@ webix.ready(function () {
       {
         cols: [
           {
-            view: "sidebar", id: "sidebarId", width: 155, scroll: "auto", hidden:true,
+            view: "sidebar", id: "sidebarId", width: 155, scroll: "auto",
             data: menu_data_multi, on: {
               onAfterSelect: function (id) {
                 if(id === 'optionChain') {showViewId('optionChainViewId')}
@@ -1109,17 +1124,23 @@ webix.ready(function () {
                   showViewId('worldMarketViewId')
                   dispatchChangeEvent('#worldMarketId')
                 } else if(id === 'liveTV') {window.open('https://www.cnbctv18.com/live-tv/')}
-                 else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')}
-                 else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
-                 else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
-                 else if(id === 'calendarWise') { showViewId('calendarWiseViewId')}
-                 else if(id == 'niftyMaxPain') {window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty')}
+                else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')}
+                else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
+                else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
+                else if(id === 'calendarWise') { showViewId('calendarWiseViewId')}
+                else if(id == 'niftyMaxPain') {window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty')}
+                else if(id == 'niftyTaDesk') {window.open('https://stockezee.com/nifty-ta-desk')}
                 else if(id == 'opstraId') { window.open('https://opstra.definedge.com/')}
                 else if(id == 'neostoxId') {window.open('https://neostox.com/')}
                 else if(id == 'pasiId') {window.open('http://www.pasitechnologies.com/')}
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
+                else if(id == 'continuousWiseId') {
+                  showViewId('continuousWiseViewId')
+                  continuousWiseAllCal()
+                  displayContinuousData()
+              }
                 else {
                   $$('strategyViewId').show()
                   showViewId('strategyViewId')
@@ -1570,7 +1591,6 @@ webix.ready(function () {
                         },{width: 15}
                     ]
                   },
-
                   {
                     view:"calendar",
                     id:"script_calendar",
@@ -1632,6 +1652,48 @@ webix.ready(function () {
                       columns: [{id:'name', header: 'Company Name', width: 200}, {id:'event', header: 'Event', width: 450, fillspace:true}]   }
                     },
                     {height: 30}
+                  ]
+                }
+              },{
+                view: "scrollview",
+                scroll: "auto",
+                id: 'continuousWiseViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      body: {
+                          id: "scriptDetailsContinuousId",
+                          cols: [
+                              {
+                                  header: "Continuous Loss",
+                                  css:'red-background',
+                                  body: {
+                                      id: "continuousLossId",
+                                      view: "tabview",
+                                      tabbar: {
+                                          id: "continuousLossTabbarId"
+                                      },
+                                      cells: generateContinuousCells('Loss'),
+                                      data: []
+                                  }
+                              },
+                              {
+                                  header: "Continuous Profit",
+                                  css:'green-background',
+                                  body: {
+                                      view: "tabview",
+                                      id: "continuousProfitId",
+                                      tabbar: {
+                                          id: "continuousProfitTabbarId"
+                                      },
+                                      cells: generateContinuousCells('Profit'),
+                                      data: []
+                                  }
+                              }
+                          ]
+                      }
+                  },
                   ]
                 }
               },
@@ -2041,7 +2103,7 @@ function processDataForCalenderUI(id) {
   })
   return cData;
 }
-let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId']
+
 function showViewId(id) {
   ViewIds.forEach(v => {
     if(v == id) {
@@ -2050,4 +2112,181 @@ function showViewId(id) {
       $$(v).hide()
     }
   })
+}
+
+function generateContinuousCells(type) {
+  let cells = [];
+  for(let i=10; i>0; i--) {
+      cells.push({
+          id: i + 'd' + (type === 'Loss' ? 'l' : 'p'),
+          header: i + "D",
+          body: {
+              id: i + "d" + type + "Id",
+              view:"datatable",
+              columns:[
+                  {id:'id', header:'Script', width: 150},
+                  {id:'per', header:'% (Rs)', width: 310, template: function (obj) {
+                      return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
+                  }, sort: 'int', fillspace: true},
+              ],
+              data: [],
+              on:{
+                  onAfterLoad:function(){
+                  this.sort("per", "desc");
+                  this.markSorting("per", "desc");
+                }
+              }
+          }
+      })
+  }
+  cells.push({
+      id: 'Alld' + (type === 'Loss' ? 'l' : 'p'),
+      header: "All",
+      body: {
+          id: "Alld" + type + "Id",
+          view:"datatable",
+          columns:[
+              {id:'id', header:'Script', width: 150},
+              {id:'per', header:'% (Rs)', width: 310, template: function (obj) {
+                  return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
+              }, sort: 'int'},
+              {id:'days', header:'(?)D', width: 310, template: function (obj) {
+                  return obj['days']
+              }, sort: 'int', fillspace: true},
+          ],
+          data: [],
+          on:{
+              onAfterLoad:function(){
+              this.sort("per", "desc");
+              this.markSorting("per", "desc");
+            }
+          }
+      }
+  })
+  return cells;
+}
+function getTemplateForContinues(per, pol, closePrice, pClose) {
+  return per < 0 ? ("<span style='color:#fd505c'>" + per + "% (" + pol + ")</span>" +
+                      " <span style='color:#fd505c'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
+                  : ("<span style='color:#02a68a'>" + per + "% (" + pol + ")</span> " +
+                      " <span style='color:#02a68a'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
+}
+function continuousWiseAllCal() {
+  let dd = webix.storage.local.get('ScriptHistoryData')
+  Object.keys(dd).forEach(k => continuousWiseCal(k))
+}
+function continuousWiseCal(scriptName) {
+  let dd = webix.storage.local.get('ScriptHistoryData')
+  let data = dd[scriptName]
+  if(!data) {
+      console.dir(scriptName);
+      return;
+  }
+  let calculatedData = {
+      id: scriptName,
+      conWise: {
+          pos: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          neg: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+      },
+  }
+
+  for (let i = 10; i > 0; i--) {
+      let v = data.slice(0, i+1).filter(function (val, index, array) {
+          return array[index+1] && parseFloat((val[4] - array[index+1][4]).toFixed(2)) > 0
+      }).map(function (val) {
+          return val;
+      })
+      if (v.length === i) {
+          calculatedData.conWise.pos[i - 1] = {
+              pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
+              per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))) ,
+              closePrice: v[0][4],
+              prevClose: data[i][4]
+          }
+          break;
+      }
+      v = data.slice(0, i+1).filter(function (val, index, array) {
+          return array[index+1] && parseFloat((val[4] - array[index+1][4]).toFixed(2)) < 0
+      }).map(function (val) {
+          return val;
+      })
+      if (v.length === i) {
+          calculatedData.conWise.neg[i - 1] = {
+              pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
+              per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))) ,
+              closePrice: v[0][4],
+              prevClose: data[i][4]
+          }
+          break;
+      }
+  }
+
+  ContinuousWiseData[scriptName] = calculatedData
+  webix.storage.local.put('ContinuousWiseData', ContinuousWiseData)
+}
+function displayContinuousData() {
+  let dd = webix.storage.local.get('ContinuousWiseData')
+  let posArr = {
+      '0': [],'1': [],'2': [],'3': [],'4': [],'5': [],'6': [],'7': [],'8': [],'9': []
+  }
+  let negArr = {
+      '0': [],'1': [],'2': [],'3': [],'4': [],'5': [],'6': [],'7': [],'8': [],'9': []
+  }
+  Object.keys(dd)
+  Object.keys(dd).forEach(k => {
+      let s = dd[k]
+      let obj = {id: s.id}
+      for(let i=9; i>=0; i--) {
+          if(Object.keys(s.conWise.pos[i]).length > 0) {
+              obj['pol'] = s.conWise.pos[i]['pol']
+              obj['per'] = s.conWise.pos[i]['per']
+              obj['prevClose'] = s.conWise.pos[i]['prevClose']
+              obj['closePrice'] = s.conWise.pos[i]['closePrice']
+              obj['days'] = i+1
+              posArr[i].push(obj)
+              break;
+          }
+      }
+      for(let i=9; i>=0; i--) {
+          if(Object.keys(s.conWise.neg[i]).length > 0) {
+              obj['pol'] = s.conWise.neg[i]['pol']
+              obj['per'] = s.conWise.neg[i]['per']
+              obj['prevClose'] = s.conWise.neg[i]['prevClose']
+              obj['closePrice'] = s.conWise.neg[i]['closePrice']
+              obj['days'] = i+1
+              negArr[i].push(obj)
+              break;
+          }
+      }
+  })
+  let posAll = []
+  Object.keys(posArr).forEach(k => {
+      let kInt = parseInt(k)
+      let id = (kInt+1) +'dProfitId'
+      $$(id).parse(posArr[k])
+      posAll = posAll.concat(posArr[k])
+      $$('continuousProfitId').getTabbar().config.options[(9-kInt)].value = (kInt+1) + 'D (' + posArr[k].length + ')'
+      if(posArr[k].length === 0) {
+          $$('continuousProfitTabbarId').hideOption(id)
+      } else {
+          $$('continuousProfitTabbarId').showOption(id)
+      }
+  })
+  $$('AlldProfitId').parse(posAll)
+  $$('continuousProfitId').getTabbar().render()
+  let negAll = []
+  Object.keys(negArr).forEach(k => {
+      let kInt = parseInt(k)
+      let id = (kInt+1) +'dLossId'
+      $$(id).parse(negArr[k])
+      negAll = negAll.concat(negArr[k])
+      $$('continuousLossId').getTabbar().config.options[(9-kInt)].value = (kInt+1) + 'D (' + negArr[k].length + ')'
+      if(negArr[k].length === 0) {
+          $$('continuousLossTabbarId').hideOption(id)
+      } else {
+          $$('continuousLossTabbarId').showOption(id)
+      }
+  })
+  $$('AlldLossId').parse(negAll)
+  $$('continuousLossId').getTabbar().render()
 }
