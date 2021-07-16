@@ -1,6 +1,6 @@
 
 let globalConfig = {
-  'default': { lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 7, ironConderRange: 50 },
+  'default': { lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
   'BANKNIFTY': { lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
   'NIFTY': { lowerPer: 4, higherPer: 4, creditAmt: 20, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 2, ironConderRange: 300 },
 }
@@ -72,7 +72,6 @@ let strategiesObj = {
   "shortCallCondor": { buyCall: [1, 1], sellCall: [1, 1], label: 'Short Call Condor', buyCallLabel: ['ITM', 'OTM'], sellCallLabel: ['ITM', 'OTM'] },
 
 }
-
 let labels = {
   buyCall: 'Buy Call',
   sellCall: 'Sell Call',
@@ -99,7 +98,6 @@ let optionViews = {
     }},
   ]
 };
-
 let keyIds = ['buyCall', 'sellCall', 'buyPut', 'sellPut', 'buyStock', 'sellStock'];
 let strikeIds = ['buyCallStrike_', 'sellCallStrike_', 'buyPutStrike_', 'sellPutStrike_', 'buyStockStrike_', 'sellStockStrike_'];
 let premiumIds = ['buyCallPremium_', 'sellCallPremium_', 'buyPutPremium_', 'sellPutPremium_'];
@@ -145,7 +143,6 @@ let submitButton = {
       }
     },{ view: "label", label: '', align: "center" },]
 };
-
 function buyCall(strikePrice, premium, expiryStrikePrice) {
   if (strikePrice >= expiryStrikePrice) {
     return -premium;
@@ -153,7 +150,6 @@ function buyCall(strikePrice, premium, expiryStrikePrice) {
     return parseFloat(expiryStrikePrice - strikePrice - premium).toFixed(2);
   }
 }
-
 function sellCall(strikePrice, premium, expiryStrikePrice) {
   if (expiryStrikePrice <= strikePrice) {
     return premium;
@@ -161,7 +157,6 @@ function sellCall(strikePrice, premium, expiryStrikePrice) {
     return parseFloat(premium - (expiryStrikePrice - strikePrice)).toFixed(2);
   }
 }
-
 function buyPut(strikePrice, premium, expiryStrikePrice) {
   if (strikePrice <= expiryStrikePrice) {
     return -premium;
@@ -169,7 +164,6 @@ function buyPut(strikePrice, premium, expiryStrikePrice) {
     return parseFloat((strikePrice - expiryStrikePrice) - premium).toFixed(2);
   }
 }
-
 function sellPut(strikePrice, premium, expiryStrikePrice) {
   if (expiryStrikePrice >= strikePrice) {
     return premium;
@@ -177,15 +171,12 @@ function sellPut(strikePrice, premium, expiryStrikePrice) {
     return parseFloat((expiryStrikePrice - strikePrice) + premium).toFixed(2);
   }
 }
-
 function buyStock(stockPrice, expiryStrikePrice) {
   return parseFloat(expiryStrikePrice - stockPrice).toFixed(2);
 }
-
 function sellStock(stockPrice, expiryStrikePrice) {
   return parseFloat(stockPrice - expiryStrikePrice).toFixed(2);
 }
-
 function calculatePayoffTable(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
   let header = 'On Expiry Closes At , ';
   let arr = [].concat(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr);
@@ -286,7 +277,6 @@ function calculatePayoffTable(buyCallArr, sellCallArr, buyPutArr, sellPutArr, bu
 
   return data;
 }
-
 function prepareStrategy(obj) {
   let arr = Object.keys(obj);
   for (let i = 0; i < arr.length; i++) {
@@ -313,7 +303,6 @@ function prepareStrategy(obj) {
   }
   $$('inputViewId').getBody().addView(submitButton);
 }
-
 function preparePayoffTable(columns, data) {
   $$('payoffViewId').getBody().reconstruct();
   $$('payoffViewId').getBody().removeView('payoffLabelId');
@@ -325,7 +314,6 @@ function preparePayoffTable(columns, data) {
     }
   );
 }
-
 function displayChart(data) {
 
   let pData = [];
@@ -393,7 +381,6 @@ function displayChart(data) {
   });
 
 }
-
 function addCustomRow(config, label, strikeId, premiumId) {
   let rowView = JSON.parse(JSON.stringify(optionViews))
   rowView.cols[0].label = label + ' @'
@@ -468,7 +455,6 @@ function downloadOptionChain(symbol) {
     $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
     
 }
-
 function formatDateWiseData() {
   let optionChain = webix.storage.local.get('optionChain')
   let data = optionChain.data['08-Jul-2021']
@@ -476,7 +462,6 @@ function formatDateWiseData() {
   console.dir(data)
 
 }
-
 function prepareStrikeWithPremium() {
 
   // [Strike Price, Bid Price, Ask Price, Volumn, OI]
@@ -517,7 +502,6 @@ function prepareStrikeWithPremium() {
     }
   }
 }
-
 function optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
   let arr = [].concat(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr);
   let spArr = [];
@@ -560,7 +544,6 @@ function optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, bu
   }
   return fullData;
 }
-
 function shortGammaCal(peOTM, ceOTM) {
 
   let config = fetchScriptConfig()
@@ -654,7 +637,6 @@ function shortGammaCal(peOTM, ceOTM) {
   console.dir(resultArr)
   return resultArr
 }
-
 function displayShortGamma() {
   prepareStrikeWithPremium()
   /* Net Credit
@@ -774,7 +756,6 @@ function displayShortGamma() {
     }
   }).show();
 }
-
 function displayStrategyChart(data, underlyingVal) {
 
   let pData = [];
@@ -853,7 +834,6 @@ function displayStrategyChart(data, underlyingVal) {
   });
 
 }
-
 function findLowerBoundUpperBound(underlyingVal, data) {
   let lowerBound = 0
   let uppderBound = 0
@@ -881,7 +861,6 @@ function findLowerBoundUpperBound(underlyingVal, data) {
 
   return [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer]
 }
-
 function findSupportResistence() {
   let ceOI = []
   CE_OTM.forEach(a => ceOI.push(a[4]))
@@ -911,7 +890,6 @@ function findSupportResistence() {
   // [S1, S2, R1, R2]
   return [S[1], S[0], R[0], R[1]]
 }
-
 function upperBoundLowerBoundGraph(underlyingVal, data) {
   let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(underlyingVal, data)
   let guides = []
@@ -1059,7 +1037,7 @@ function initEventListeners() {
     webix.message({ text: e.target.value, type:"info", expire: 500})
   })
 }
-let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'continuousWiseViewId']
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'continuousWiseViewId', 'yearWiseViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1071,8 +1049,13 @@ webix.ready(function () {
 
   var menu_data_multi = []
   menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'})
-  menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
+  menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
+  menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
+    {id:'calendarWise', value: 'Calendar Wise'},
+    { id: 'continuousWiseId', value: 'Continuous Wise'},
+    { id: 'yearWiseId', value: 'Year Wise'},
+  ]})
   menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
     {id:'liveTV', value: 'Live TV'},
     {id:'indianMarket', value:'Indian Market'},
@@ -1080,17 +1063,16 @@ webix.ready(function () {
     {id:'trendlyne', value:'Trendlyne'},
     {id:'niftyMaxPain', value:'Nifty Max Pain'},
     {id:'niftyTaDesk', value:'Nifty TA Desk'},
+    {id:'tradingView', value:'Trading View'},{id:'icharts', value:'i Charts'},
+    
   ]})
-  menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
-    {id:'calendarWise', value: 'Calendar Wise'},
-    { id: 'continuousWiseId', value: 'Continuous Wise'}
-  ]})
+
   menu_data_multi.push({ id: 'usefulWebsites', value: 'Useful Websites', data: [
     {id:'opstraId', value: 'Opstra Options Analysis'},{id:'neostoxId', value: 'Neostox'},
     {id:'pasiId', value: 'Pasi Technologies'},{id:'eqsisId', value:'Eqsis'},{id:'niftyIndicesId', value:'Nifty Indices'},
   ]})
-  menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
-
+  
+  menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1136,10 +1118,17 @@ webix.ready(function () {
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
+                else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
+                else if(id == 'icharts') {window.open('https://www.icharts.in/screener-eod.html')}
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
                   continuousWiseAllCal()
                   displayContinuousData()
+              } else if(id == 'yearWiseId') {
+                showViewId('yearWiseViewId')
+                let sArr = yearWisePercentageCal()
+                $$('yearWiseDatatableId').clearAll()
+                $$('yearWiseDatatableId').parse(sArr)
               }
                 else {
                   $$('strategyViewId').show()
@@ -1703,6 +1692,33 @@ webix.ready(function () {
                   ]
                 }
               },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'yearWiseViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      view:"align", align:"middle,center",
+                      body:{ view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, 
+                      data: [], 
+                      columns: [
+                        {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'}, 
+                        {id:'per', header: '52 Wks %', width: 200, sort: 'int',template: function(obj) {
+                          return obj['per'] + '%' + "(" +  obj['pol'] + ")"
+                        }}, 
+                        {id:'below52WksPer', header: 'Below 52 Wks', width: 150, sort: 'int', fillspace:true, template: function(obj) {
+                          return obj['below52WksPer'] + '%' + "(" +  obj['below52Wks'] + ")"
+                        }
+                        }
+                      ]   
+                    }
+                    },
+                    {height: 30}
+                  ]
+                }
+              }
             ]
           }
         ]
@@ -1753,7 +1769,6 @@ function shortStrangleCal(peOTM, ceOTM) {
   console.dir(resultArr)
   return resultArr;
 }
-
 function displayShortStrangle() {
   prepareStrikeWithPremium()
   let d = shortStrangleCal(PE_OTM, CE_OTM)
@@ -1851,7 +1866,6 @@ function displayShortStrangle() {
       
     }).show()
 }
-
 function ironConderCal(peOTM, ceOTM) {
 
   let config = fetchScriptConfig()
@@ -2049,7 +2063,6 @@ function displayIronConderStrangle() {
       },
     }).show()
 }
-
 function DecimalFixed(val) {
   var noDecimal = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
   var escapeHypen = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -2065,12 +2078,10 @@ function DecimalFixed(val) {
   });
   return num;
 }
-
 function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
   webix.storage.local.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
   dispatchChangeEvent('#optionHistoryId')
 }
-
 let GlobalMarketHeader = [{id: 'country', header:'Country'}, {id: 'exchange', header: 'Stock Exchange'},
 {id:'index', header: 'Index'}, {id:'openTime', header: 'Opening Time (India Time)'}, {id:'closeTime', header: 'Closing Time (India Time)'}]
 let GlobalMarketTimings = [
@@ -2084,11 +2095,9 @@ let GlobalMarketTimings = [
   {country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime:'1 : 30 PM', closeTime: '10 : 00 PM'},
   {country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime:'7 : 00 PM', closeTime: '1 : 30 AM'}
 ]
-
 function fetchScriptHistory() {
   dispatchChangeEvent('#scriptHistoryId')
 }
-
 function dispatchChangeEvent(elementId, eleVal) {
   let e = new Event("change")
   let element = document.querySelector(elementId)
@@ -2097,7 +2106,6 @@ function dispatchChangeEvent(elementId, eleVal) {
   }
   element.dispatchEvent(e)
 }
-
 function processDataForCalenderUI(id) {
   let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
   let data = ScriptHistoryData[id]
@@ -2109,7 +2117,6 @@ function processDataForCalenderUI(id) {
   })
   return cData;
 }
-
 function showViewId(id) {
   ViewIds.forEach(v => {
     if(v == id) {
@@ -2119,7 +2126,6 @@ function showViewId(id) {
     }
   })
 }
-
 function generateContinuousCells(type) {
   let cells = [];
   for(let i=10; i>0; i--) {
@@ -2295,4 +2301,46 @@ function displayContinuousData() {
   })
   $$('AlldLossId').parse(negAll)
   $$('continuousLossId').getTabbar().render()
+}
+function yearWisePercentageCal() {
+  let dd = webix.storage.local.get('ScriptHistoryData')
+  let sArr = []
+  Object.keys(dd).forEach(s => {
+    let d = dd[s]
+    let cDate = d[0][0]
+    let cClose = d[0][4]
+    let oneYearDate = new Date(cDate);
+    oneYearDate.setFullYear(oneYearDate.getFullYear() - 1);
+    let oneYearClose = 0
+    let lowPrice = d[0][3]
+    let highPrice = d[0][2]
+    let lowPriceDate = d[0][0]
+    let highPriceDate = d[0][0]
+    d.forEach(a => {
+      if(new Date(a[0]) >= oneYearDate) {
+        oneYearClose = a[4]
+        if(lowPrice>a[3]) {
+          lowPrice = a[3]
+          lowPriceDate = a[0]
+        }
+        if(highPrice<a[2]) {
+          highPrice = a[2]
+          highPriceDate = a[0]
+        }
+      }
+    })
+    sArr.push({
+      name: s,
+      pol: parseFloat(cClose - oneYearClose).toFixed(2),
+      per: parseFloat((cClose - oneYearClose) / oneYearClose * 100).toFixed(2),
+      lowPrice: lowPrice,
+      lowPriceDate: lowPriceDate,
+      highPrice: highPrice,
+      highPriceDate: highPriceDate,
+      below52WksPer: parseFloat((cClose - highPrice)/highPrice * 100).toFixed(2),
+      below52Wks: parseFloat(cClose - highPrice).toFixed(2)
+    })
+  })
+  console.dir(sArr)
+  return sArr
 }
