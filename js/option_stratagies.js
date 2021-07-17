@@ -1,8 +1,8 @@
 
 let globalConfig = {
-  'default': { lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
-  'BANKNIFTY': { lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
-  'NIFTY': { lowerPer: 4, higherPer: 4, creditAmt: 20, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 2, ironConderRange: 300 },
+  'default': { lotSize: 1, lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
+  'BANKNIFTY': { lotSize: 25, lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
+  'NIFTY': { lotSize: 50, lowerPer: 4, higherPer: 4, creditAmt: 20, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 2, ironConderRange: 300 },
 }
 let loader = '<div class="loader-wrp"><div class="spin-loader" aria-hidden="true"></div></div>'
 let emptyRow = '<tr><td colspan="23" class="text-center emptyRow">No Record Found</td></tr>'
@@ -16,8 +16,21 @@ let Underlying_Value = 0
 let SelectedScript = ''
 let SelectedExpiryDate = ''
 let CalenderUI = {}
+let WatchObj = undefined
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
+}
+
+let WatchList = webix.storage.local.get('WatchList')
+if (!WatchList) {
+  WatchList = []
+  webix.storage.local.put('WatchList', WatchList)
+}
+
+let MaxPainList = webix.storage.local.get('MaxPainList')
+if (!MaxPainList) {
+  MaxPainList = []
+  webix.storage.local.put('MaxPainList', MaxPainList)
 }
 
 let ContinuousWiseData = webix.storage.local.get('ContinuousWiseData')
@@ -401,60 +414,7 @@ function addCustomRow(config, label, strikeId, premiumId) {
 
 }
 let twoMinutes = 2 * 60 * 1000 + 15 * 1000
-function downloadOptionChain(symbol) {
-  //let symbol = SelectedScript
-  /*let optionChain = webix.storage.local.get('optionChain')
-  let flag = true
-  if(optionChain) {
-    let d = new Date(optionChain.fetchTime)
-    let now = new Date()
-    if((d.getTime() + twoMinutes) > now.getTime()) {
-      flag = false
-    }
-  }*/
-  //$$('mainWinId').showProgress()
-  document.getElementById("indices-body").innerHTML = loader
-  //0 && fetch('http://localhost:3000/optionChain?symbol=' + symbol)
-  //https://optionstrategies.el.r.appspot.com/
-  fetch('https://optionstrategies.el.r.appspot.com/optionChain?symbol=' + symbol)
-    .then(res => {
-      return res.text()
-    })
-    .then(jsonStr => {
-      $$('mainWinId').hideProgress()
-      let json = JSON.parse(jsonStr)
-      if (json.data) {
-        json.fetchTime = new Date
-        let d = json.data
-        let formattedData = {}
-        for (let i = 0; i < d.length; i++) {
-          let expiryDate = []
-          if (formattedData[d[i].expiryDate]) {
-            expiryDate = formattedData[d[i].expiryDate]
-          } else {
-            formattedData[d[i].expiryDate] = expiryDate
-          }
-          let strikePrice = d[i].strikePrice
-          expiryDate.push({ [strikePrice]: { 'PE': d[i]['PE'], 'CE': d[i]['CE'] } })
-        }
-        json.data = formattedData
-        //webix.storage.local.put('optionChain', json)
-        OptionChainData[symbol] = json
-        webix.storage.local.put('OptionChainData', OptionChainData)
-        console.dir(json)
-        let sData = OptionChainData[SelectedScript]
-        Underlying_Value = sData.underlyingValue
-        $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
-      }
-      webix.message({text: symbol + " download completed :-)", type:"success"})
-    })
-    .catch(err => {$$('mainWinId').hideProgress(); webix.message({text: "Error while downloading  "+symbol+" :-(", type:"error", }); console.error(err)});
 
-    let sData = OptionChainData[SelectedScript]
-    Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
-    
-}
 function formatDateWiseData() {
   let optionChain = webix.storage.local.get('optionChain')
   let data = optionChain.data['08-Jul-2021']
@@ -488,16 +448,16 @@ function prepareStrikeWithPremium() {
     let ce = ocArr[i][stPrice]['CE']
     if (pe) {
       if (pe.strikePrice <= closest) {
-        PE_OTM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest])
+        PE_OTM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest, pe.impliedVolatility])
       } else {
-        PE_ITM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest])
+        PE_ITM.push([pe.strikePrice, pe.bidprice, pe.askPrice, pe.totalTradedVolume, pe.openInterest, pe.impliedVolatility])
       }
     }
     if (ce) {
       if (ce.strikePrice <= closest) {
-        CE_ITM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest])
+        CE_ITM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest, ce.impliedVolatility])
       } else {
-        CE_OTM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest])
+        CE_OTM.push([ce.strikePrice, ce.bidprice, ce.askPrice, ce.totalTradedVolume, ce.openInterest, ce.impliedVolatility])
       }
     }
   }
@@ -701,6 +661,21 @@ function displayShortGamma() {
           let buyCallSt = obj.buyCallSt
           let buyCallPre = obj.buyCallPre
           let premiumRec = obj.premiumRec
+
+          WatchObj = {
+            key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt,
+            name: 'Short Gamma',
+            script: SelectedScript,
+            expiryDate: SelectedExpiryDate,
+            lotSize: fetchScriptConfig().lotSize,
+            createDate: new Date,
+            pol:0,
+            sellPut: [{strikePrice: sellPutSt, lots: 2, entryPremium: sellPutPre, entryIV: 12, latestPremium: sellPutPre, latestIV: 12, pl: 0}],
+            sellCall: [{strikePrice: sellCallSt, lots: 2, entryPremium: sellCallPre, entryIV: 12, latestPremium: sellCallPre, latestIV: 12, pl: 0}],
+
+            buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: 12, latestPremium: buyPutPre, latestIV: 12, pl: 0}],
+            buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: 12, latestPremium: buyCallPre, latestIV: 12, pl: 0}],
+          }
           webix.ui({
             view: "window",
             width: window.innerWidth - 2,
@@ -742,7 +717,17 @@ function displayShortGamma() {
                     rows: [
                       {view:'template', template: ''},
                       {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
-                      {view: 'template', borderless:true, template: ''},
+                      {view:'button', label: 'Watch It', click: function() {
+
+                        let r = WatchList.filter(obj => obj.key == WatchObj.key)
+                        if(r.length == 0) {
+                          WatchList.push(WatchObj)
+                          webix.storage.local.put('WatchList', WatchList)
+                          webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
+                        } else {
+                          webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
+                        }
+                      }},
                     ]
                   },
                 ]},
@@ -968,9 +953,9 @@ function supportResistenceGraph() {
   return guides
 }
 function initEventListeners() {
-  let refreshOptionChainId = document.querySelector('#refreshOptionChainId')
-  refreshOptionChainId.addEventListener('change', (e) => {
-    let tempData = webix.storage.local.get('tempData')
+  let optionChainResId = document.querySelector('#optionChainResId')
+  optionChainResId.addEventListener('change', (e) => {
+    let tempData = webix.storage.session.get('tempData')
     if(SelectedExpiryDate == '') {
       let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
       $$('expiryDateId').define('options', expiryDates)
@@ -991,9 +976,8 @@ function initEventListeners() {
 
   let optionHistoryResId = document.querySelector('#optionHistoryResId')
   optionHistoryResId.addEventListener('change', (e) => {
-    let optionHistory = webix.storage.local.get('optionHistory')
-    console.dir(optionHistory)
-    let input = webix.storage.local.get('optionHistoryInput')
+    let optionHistory = webix.storage.session.get('optionHistory')
+    let input = webix.storage.session.get('optionHistoryInput')
     let d = []
     
     let t = optionHistory.data
@@ -1027,17 +1011,32 @@ function initEventListeners() {
   
   let etDatepickerResId = document.querySelector('#etDatepickerResId')
   etDatepickerResId.addEventListener('change', (e) => {
-    let jsonArr = webix.storage.local.get('tempETDatepickerRes')
+    let jsonArr = webix.storage.session.get('tempETDatepickerRes')
     $$('etDatatableId').clearAll()
     $$('etDatatableId').parse(jsonArr.searchResult)
   })
   
+  let maxPainStocksResId = document.querySelector('#maxPainStocksResId')
+  maxPainStocksResId.addEventListener('change', (e) => {
+    MaxPainList = webix.storage.local.get('MaxPainList')
+    $$('maxPainForAllDatatableId').clearAll()
+    $$('maxPainForAllDatatableId').parse(MaxPainList)
+  })
+
+  let nifty50StocksResId = document.querySelector('#nifty50StocksResId')
+  nifty50StocksResId.addEventListener('change', (e) => {
+    let Nifty50Stocks = webix.storage.session.get('Nifty50Stocks')
+    $$('nifty50StockDatatableId').clearAll()
+    $$('nifty50StockDatatableId').parse(Nifty50Stocks)
+  })
+
   let messageStatusId = document.querySelector('#messageStatusId')
   messageStatusId.addEventListener('change', (e) => {
     webix.message({ text: e.target.value, type:"info", expire: 500})
   })
 }
-let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'continuousWiseViewId', 'yearWiseViewId']
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 
+            'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1049,8 +1048,11 @@ webix.ready(function () {
 
   var menu_data_multi = []
   menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'})
+  menu_data_multi.push({ id: 'nifty50Stocks', value: 'Nifty 50 Stocks'})
+  menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
   menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
+  menu_data_multi.push({ id: 'watchList', value: 'Strategy Watch List'})
   menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
     {id:'calendarWise', value: 'Calendar Wise'},
     { id: 'continuousWiseId', value: 'Continuous Wise'},
@@ -1118,6 +1120,20 @@ webix.ready(function () {
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
+                else if(id == 'maxPainStocks') {
+                  showViewId('maxPainForAllViewId')
+                  dispatchChangeEvent('#maxPainStocksReqId')
+              }
+                else if(id == 'nifty50Stocks') {
+                  showViewId('nifty50StockViewId')
+                  dispatchChangeEvent('#nifty50StocksReqId')
+                }
+                else if(id == 'watchList') {
+                  showViewId('watchListViewId')
+                  watchListCal()
+                  $$('watchListDatatableId').clearAll()
+                  $$('watchListDatatableId').parse(WatchList)
+                }
                 else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
                 else if(id == 'icharts') {window.open('https://www.icharts.in/screener-eod.html')}
                 else if(id == 'continuousWiseId') {
@@ -1255,14 +1271,13 @@ webix.ready(function () {
                             if(s == "") {
                               webix.message({ text: "Please select script :-)", type:"info "})
                             } else {
-                              //downloadOptionChain(s)
                               let sData = OptionChainData[SelectedScript]
                               if(sData) {
                                 let d = new Date(sData.fetchTime)
                                 let now = new Date()
                                 if(now.getTime() > (d.getTime() + twoMinutes)) {
                                   let e = new Event("change")
-                                  let element = document.querySelector('#scriptInputId')
+                                  let element = document.querySelector('#optionChainReqId')
                                   element.value = s
                                   element.dispatchEvent(e)
                                 } else {
@@ -1271,7 +1286,7 @@ webix.ready(function () {
                                 }
                               } else {
                                 let e = new Event("change")
-                                let element = document.querySelector('#scriptInputId')
+                                let element = document.querySelector('#optionChainReqId')
                                 element.value = s
                                 element.dispatchEvent(e)
                               }
@@ -1649,7 +1664,8 @@ webix.ready(function () {
                     {height: 30}
                   ]
                 }
-              },{
+              },
+              {
                 view: "scrollview",
                 scroll: "auto",
                 id: 'continuousWiseViewId',
@@ -1701,24 +1717,93 @@ webix.ready(function () {
                   rows: [
                     {
                       view:"align", align:"middle,center",
-                      body:{ view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, 
-                      data: [], 
-                      columns: [
-                        {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'}, 
-                        {id:'per', header: '52 Wks %', width: 200, sort: 'int',template: function(obj) {
-                          return obj['per'] + '%' + "(" +  obj['pol'] + ")"
-                        }}, 
-                        {id:'below52WksPer', header: 'Below 52 Wks', width: 150, sort: 'int', fillspace:true, template: function(obj) {
-                          return obj['below52WksPer'] + '%' + "(" +  obj['below52Wks'] + ")"
-                        }
-                        }
-                      ]   
-                    }
+                      body:{
+                        view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, 
+                        data: [], 
+                        columns: [
+                          {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'}, 
+                          {id:'per', header: '52 Wks %', width: 200, sort: 'int',template: function(obj) {
+                            return obj['per'] + '%' + "(" +  obj['pol'] + ")"
+                          }}, 
+                          {id:'below52WksPer', header: 'Below 52 Wks', width: 150, sort: 'int', fillspace:true, template: function(obj) {
+                            return obj['below52WksPer'] + '%' + "(" +  obj['below52Wks'] + ")"
+                          }
+                          }
+                        ]   
+                      }
                     },
                     {height: 30}
                   ]
                 }
-              }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'watchListViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      view:'datatable', hover:"myhover",css: "rows", id:'watchListDatatableId', 
+                      data: [],
+                      rowHeight: 180,
+                      columns: [
+                        {id:'name', header: ['Strategy Details', {content: 'textFilter'}], width: 200, sort: 'string'}, 
+                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 400, sort: 'int',template: function(obj) {
+                          return displayStrategyEntryDetails(obj)
+                        }}, 
+                        {id:'pol', header: ['Profit / Loss', {content: 'numberFilter'}], width: 400, sort: 'int', fillspace:true, template: function(obj) {
+                          return displayStrategyLatestDetails(obj)
+                        }
+                        },
+                        {id:'action', header: 'Action', width: 100, template: function(obj) {
+                          return '<div><button onclick="deleteWatchList(\''+ obj.key + '\')">Delete</button></div>'
+                        }},
+                      ]   
+                    }
+                  ]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'maxPainForAllViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      view:'datatable', hover:"myhover",css: "rows", id:'maxPainForAllDatatableId', 
+                      data: [],
+                      columns: [
+                        {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
+                        {id:'max_pain', header: 'Max Pain', width: 200,}, 
+                        {id:'today_close', header: 'Todays Close', width: 200},
+                        {id:'prev_close', header: 'Previous Close', width: 200, fillspace:true},
+                      ]   
+                    }
+                  ]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'nifty50StockViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    {
+                      view:'datatable', hover:"myhover",css: "rows", id:'nifty50StockDatatableId', 
+                      data: [],
+                      columns: [
+                        {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
+                        {id:'last_trade_price', header: 'LTP', width: 200,}, 
+                        {id:'change', header: 'Change', width: 200,}, 
+                        {id:'change_per', header: ['Percentage (%)', {content: 'numberFilter'}], width: 200, sort: 'int', fillspace:true}, 
+                      ]   
+                    }
+                  ]
+                }
+              },
             ]
           }
         ]
@@ -1727,7 +1812,7 @@ webix.ready(function () {
   })
   webix.delay(()=> webix.extend($$("mainWinId"), webix.ProgressBar))
 })
-// Short Strangle Strategy
+
 function shortStrangleCal(peOTM, ceOTM) {
 
   peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - 300) )
@@ -1735,12 +1820,18 @@ function shortStrangleCal(peOTM, ceOTM) {
 
   let resultArr = []
   for(let i=0;i<peOTM.length; i++) {
+    if(peOTM[i][5]<2 || peOTM[i][3]<100) {
+      continue;
+    }
       let sellPut = {
           strikePrice: peOTM[i][0],
           premium: peOTM[i][1],
           lotSize: 1
       }
       for(let j=0;j<ceOTM.length; j++) {
+        if(ceOTM[j][5]<2|| ceOTM[j][3]<100) {
+          continue;
+        }
           let sellCall = {
               strikePrice: ceOTM[j][0],
               premium: ceOTM[j][1],
@@ -1759,14 +1850,16 @@ function shortStrangleCal(peOTM, ceOTM) {
               range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
               ceSt: sellCall.strikePrice,
               cePre: sellCall.premium,
+              ceiv: ceOTM[j][5],
               peSt: sellPut.strikePrice,
               pePre: sellPut.premium,
+              peiv: peOTM[i][5],
               upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
               downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
           })
       }
   }
-  console.dir(resultArr)
+  //console.dir(resultArr)
   return resultArr;
 }
 function displayShortStrangle() {
@@ -1813,6 +1906,18 @@ function displayShortStrangle() {
             let sellCallSt = obj.ceSt
             let sellCallPre = obj.cePre
             let premiumRec = obj.premiumRec
+
+            WatchObj = {
+              key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+sellCallSt,
+              name: 'Short Strangle',
+              script: SelectedScript,
+              expiryDate: SelectedExpiryDate,
+              lotSize: fetchScriptConfig().lotSize,
+              createDate: new Date,
+              pol:0,
+              sellPut: [{strikePrice: sellPutSt, lots: 1, entryPremium: sellPutPre, entryIV: obj.peiv, latestPremium: sellPutPre, latestIV: obj.peiv, pl: 0}],
+              sellCall: [{strikePrice: sellCallSt, lots: 1, entryPremium: sellCallPre, entryIV: obj.ceiv, latestPremium: sellCallPre, latestIV: obj.ceiv, pl: 0}],
+            }
             webix.ui({
               view: "window",
               width: window.innerWidth - 2,
@@ -1852,6 +1957,18 @@ function displayShortStrangle() {
                       rows: [
                         {view:'template', template: ''},
                         {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
+                        {view:'button', label: 'Watch It', click: function() {
+
+                          let r = WatchList.filter(obj => obj.key == WatchObj.key)
+                          if(r.length == 0) {
+                            WatchList.push(WatchObj)
+                            webix.storage.local.put('WatchList', WatchList)
+                            webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
+                          } else {
+                            webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
+                          }
+                          
+                        }},
                       ]
                     },
                   ]},
@@ -1863,7 +1980,6 @@ function displayShortStrangle() {
           }
         }
       },
-      
     }).show()
 }
 function ironConderCal(peOTM, ceOTM) {
@@ -1948,7 +2064,10 @@ function ironConderCal(peOTM, ceOTM) {
               cePre: sellCall.premium,
               peSt: sellPut.strikePrice,
               pePre: sellPut.premium,
-
+              sellPutIV: peOTM[sp][5],
+              buyPutIV: peOTM[bp][5],
+              sellCallIV: ceOTM[sc][5],
+              buyCallIV: ceOTM[bc][5],
               upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
               downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
           })
@@ -1956,7 +2075,7 @@ function ironConderCal(peOTM, ceOTM) {
       }
     }
   }
-  console.dir(resultArr)
+  //console.dir(resultArr)
   return resultArr;
 }
 function displayIronConderStrangle() {
@@ -2008,6 +2127,20 @@ function displayIronConderStrangle() {
             let sellCallSt = obj.sellCallSt
             let sellCallPre = obj.sellCallPre
             let premiumRec = obj.premiumRec
+
+            WatchObj = {
+              key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt+","+'IronCondor',
+              name: 'Iron Condor',
+              script: SelectedScript,
+              expiryDate: SelectedExpiryDate,
+              lotSize: fetchScriptConfig().lotSize,
+              createDate: new Date,
+              pol:0,
+              sellPut: [{strikePrice: sellPutSt, lots: 1, entryPremium: sellPutPre, entryIV: obj.sellPutIV, latestPremium: sellPutPre, latestIV: obj.sellPutIV, pl: 0}],
+              sellCall: [{strikePrice: sellCallSt, lots: 1, entryPremium: sellCallPre, entryIV: obj.sellCallIV, latestPremium: sellCallPre, latestIV: obj.sellCallIV, pl: 0}],
+              buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: obj.buyPutIV, latestPremium: buyPutPre, latestIV: obj.buyPutIV, pl: 0}],
+              buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: obj.buyCallIV, latestPremium: buyCallPre, latestIV: obj.buyCallIV, pl: 0}],
+            }
             webix.ui({
               view: "window",
               width: window.innerWidth - 2,
@@ -2049,7 +2182,17 @@ function displayIronConderStrangle() {
                       rows: [
                         {view:'template', template: ''},
                         {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
-                        {view:'template', borderless:true, template: ''},
+                        {view:'button', label: 'Watch It', click: function() {
+
+                          let r = WatchList.filter(obj => obj.key == WatchObj.key)
+                          if(r.length == 0) {
+                            WatchList.push(WatchObj)
+                            webix.storage.local.put('WatchList', WatchList)
+                            webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
+                          } else {
+                            webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
+                          }
+                        }},
                       ]
                     },
                   ]},
@@ -2079,7 +2222,7 @@ function DecimalFixed(val) {
   return num;
 }
 function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
-  webix.storage.local.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
+  webix.storage.session.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
   dispatchChangeEvent('#optionHistoryId')
 }
 let GlobalMarketHeader = [{id: 'country', header:'Country'}, {id: 'exchange', header: 'Stock Exchange'},
@@ -2343,4 +2486,206 @@ function yearWisePercentageCal() {
   })
   console.dir(sArr)
   return sArr
+}
+function watchListCal() {
+  let OptionData = webix.storage.local.get('OptionChainData')
+  WatchList = webix.storage.local.get('WatchList')
+  for(let i=0;i<WatchList.length;i++) {
+      let strategy = WatchList[i]
+      strategy.pol = 0
+      let optionDataArr = OptionData[strategy.script]['data'][strategy.expiryDate]
+      if(optionDataArr) {
+          // Sell Put
+          if(strategy.sellPut) {
+              for(let j=0;j<strategy.sellPut.length; j++) {
+                  let sp = strategy.sellPut[j]
+                  for(let k=0; k<optionDataArr.length; k++) {
+                      let st = Object.keys(optionDataArr[k])[0]
+                      if(st == sp.strikePrice) {
+                          let pe = optionDataArr[k][st]['PE']
+                          if(pe) {
+                              sp.latestPremium = pe.askPrice
+                              sp.pl = sp.lots * (sp.entryPremium - sp.latestPremium) * strategy.lotSize
+                              strategy.pol += sp.pl
+                              sp.latestIV = pe.impliedVolatility
+                          }
+                      }
+                  }
+              }
+          }
+          // Buy Put
+          if(strategy.buyPut) {
+              for(let j=0;j<strategy.buyPut.length; j++) {
+                  let bp = strategy.buyPut[j]
+                  for(let k=0; k<optionDataArr.length; k++) {
+                      let st = Object.keys(optionDataArr[k])[0]
+                      if(st == bp.strikePrice) {
+                          let pe = optionDataArr[k][st]['PE']
+                          if(pe) {
+                              bp.latestPremium = pe.bidprice
+                              bp.pl = bp.lots * (bp.latestPremium - bp.entryPremium) * strategy.lotSize
+                              strategy.pol += bp.pl
+                              bp.latestIV = pe.impliedVolatility
+                          }
+                      }
+                  }
+              }
+          }
+          // Sell Call
+          if(strategy.sellCall) {
+              for(let j=0;j<strategy.sellCall.length; j++) {
+                  let sc = strategy.sellCall[j]
+                  for(let k=0; k<optionDataArr.length; k++) {
+                      let st = Object.keys(optionDataArr[k])[0]
+                      if(st == sc.strikePrice) {
+                          let ce = optionDataArr[k][st]['CE']
+                          if(ce) {
+                              sc.latestPremium = ce.askPrice
+                              sc.pl = sc.lots * (sc.entryPremium - sc.latestPremium) * strategy.lotSize
+                              strategy.pol += sc.pl
+                              sc.latestIV = ce.impliedVolatility
+                          }
+                      }
+                  }
+              }
+          }
+          // Buy Call
+          if(strategy.buyCall) {
+              for(let j=0;j<strategy.buyCall.length; j++) {
+                  let bc = strategy.buyCall[j]
+                  for(let k=0; k<optionDataArr.length; k++) {
+                      let st = Object.keys(optionDataArr[k])[0]
+                      if(st == bc.strikePrice) {
+                          let ce = optionDataArr[k][st]['CE']
+                          if(ce) {
+                              bc.latestPremium = ce.askPrice
+                              bc.pl = bc.lots * (bc.entryPremium - bc.latestPremium) * strategy.lotSize
+                              strategy.pol += bc.pl
+                              bc.latestIV = ce.impliedVolatility
+                          }
+                      }
+                  }
+              }
+          }
+          strategy.pol = parseFloat(parseFloat(strategy.pol).toFixed(2))
+      }
+  }
+  webix.storage.local.put('WatchList', WatchList)
+}
+function displayStrategyEntryDetails(obj){
+  if(obj.name == 'Short Gamma') {
+    return `<div style="width:100%;">
+            Script: <b>${obj.script}</b><br>
+            Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
+            Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
+
+            Buy <b>${obj.buyCall[0].lots}</b> lot of <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].entryPremium}</b> IV: ${obj.buyCall[0].entryIV}<br>
+            Sell <b>${obj.sellCall[0].lots}</b> lots of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
+            Expiry Date: ${obj.expiryDate}
+          </div>`
+  } else if(obj.name == 'Short Strangle') {
+    return `<div style="width:100%;">
+            Script: <b>${obj.script}</b><br>
+            Sell <b>${obj.sellPut[0].lots}</b> lot of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
+            Sell <b>${obj.sellCall[0].lots}</b> lot of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
+            
+            Expiry Date: ${obj.expiryDate}
+          </div>`
+  } else if(obj.name == 'Iron Condor') {
+    return `<div style="width:100%;">
+            Script: <b>${obj.script}</b><br>
+            Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
+            Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
+
+            Sell <b>${obj.sellCall[0].lots}</b> lots of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
+            Buy <b>${obj.buyCall[0].lots}</b> lot of <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].entryPremium}</b> IV: ${obj.buyCall[0].entryIV}<br>
+            Expiry Date: ${obj.expiryDate}
+          </div>`
+  }
+  return ''
+}
+function displayStrategyLatestDetails(obj){
+  if(obj.name == 'Short Gamma') {
+    let style = 'style="color:#fd505c"'
+    if(obj.pol >= 0) {
+      style = 'style="color:#02a68a"'
+    }
+    return `<div style="width:100%;"><br>
+            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellPut[0].latestIV}<br>
+            <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
+            [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.buyPut[0].latestIV}<br>
+
+            <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].latestPremium}</b> 
+            [ ${parseFloat(obj.buyCall[0].latestPremium - obj.buyCall[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.buyCall[0].latestIV}<br>
+            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellCall[0].latestIV}<br>
+            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
+          </div>`
+  } else if(obj.name == 'Short Strangle') {
+    let style = 'style="color:#fd505c"'
+    if(obj.pol >= 0) {
+      style = 'style="color:#02a68a"'
+    }
+    return `<div style="width:100%;">
+            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellPut[0].latestIV}<br>
+
+            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellCall[0].latestIV}<br>
+            <br>
+            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
+          </div>`
+  } else if(obj.name == 'Iron Condor') {
+    let style = 'style="color:#fd505c"'
+    if(obj.pol >= 0) {
+      style = 'style="color:#02a68a"'
+    }
+    return `<div style="width:100%;"><br>
+            <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
+            [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.buyPut[0].latestIV}<br>
+            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellPut[0].latestIV}<br>
+            
+
+            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
+            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.sellCall[0].latestIV}<br>
+            <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].latestPremium}</b> 
+            [ ${parseFloat(obj.buyCall[0].latestPremium - obj.buyCall[0].entryPremium).toFixed(2)} ]
+            IV: ${obj.buyCall[0].latestIV}<br>
+            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
+          </div>`
+  }
+return ''
+}
+function deleteWatchList(key) {
+  if(confirm('Are you sure to delete the strategy?')) {
+    WatchList = webix.storage.local.get('WatchList')
+    let tempList = []
+    let flag = false
+    for(let i=0; i<WatchList.length; i++) {
+      if(WatchList[i].key != key) {
+        tempList.push(WatchList[i])
+      } else {
+        flag = true
+      }
+    }
+    flag && webix.delay(()=> {
+      webix.message({text: "Deleted the strategy item", type:"success"})
+      $$('watchListDatatableId').clearAll()
+      $$('watchListDatatableId').parse(tempList)
+    })
+    WatchList = tempList
+    webix.storage.local.put('WatchList', WatchList)
+  }
+  
 }

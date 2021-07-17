@@ -35,7 +35,9 @@
       position: relative;
       top: 24px;
     }
-
+    .rows .myhover {
+      background: #ccf3ed !important;
+    }
     .rows .webix_cell:nth-child(2n) {
       background-color: #d5f1cd !important;
     }
@@ -63,10 +65,6 @@
 
     div[view_id='strategyWinToolbarId'] {
       background-color: #abe8a7;
-    }
-
-    .myhover {
-      background: #F0DCB6;
     }
 
     .putBgColor {
@@ -105,23 +103,34 @@
     div[view_id="sidebarId"] .webix_selected {
       background-color: #b4efad !important;
     }
+    div[view_id="watchListDatatableId"] .webix_cell {
+      line-height: 30px !important;
+    }
 
-    
   </style>
 </head>
 
 <body>
   <input type="text" id="messageStatusId" hidden="true"/>
 
-  <input type="text" id="scriptInputId" hidden="true"/>
-  <input type="text" id="refreshOptionChainId" hidden="true"/>
+  <input type="text" id="optionChainReqId" hidden="true"/>
+  <input type="text" id="optionChainResId" hidden="true"/>
+
   <input type="text" id="worldMarketId" hidden="true"/>
+
   <input type="text" id="optionHistoryId" hidden="true"/>
   <input type="text" id="optionHistoryResId" hidden="true"/>
+
   <input type="text" id="scriptHistoryId" hidden="true"/>
 
   <input type="text" id="etDatepickerReqId" hidden="true"/>
   <input type="text" id="etDatepickerResId" hidden="true"/>
+
+  <input type="text" id="nifty50StocksReqId" hidden="true"/>
+  <input type="text" id="nifty50StocksResId" hidden="true"/>
+
+  <input type="text" id="maxPainStocksReqId" hidden="true"/>
+  <input type="text" id="maxPainStocksResId" hidden="true"/>
   
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
