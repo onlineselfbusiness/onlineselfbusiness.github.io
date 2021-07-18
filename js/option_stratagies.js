@@ -1122,11 +1122,10 @@ webix.ready(function () {
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
                 else if(id == 'maxPainStocks') {
                   showViewId('maxPainForAllViewId')
-                  dispatchChangeEvent('#maxPainStocksReqId')
+                  //dispatchChangeEvent('#maxPainStocksReqId')
               }
                 else if(id == 'nifty50Stocks') {
                   showViewId('nifty50StockViewId')
-                  dispatchChangeEvent('#nifty50StocksReqId')
                 }
                 else if(id == 'watchList') {
                   showViewId('watchListViewId')
@@ -1200,14 +1199,15 @@ webix.ready(function () {
                   rows: [
                     {
                       view: "toolbar", padding: 3, id:'optionChainToolbarId', elements: [
-                        { view: "label", label: "Option Chain" },
+                        { view: "label", width:100, label: "Option Chain" },
                         {
-                          view:"combo", width:200, labelWidth:50, id:"scriptId",
-                          label: 'Script:',  placeholder:"Please Select",
+                          view:"combo", width:130, id:"scriptId",
+                          placeholder:"Select Script",
                           options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
                           on:{
                             onChange: function(id){
                               SelectedScript = id
+                              $$('maxPainLabelId').setHTML('')
                               if(id == '') {
                                 $$('algoStrategyId').setValue('')
                                 $$('underlyingVal').setHTML('')
@@ -1240,12 +1240,18 @@ webix.ready(function () {
                                   $$('expiryDateId').define('options', [])
                                   webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
                                 }
+                                MaxPainList = webix.storage.local.get('MaxPainList')
+                                MaxPainList.forEach(v => {
+                                  if(v.symbol_name == SelectedScript) {
+                                    $$('maxPainLabelId').setHTML('Max Pain: <b>' + v.max_pain + '</b>')
+                                  }
+                                })
                               }
                             }
                           }
                         },
                         {
-                          view:"combo", width:210, labelWidth:85, id:"expiryDateId",
+                          view:"combo", width:200, labelWidth:85, id:"expiryDateId",
                           label: 'Expiry Date:',  placeholder:"Please Select",
                           options:[],on:{
                             onChange: function(id){
@@ -1324,16 +1330,17 @@ webix.ready(function () {
                                     $$('mainWinId').showProgress();
                                     webix.delay(() => { displayShortStrangle(); $$('mainWinId').hideProgress()})
                                     break
-                                    case '3':
-                                      $$('mainWinId').showProgress();
-                                      webix.delay(() => { displayIronConderStrangle(); $$('mainWinId').hideProgress()})
-                                      break
+                                  case '3':
+                                    $$('mainWinId').showProgress();
+                                    webix.delay(() => { displayIronConderStrangle(); $$('mainWinId').hideProgress()})
+                                    break
                                 }
                               }
                             }
                           }
                         },
                         {},
+                        {view: 'template', width: 150, template: '', id: 'maxPainLabelId', borderless:true},
                         {view:'template', width:200, template: '', id:'underlyingVal', borderless:true},
                         {view: "button", type: "icon", width:35, id:'upArrowId', icon: "mdi mdi-arrow-up", click: function() {
                           $$('downArrowId').show()
@@ -1570,7 +1577,7 @@ webix.ready(function () {
                             CalenderUI = processDataForCalenderUI(id)
                             $$('script_calendar').refresh()
                           }
-                          }
+                        }
                         },
                         {
                           view: "button", type: "icon", icon: "mdi mdi-download",
@@ -1604,19 +1611,14 @@ webix.ready(function () {
                   {
                     view:"calendar",
                     id:"script_calendar",
-                    //date:new Date(2021,5,23),
                     calendarHeader: "%F, %Y",
                     weekHeader:true,
                     skipEmptyWeeks: true,
                     cellHeight: 70,
                     events:webix.Date.isHoliday,
-                    //width:650,
-                    //height:400,
                     align: 'center',
-                    //borderless: false,
                     
                     dayTemplate: function(date){
-                        //console.dir(date)
                         let dArr = date.toDateString().split(' ')
                         let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
 
@@ -1630,6 +1632,33 @@ webix.ready(function () {
                             } else {
                                 html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
                             }
+                        } else if(dArr[0] == 'Sat') {
+                          let sat = new Date(dStr)
+                          sat.setDate(sat.getDate() - 5)
+                          dArr = sat.toDateString().split(' ')
+                          dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
+                          let sDate = ''
+                          let eDate = ''
+                          for(let i=0; i<5; i++) {
+                            if(sDate == '' && CalenderUI[dStr]) {
+                              sDate = dStr
+                            } else if(sDate != '' && CalenderUI[dStr]) {
+                              eDate = dStr
+                            }
+                            sat.setDate(sat.getDate() + 1)
+                            dArr = sat.toDateString().split(' ')
+                            dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
+                          }
+                          if(sDate != '' && eDate != '') {
+                            let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
+                            let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
+                            
+                            if(pol > 0) {
+                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;background-color: lightblue;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                            } else {
+                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;background-color: lightblue;'> <b>" + per + "%</b> <br/>" + pol + "</div>";
+                            }
+                          }
                         }
                         return html;
                     },
@@ -1718,10 +1747,13 @@ webix.ready(function () {
                     {
                       view:"align", align:"middle,center",
                       body:{
-                        view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, 
+                        view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, rowHeight: 70,
                         data: [], 
                         columns: [
-                          {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'}, 
+                          {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'},
+                          {id:'52Wks', header: 'High/Low', width: 220, template: function(obj){
+                            return obj.highPrice + ' / ' + obj.lowPrice + '<br>[' + obj.highPriceDate + ' / ' + obj.lowPriceDate + ']'
+                          }},
                           {id:'per', header: '52 Wks %', width: 200, sort: 'int',template: function(obj) {
                             return obj['per'] + '%' + "(" +  obj['pol'] + ")"
                           }}, 
@@ -1765,12 +1797,16 @@ webix.ready(function () {
                 }
               },
               {
-                view: "scrollview",
-                scroll: "auto",
                 id: 'maxPainForAllViewId',
                 hidden: true,
                 body: {
-                  rows: [
+                  rows: [{height:35, cols: [
+                        {},
+                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width:50, align: "center",
+                        click: function () {
+                          dispatchChangeEvent('#maxPainStocksReqId')
+                        }},{}
+                      ]},
                     {
                       view:'datatable', hover:"myhover",css: "rows", id:'maxPainForAllDatatableId', 
                       data: [],
@@ -1785,20 +1821,27 @@ webix.ready(function () {
                 }
               },
               {
-                view: "scrollview",
-                scroll: "auto",
                 id: 'nifty50StockViewId',
                 hidden: true,
                 body: {
                   rows: [
+                    {height:35, cols: [
+                      {},
+                      {view: "button", type: "icon", icon: "mdi mdi-refresh", width:50, align: "center",
+                      click: function () {
+                        dispatchChangeEvent('#nifty50StocksReqId')
+                      }},{}
+                    ]},
+                    
                     {
-                      view:'datatable', hover:"myhover",css: "rows", id:'nifty50StockDatatableId', 
+                      view:'datatable', hover:"myhover",css: "rows", id:'nifty50StockDatatableId',
                       data: [],
                       columns: [
                         {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
                         {id:'last_trade_price', header: 'LTP', width: 200,}, 
                         {id:'change', header: 'Change', width: 200,}, 
-                        {id:'change_per', header: ['Percentage (%)', {content: 'numberFilter'}], width: 200, sort: 'int', fillspace:true}, 
+                        {id:'change_per', header: ['Percentage (%)', {content: 'numberFilter'}], width: 200, sort: 'int'},
+                        {id:'dummy', header: '', fillspace:true},
                       ]   
                     }
                   ]
