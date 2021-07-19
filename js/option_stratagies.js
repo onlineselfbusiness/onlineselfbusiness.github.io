@@ -983,12 +983,14 @@ function initEventListeners() {
     let t = optionHistory.data
     for(let i=0; i<t.length-1; i++) {
       let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE']) / t[i+1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
-      d.push({'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%', changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE'])).toFixed(2)})
+      d.push({'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%', 
+      changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE'])).toFixed(2),
+      oi: t[i]['FH_OPEN_INT'], changeOI: parseInt(t[i]['FH_CHANGE_IN_OI'])})
     }
     webix.ui({
       view:"window",
       height:450,
-      width:400,
+      width:590,
       move: true,
       modal: true,
       id: 'optionHisWinId',
@@ -1002,7 +1004,8 @@ function initEventListeners() {
       body:{
         view:"datatable", hover:"myhover",css: "rows",
         columns:[{id: 'dateId', header: 'Date'},{id:'priceId', header: 'Price'},
-        {id:'changeId', header: 'Change'}, {id: 'perId', header: '%', fillspace:true}],
+        {id:'changeId', header: 'Change'}, {id: 'perId', header: '%'},
+        {id: 'oi', header: 'OI',fillspace:true}, {id:'changeOI', header: 'Change In OI', width: 120}],
         data: d
       }
     }).show();
@@ -1251,7 +1254,7 @@ webix.ready(function () {
                           }
                         },
                         {
-                          view:"combo", width:200, labelWidth:85, id:"expiryDateId",
+                          view:"combo", width:210, labelWidth:85, id:"expiryDateId",
                           label: 'Expiry Date:',  placeholder:"Please Select",
                           options:[],on:{
                             onChange: function(id){
@@ -1282,19 +1285,13 @@ webix.ready(function () {
                                 let d = new Date(sData.fetchTime)
                                 let now = new Date()
                                 if(now.getTime() > (d.getTime() + twoMinutes)) {
-                                  let e = new Event("change")
-                                  let element = document.querySelector('#optionChainReqId')
-                                  element.value = s
-                                  element.dispatchEvent(e)
+                                  dispatchChangeEvent('#optionChainReqId', s)
                                 } else {
                                   Underlying_Value = sData.underlyingValue
                                   $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 }
                               } else {
-                                let e = new Event("change")
-                                let element = document.querySelector('#optionChainReqId')
-                                element.value = s
-                                element.dispatchEvent(e)
+                                dispatchChangeEvent('#optionChainReqId', s)
                               }
                             }
                           }
@@ -1547,9 +1544,7 @@ webix.ready(function () {
                       $('#worldMarket').append('Loading ...');
                       $('#sgxNifty').empty();
                       $('#sgxNifty').append('Loading ...');
-                      let e = new Event("change")
-                      let element = document.querySelector('#worldMarketId')
-                      element.dispatchEvent(e)
+                      dispatchChangeEvent('#worldMarketId')
                     }},
                     {
                       cols:[
@@ -1585,10 +1580,7 @@ webix.ready(function () {
                           click: function () {
                             let id = $$('scriptCalendarId').getValue()
                             if(id != '') {
-                              let e = new Event("change")
-                              let element = document.querySelector('#scriptHistoryId')
-                              element.value = id
-                              element.dispatchEvent(e)
+                              dispatchChangeEvent('#scriptHistoryId', id)
                             } else {
 
                             }
@@ -1599,10 +1591,7 @@ webix.ready(function () {
                           width: 130, align: "left",
                           click: function () {
                             if(window.confirm('Are you sure to download all sripts')) {
-                              let e = new Event("change")
-                              let element = document.querySelector('#scriptHistoryId')
-                              element.value = ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() 
-                              element.dispatchEvent(e)
+                              dispatchChangeEvent('#scriptHistoryId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() )
                             }
                           }
                         },{width: 15}
@@ -1676,7 +1665,7 @@ webix.ready(function () {
                   rows: [
                     { height: 40,
                       cols:[{},
-                        { view:"datepicker", id:'etDatepickerId', value: new Date(),stringResult:true, width: 150 },
+                        { view:"datepicker", id:'etDatepickerId', value: new Date(),stringResult:true, width: 200 },
                         {view: "button", type: "icon", icon: "mdi mdi-download", height:35, width: 37, align: "center",
                       click: function () {
                         let sDate = $$('etDatepickerId').getValue().substr(0,10)
@@ -2010,7 +1999,7 @@ function displayShortStrangle() {
                           } else {
                             webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
                           }
-                          
+
                         }},
                       ]
                     },
@@ -2527,7 +2516,7 @@ function yearWisePercentageCal() {
       below52Wks: parseFloat(cClose - highPrice).toFixed(2)
     })
   })
-  console.dir(sArr)
+  //console.dir(sArr)
   return sArr
 }
 function watchListCal() {
