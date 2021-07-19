@@ -17,6 +17,9 @@ let SelectedScript = ''
 let SelectedExpiryDate = ''
 let CalenderUI = {}
 let WatchObj = undefined
+let OCChart
+let optionGraphSt = ''
+let optionGraphEd = ''
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
@@ -1032,6 +1035,11 @@ function initEventListeners() {
     $$('nifty50StockDatatableId').clearAll()
     $$('nifty50StockDatatableId').parse(Nifty50Stocks)
   })
+  
+  let ocGraphResId = document.querySelector('#ocGraphResId')
+  ocGraphResId.addEventListener('change', (e) => {
+    createChart()
+  })
 
   let messageStatusId = document.querySelector('#messageStatusId')
   messageStatusId.addEventListener('change', (e) => {
@@ -1410,11 +1418,13 @@ webix.ready(function () {
                             let st = Object.keys(row)[0]
                             let ce = row[st]['CE'] || {}
                             let pe = row[st]['PE'] || {}
+                            let ceIdentifier = ce.identifier
+                            let peIdentifier = pe.identifier
                             let ceClass = st<=closest ? 'bg-yellow' : ''
                             let peClass = st>closest ? 'bg-yellow' : ''
-                            let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
+                            let stRow = `<td width="6.34%" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
                             if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
-                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
+                              stRow = `<td width="6.34%" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
                             }
                             let ceChangeTx = ' redTxt'
                             if(ce.change > 0) {
@@ -2720,4 +2730,77 @@ function deleteWatchList(key) {
     webix.storage.local.put('WatchList', WatchList)
   }
   
+}
+
+function createChart() {
+  let seriesOptions = webix.storage.session.get('OptionChainGraph')
+  webix.ui({
+    view:"window",
+    height:500,
+    width:590,
+    move: true,
+    modal: true,
+    id: 'optionChartWinId',
+    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
+      { width:4 },
+      { view:"label", label: "Chart: Strike Price: " + optionGraphSt + ", Expiry Date: " + optionGraphEd},
+      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ $$('optionChartWinId').close(); OCChart.destroy();}}
+    ]
+    },
+    position:"center",
+    body:{
+      rows: [
+        {view: 'template', template: '<div id="optionChainGraph" style="width:100%;height:100%;"></div>'}]
+    },
+    on: {
+      onShow: function() {
+        try {
+          OCChart = Highcharts.stockChart('optionChainGraph', {
+              rangeSelector: {
+                  enabled: false,
+                  selected: 2,
+                  inputEnabled: false
+              },
+              credits: {
+                  enabled: false
+              },
+              navigator: {
+                  enabled: false
+              },
+              scrollbar: {
+                  enabled: false
+              },
+              yAxis: {
+                  opposite: false,
+                  plotLines: [{
+                      value: 0,
+                      width: 2,
+                      color: 'silver'
+                  }]
+              },
+              plotOptions: {
+                  series: {
+                      compare: 'percent',
+                      showInNavigator: true
+                  }
+              },
+              tooltip: {
+                  pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                  valueDecimals: 2,
+                  split: true
+              },
+              series: seriesOptions
+          });
+      } catch (err) {
+          console.log('err', err);
+      }
+      }
+    }
+  }).show();
+}
+
+function showOptionGraph(ce, pe, st, ed) {
+  optionGraphSt = st
+  optionGraphEd = ed
+  dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
 }
