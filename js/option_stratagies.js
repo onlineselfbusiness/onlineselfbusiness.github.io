@@ -1038,7 +1038,7 @@ function initEventListeners() {
   
   let ocGraphResId = document.querySelector('#ocGraphResId')
   ocGraphResId.addEventListener('change', (e) => {
-    createChart()
+    showOptionChart()
   })
 
   let messageStatusId = document.querySelector('#messageStatusId')
@@ -1422,9 +1422,9 @@ webix.ready(function () {
                             let peIdentifier = pe.identifier
                             let ceClass = st<=closest ? 'bg-yellow' : ''
                             let peClass = st>closest ? 'bg-yellow' : ''
-                            let stRow = `<td width="6.34%" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
+                            let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" alt="Graph" style="width: 13px;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
-                              stRow = `<td width="6.34%" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a></td>`
+                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" alt="Graph" style="width: 13px;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             }
                             let ceChangeTx = ' redTxt'
                             if(ce.change > 0) {
@@ -2732,8 +2732,8 @@ function deleteWatchList(key) {
   
 }
 
-function createChart() {
-  let seriesOptions = webix.storage.session.get('OptionChainGraph')
+function showOptionGraph(ce, pe, st, ed) {
+  
   webix.ui({
     view:"window",
     height:500,
@@ -2754,53 +2754,56 @@ function createChart() {
     },
     on: {
       onShow: function() {
-        try {
-          OCChart = Highcharts.stockChart('optionChainGraph', {
-              rangeSelector: {
-                  enabled: false,
-                  selected: 2,
-                  inputEnabled: false
-              },
-              credits: {
-                  enabled: false
-              },
-              navigator: {
-                  enabled: false
-              },
-              scrollbar: {
-                  enabled: false
-              },
-              yAxis: {
-                  opposite: false,
-                  plotLines: [{
-                      value: 0,
-                      width: 2,
-                      color: 'silver'
-                  }]
-              },
-              plotOptions: {
-                  series: {
-                      compare: 'percent',
-                      showInNavigator: true
-                  }
-              },
-              tooltip: {
-                  pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
-                  valueDecimals: 2,
-                  split: true
-              },
-              series: seriesOptions
-          });
-      } catch (err) {
-          console.log('err', err);
-      }
+        document.getElementById("optionChainGraph").innerHTML = loader
+        optionGraphSt = st
+        optionGraphEd = ed
+        dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
       }
     }
   }).show();
 }
 
-function showOptionGraph(ce, pe, st, ed) {
-  optionGraphSt = st
-  optionGraphEd = ed
-  dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
+function showOptionChart() {
+  document.getElementById("optionChainGraph").innerHTML = ''
+  let seriesOptions = webix.storage.session.get('OptionChainGraph')
+  try {
+    OCChart = Highcharts.stockChart('optionChainGraph', {
+        rangeSelector: {
+            enabled: false,
+            selected: 2,
+            inputEnabled: false
+        },
+        credits: {
+            enabled: false
+        },
+        navigator: {
+            enabled: false
+        },
+        scrollbar: {
+            enabled: false
+        },
+        yAxis: {
+            opposite: false,
+            plotLines: [{
+                value: 0,
+                width: 2,
+                color: 'silver'
+            }]
+        },
+        plotOptions: {
+            series: {
+                compare: 'percent',
+                showInNavigator: true
+            }
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+            valueDecimals: 2,
+            split: true
+        },
+        series: seriesOptions
+    });
+  } catch (err) {
+      console.log('err', err);
+  }
 }
