@@ -18,8 +18,6 @@ let SelectedExpiryDate = ''
 let CalenderUI = {}
 let WatchObj = undefined
 let OCChart
-let optionGraphSt = ''
-let optionGraphEd = ''
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
@@ -2736,7 +2734,7 @@ function showOptionGraph(ce, pe, st, ed) {
     id: 'optionChartWinId',
     head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
       { width:4 },
-      { view:"label", label: "Chart: Strike Price: " + optionGraphSt + ", Expiry Date: " + optionGraphEd},
+      { view:"label", label: "Chart: Strike Price: " + st + ", Expiry Date: " + ed},
       { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
         $$('optionChartWinId').close(); 
         OCChart.destroy();
@@ -2753,10 +2751,7 @@ function showOptionGraph(ce, pe, st, ed) {
         //showVolatilitySmileChart()
 
         document.getElementById("optionChainGraph").innerHTML = loader
-        optionGraphSt = st
-        optionGraphEd = ed
         dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
-        
       }
     }
   }).show();
