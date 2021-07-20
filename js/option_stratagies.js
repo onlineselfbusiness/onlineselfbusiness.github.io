@@ -1,4 +1,4 @@
-
+let twoMinutes = 2 * 60 * 1000 + 15 * 1000
 let globalConfig = {
   'default': { lotSize: 1, lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
   'BANKNIFTY': { lotSize: 25, lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
@@ -23,31 +23,26 @@ let optionGraphEd = ''
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
-
 let WatchList = webix.storage.local.get('WatchList')
 if (!WatchList) {
   WatchList = []
   webix.storage.local.put('WatchList', WatchList)
 }
-
 let MaxPainList = webix.storage.local.get('MaxPainList')
 if (!MaxPainList) {
   MaxPainList = []
   webix.storage.local.put('MaxPainList', MaxPainList)
 }
-
 let ContinuousWiseData = webix.storage.local.get('ContinuousWiseData')
 if (!ContinuousWiseData) {
   ContinuousWiseData = {}
   webix.storage.local.put('ContinuousWiseData', ContinuousWiseData)
 }
-
 let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
 if (!ScriptHistoryData) {
   ScriptHistoryData = {}
   webix.storage.local.put('ScriptHistoryData', ScriptHistoryData)
 }
-
 let OptionChainData = webix.storage.local.get('OptionChainData')
 if (!OptionChainData) {
   OptionChainData = {}
@@ -416,8 +411,6 @@ function addCustomRow(config, label, strikeId, premiumId) {
   config.count = config.count + 1
 
 }
-let twoMinutes = 2 * 60 * 1000 + 15 * 1000
-
 function formatDateWiseData() {
   let optionChain = webix.storage.local.get('optionChain')
   let data = optionChain.data['08-Jul-2021']
@@ -1361,7 +1354,7 @@ webix.ready(function () {
                     },
                     { view: 'template', id: 'optionChainTemplateId', template: function(obj) {
                       //console.dir(obj)
-                      
+
                       let start = `<div class="optionChainApp1" style="overflow:auto;width:100%;height:100%;"><div class="customTable-width optionChainTable wordBreak borderTD">
                       <table id="optionChainTable-indices" class="common_table w-100">
                         <thead>
@@ -1422,9 +1415,9 @@ webix.ready(function () {
                             let peIdentifier = pe.identifier
                             let ceClass = st<=closest ? 'bg-yellow' : ''
                             let peClass = st>closest ? 'bg-yellow' : ''
-                            let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" alt="Graph" style="width: 13px;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
+                            let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
-                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" alt="Graph" style="width: 13px;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
+                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             }
                             let ceChangeTx = ' redTxt'
                             if(ce.change > 0) {
@@ -1435,8 +1428,8 @@ webix.ready(function () {
                               peChangeTx = ' greenTxt'
                             }
 
-                            let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
-                            let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;"></span>`
+                            let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
+                            let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
 
                             let ceOI1 = ''
                             if(DecimalFixed(st).replaceAll(',', '') == R1) {
@@ -1476,7 +1469,7 @@ webix.ready(function () {
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidprice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askQty, true)}</td>
-                            <td width="4.34%" class="${peClass} ${peChangeTx}">${parseFloat(pe.change).toFixed(2)}</td>
+                            <td width="4.34%" class="${peClass} ${peChangeTx}">${DecimalFixed(pe.change)}</td>
                             <td width="4.34%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.lastPrice)}</a></td>
                             <td width="3.34%" class="${peClass}">${DecimalFixed(pe.impliedVolatility)}</td>
                             <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
@@ -1486,7 +1479,7 @@ webix.ready(function () {
                             </tr>`
                             start = start + r
                           }
-                          
+
                           $$('underlyingVal').setHTML( '<b>' +SelectedScript + ': ' + DecimalFixed(Underlying_Value) + '</b><br>' + obj.timestamp)
                       } else {
                         $$('underlyingVal').setHTML('')
@@ -2733,7 +2726,7 @@ function deleteWatchList(key) {
 }
 
 function showOptionGraph(ce, pe, st, ed) {
-  
+
   webix.ui({
     view:"window",
     height:500,
@@ -2744,8 +2737,11 @@ function showOptionGraph(ce, pe, st, ed) {
     head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
       { width:4 },
       { view:"label", label: "Chart: Strike Price: " + optionGraphSt + ", Expiry Date: " + optionGraphEd},
-      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ $$('optionChartWinId').close(); OCChart.destroy();}}
-    ]
+      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
+        $$('optionChartWinId').close(); 
+        OCChart.destroy();
+       }
+      }]
     },
     position:"center",
     body:{
@@ -2754,10 +2750,13 @@ function showOptionGraph(ce, pe, st, ed) {
     },
     on: {
       onShow: function() {
+        //showVolatilitySmileChart()
+
         document.getElementById("optionChainGraph").innerHTML = loader
         optionGraphSt = st
         optionGraphEd = ed
         dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
+        
       }
     }
   }).show();
@@ -2806,4 +2805,35 @@ function showOptionChart() {
   } catch (err) {
       console.log('err', err);
   }
+}
+
+function showVolatilitySmileChart() {
+  prepareStrikeWithPremium()
+  let vs = []
+  CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+  PE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+  try {
+    Highcharts.chart('optionChainGraph', {
+      title: { text: '' },
+      yAxis: {
+          title: { text: '' }
+      },
+      plotOptions: {
+          series: {
+              label: {
+                  connectorAllowed: false
+              },
+          }
+      },
+
+      series: [{
+          name: 'Volatility Smile',
+          data: vs
+      }, ],
+  
+  });
+  }catch(e) {
+
+  }
+
 }
