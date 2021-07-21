@@ -426,7 +426,6 @@ function prepareStrikeWithPremium() {
   CE_ITM = []
 
   let sData = OptionChainData[SelectedScript]
-  Underlying_Value = parseInt(sData.underlyingValue)
   let ocArr = sData.data[SelectedExpiryDate]
   let allOcs = []
   for (let i = 0; i < ocArr.length; i++) {
@@ -729,7 +728,7 @@ function displayShortGamma() {
               ]
             }
           }).show();
-          displayStrategyChart(this.data.pull[id.row].data, Underlying_Value)
+          displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
         }
       }
     }
@@ -1212,7 +1211,7 @@ webix.ready(function () {
                               $$('maxPainLabelId').setHTML('')
                               if(id == '') {
                                 $$('algoStrategyId').setValue('')
-                                $$('underlyingVal').setHTML('')
+                                $$('underlyingValId').setHTML('')
                                 $$('expiryDateId').define('options', [])
                                 $$('expiryDateId').setValue('')
                                 SelectedExpiryDate = ''
@@ -1254,7 +1253,7 @@ webix.ready(function () {
                         },
                         {
                           view:"combo", width:210, labelWidth:85, id:"expiryDateId",
-                          label: 'Expiry Date:',  placeholder:"Please Select",
+                          label: 'Expiry Date:',  placeholder:"Select Date",
                           options:[],on:{
                             onChange: function(id){
                               //console.dir(id)
@@ -1297,7 +1296,7 @@ webix.ready(function () {
                         },
                         {
                           view:"combo", width:250, labelWidth:100, id:'algoStrategyId',
-                          label: 'Algo Strategy:', placeholder:"Please Select", popupWidth: 600,
+                          label: 'Algo Strategy:', placeholder:"Select Strategy", popupWidth: 600,
                           options:[
                             { id:1, value:"Short Gamma Spread" },
                             { id:2, value:"Short Strangle" }, 
@@ -1336,8 +1335,8 @@ webix.ready(function () {
                           }
                         },
                         {},
-                        {view: 'template', width: 150, template: '', id: 'maxPainLabelId', borderless:true},
-                        {view:'template', width:200, template: '', id:'underlyingVal', borderless:true},
+                        {view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless:true},
+                        {view:'template', width:160, template: '', id:'underlyingValId', borderless:true},
                         {view: "button", type: "icon", width:35, id:'upArrowId', icon: "mdi mdi-arrow-up", click: function() {
                           $$('downArrowId').show()
                           $$('mainToolbarId').hide()
@@ -1478,9 +1477,22 @@ webix.ready(function () {
                             start = start + r
                           }
 
-                          $$('underlyingVal').setHTML( '<b>' +SelectedScript + ': ' + DecimalFixed(Underlying_Value) + '</b><br>' + obj.timestamp)
+                          let currVal = '<b>' + Underlying_Value + '</b> ' + '<br>' + obj.timestamp
+                          try {
+                            let preClose = ScriptHistoryData[SelectedScript][0][4]
+                            let per = toFixed((preClose - Underlying_Value) / preClose * 100, 2)+ '%'
+                            let diff = toFixed(preClose - Underlying_Value, 2)
+
+                            if(parseFloat(per)<0) {
+                              currVal = '<span style="color:#fd505c">'+ '<b>' + Underlying_Value + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                            } else {
+                              currVal = '<span style="color:#02a68a">'+ '<b>' + Underlying_Value + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                            }
+                          } catch(e){}
+
+                          $$('underlyingValId').setHTML(  currVal )
                       } else {
-                        $$('underlyingVal').setHTML('')
+                        $$('underlyingValId').setHTML('')
                         webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
                       }
                       let end = `  </tbody>
@@ -1876,9 +1888,9 @@ function shortStrangleCal(peOTM, ceOTM) {
           resultArr.push({
               data: d,
               lowerBound: lowerBound,
-              lowerBoundDiff: lowerBound + " (-" + (Underlying_Value-lowerBound) + ")",
+              lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
               uppderBound: uppderBound,
-              uppderBoundDiff: uppderBound + " (+" + (uppderBound - Underlying_Value) + ")",
+              uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
               premiumRec: parseFloat(sellPut.premium + sellCall.premium).toFixed(2),
               range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
               ceSt: sellCall.strikePrice,
@@ -1976,22 +1988,21 @@ function displayShortStrangle() {
                   { id: 'inputInfoId', height: 70, cols: [
                     {
                       rows: [
-                        {view:'template', template: '<div style="text-align: center;">PUT</div>'},
+                        {view:'template', borderless:true, template: '<div style="text-align: center;">PUT</div>'},
                         {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellPutSt + '</b>PE @ ₹<b>'+ sellPutPre + '</b></div>'},
                       ]
                     },
                     {
                       rows: [
-                        {view:'template', template: '<div style="text-align: center;">CALL</div>'},
+                        {view:'template', borderless:true, template: '<div style="text-align: center;">CALL</div>'},
                         {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellCallSt + '</b>CE @ ₹<b>'+ sellCallPre + '</b></div>'},
                       ]
                     },
                     {
                       rows: [
-                        {view:'template', template: ''},
+                        {view:'template', borderless:true, template: ''},
                         {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
                         {view:'button', label: 'Watch It', click: function() {
-
                           let r = WatchList.filter(obj => obj.key == WatchObj.key)
                           if(r.length == 0) {
                             WatchList.push(WatchObj)
@@ -2009,7 +2020,7 @@ function displayShortStrangle() {
                 ]
               }
             }).show();
-            displayStrategyChart(this.data.pull[id.row].data, Underlying_Value)
+            displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
           }
         }
       },
@@ -2078,9 +2089,9 @@ function ironConderCal(peOTM, ceOTM) {
           resultArr.push({
               data: d,
               lowerBound: lowerBound,
-              lowerBoundDiff: lowerBound + " (-" + (Underlying_Value-lowerBound) + ")",
+              lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
               uppderBound: uppderBound,
-              uppderBoundDiff: uppderBound + " (+" + (uppderBound - Underlying_Value) + ")",
+              uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
               premiumRec: parseFloat(ceCreditAmt + peCreditAmt).toFixed(2),
               maxLoss: parseFloat(sellPut.strikePrice - buyPut.strikePrice - (ceCreditAmt + peCreditAmt)).toFixed(2),
               buyPutSt: buyPut.strikePrice,
@@ -2233,7 +2244,7 @@ function displayIronConderStrangle() {
                 ]
               }
             }).show();
-            displayStrategyChart(this.data.pull[id.row].data, Underlying_Value)
+            displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
           }
         }
       },
@@ -2831,4 +2842,8 @@ function showVolatilitySmileChart() {
 
   }
 
+}
+function toFixed(num, fixed) {
+  var re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
+  return num.toString().match(re)[0];
 }
