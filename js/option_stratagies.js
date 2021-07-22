@@ -1336,7 +1336,7 @@ webix.ready(function () {
                         },
                         {},
                         {view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless:true},
-                        {view:'template', width:160, template: '', id:'underlyingValId', borderless:true},
+                        {view:'template', width:190, template: '', id:'underlyingValId', borderless:true},
                         {view: "button", type: "icon", width:35, id:'upArrowId', icon: "mdi mdi-arrow-up", click: function() {
                           $$('downArrowId').show()
                           $$('mainToolbarId').hide()
@@ -1480,8 +1480,8 @@ webix.ready(function () {
                           let currVal = '<b>' + Underlying_Value + '</b> ' + '<br>' + obj.timestamp
                           try {
                             let preClose = ScriptHistoryData[SelectedScript][0][4]
-                            let per = toFixed((preClose - Underlying_Value) / preClose * 100, 2)+ '%'
-                            let diff = toFixed(preClose - Underlying_Value, 2)
+                            let per = toFixed((Underlying_Value - preClose) / Underlying_Value * 100, 2)+ '%'
+                            let diff = toFixed(Underlying_Value - preClose, 2)
 
                             if(parseFloat(per)<0) {
                               currVal = '<span style="color:#fd505c">'+ '<b>' + Underlying_Value + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
@@ -1490,7 +1490,7 @@ webix.ready(function () {
                             }
                           } catch(e){}
 
-                          $$('underlyingValId').setHTML(  currVal )
+                          $$('underlyingValId').setHTML( currVal )
                       } else {
                         $$('underlyingValId').setHTML('')
                         webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
