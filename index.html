@@ -7,6 +7,7 @@
   <!---->
   <link rel="stylesheet" href="https://cdn.webix.com/materialdesignicons/5.8.95/css/materialdesignicons.min.css"/>
   <link rel="stylesheet" href="https://cdn.webix.com/8.3/webix.css" type="text/css">
+
   <script src="https://cdn.webix.com/8.3/webix.js" type="text/javascript"></script>
 
   <script src="https://cdn.amcharts.com/lib/3/amcharts.js"></script>
@@ -88,7 +89,7 @@
 
     div[view_id='optionChainTemplateId'] .webix_icon_btn { font-size: 16px !important}
     .optionChainTable tr:hover td { background-color:#c9f3ce !important}
-
+    
     .rows .hover {background-color:#d5f1cd !important}
 
     .green1 {background-color: rgb(10, 245, 10) !important;}
@@ -111,6 +112,46 @@
     div[view_id="yearWiseDatatableId"] .webix_cell {
       line-height: 30px !important;
     }
+
+    .tgl_vid_aud.active {
+    background: #2fb381;
+  }
+    .tgl_vid_aud {
+    width: 32px;
+    height: 17px;
+    background: #e9610c;
+    display: inline-block;
+    border-radius: 20px;
+    position: relative;
+    vertical-align: middle;
+    padding: 1px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: 0.5s all;
+  }
+  .tgl_vid_aud.active .tgic {
+    left: 16px;
+    top: 1px;
+    -webkit-animation-name: audioright;
+    -webkit-animation-duration: 2s;
+    animation-name: audioright;
+    animation-duration: 2s;
+}
+.tgl_vid_aud .tgic {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    right: 16px;
+    top: 1px;
+    box-shadow: 1px 1px 2px #666;
+    -webkit-animation-name: videoleft;
+    -webkit-animation-duration: 2s;
+    animation-name: videoleft;
+    animation-duration: 2s;
+}
 
   </style>
 </head>
@@ -142,7 +183,20 @@
   
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
+<script>
 
+$(function() {
+  $( document ).on( "click", "div.tgl_vid_aud", function() {
+    //alert($(this).data('action'))
+    if($(this).hasClass('active')){
+		$(this).removeClass('active');
+    }else{		
+      $(this).addClass('active');
+    }
+});
+})
+
+</script>
 </body>
 
 </html>

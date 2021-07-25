@@ -1200,7 +1200,8 @@ webix.ready(function () {
                   rows: [
                     {
                       view: "toolbar", padding: 3, id:'optionChainToolbarId', elements: [
-                        { view: "label", width:100, label: "Option Chain" },
+                        //{ view: "label", width:100, label: "Option Chain" },
+                        {view: "button", type: "icon", width: 37, align: "left", icon: "mdi mdi-table-settings", id:"tableSettingsId", popup:"table_pop"},
                         {
                           view:"combo", width:130, id:"scriptId",
                           placeholder:"Select Script",
@@ -1664,6 +1665,74 @@ webix.ready(function () {
                         }
                         return html;
                     },
+                    on : {
+                      onAfterMonthChange: function(prev_date, next_date) {
+                        let date = prev_date
+                        let dArr = date.toDateString().split(' ')
+                        let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
+                        let ds = dStr.substr(3)
+
+                        let sDate = ''
+                        let eDate = ''
+                        let cArr = Object.keys(CalenderUI)
+                        for(let i=0; i<cArr.length-1; i++) {
+                          let d = cArr[i]
+                          if(eDate == '' && ds == d.substr(3)) {
+                            sDate = d
+                            eDate = d
+                          } else if(eDate != '' && ds == d.substr(3)) {
+                            sDate = d
+                          }
+                        }
+
+                        if(sDate != '' && eDate != '') {
+                          let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
+                          let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
+                          
+                          if(pol > 0) {
+                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> " + pol + "</span>";
+                          } else {
+                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> " + pol + "</span>";
+                          }
+                          $('.webix_cal_month_name').html($('.webix_cal_month_name').text() + ' ' + html)
+                        }
+                      },
+                      onAfterZoom: function() {
+                        let months = $('.webix_cal_body>.webix_cal_block span')
+                        if(months.length>0) {
+                          let year = $('.webix_cal_month span').get(0).innerHTML
+                          for(let i=0; i<months.length; i++) {
+                            let my = months.get(i).innerHTML + '-' + year
+                            let cArr = Object.keys(CalenderUI)
+                            let sDate = ''
+                            let eDate = ''
+                            for(let i=0; i<cArr.length-1; i++) {
+                              let d = cArr[i]
+                              if(eDate == '' && my == d.substr(3)) {
+                                sDate = d
+                                eDate = d
+                              } else if(eDate != '' && my == d.substr(3)) {
+                                sDate = d
+                              }
+                            }
+                            if(sDate != '' && eDate != '') {
+                              let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
+                              let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
+                              if(pol > 0) {
+                                  html = "<span style='color:#1d922a;'><b>" + per + "%</b> " + pol + "</span>";
+                              } else {
+                                  html = "<span style='color:#d21616;'> <b>" + per + "%</b> " + pol + "</span>";
+                              }
+                              months.get(i).innerHTML = months.get(i).innerHTML + ' ' + html
+                            }
+                          }
+                          $('.webix_cal_block.webix_selected').removeClass('webix_selected')
+                        }
+                      },
+                      onAfterRender: function() {
+                        //alert('onAfterRender')
+                      }
+                    }
                 },
                 {height:10},
                   ]
@@ -1856,10 +1925,41 @@ webix.ready(function () {
     ]
   })
   webix.delay(()=> webix.extend($$("mainWinId"), webix.ProgressBar))
+
+  webix.ui({
+    view:"popup",
+    id:"table_pop",
+    
+    width: 220,
+    body:{
+      rows: [
+        { height: 30,
+          cols: [{view: 'template', template: 'Auto Refresh(2min)', borderless: true},
+            {view: 'template', borderless: true, width: 50, template: `
+            <div class="tgl_vid_aud active" data-action="toggle_price_refresh"><span class="tgic"></span></div>
+            `}
+          ]
+        },
+        {height: 30,
+          cols: [{view: 'template', template: 'Show Trend', borderless: true},
+            {view: 'template', borderless: true, width: 50, template: `
+            <div class="tgl_vid_aud active" data-action="toggle_price_refresh"><span class="tgic"></span></div>
+            `}
+          ]
+        },
+        {height: 30,
+          cols: [{view: 'template', template: 'Volatility Skew', borderless: true},
+            {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
+              showVolatilitySmileChart()
+            }}
+          ]
+        },
+      ]
+    }
+  }).hide();
 })
 
 function shortStrangleCal(peOTM, ceOTM) {
-
   peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - 300) )
   ceOTM = ceOTM.filter(obj => obj[1] > 10 && obj[0] > (Underlying_Value + 300))
 
@@ -1882,7 +1982,7 @@ function shortStrangleCal(peOTM, ceOTM) {
               premium: ceOTM[j][1],
               lotSize: 1
           }
-  
+
           let d = optionChainPayoffCal([], [sellCall], [], [sellPut], [], [])
           let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
           resultArr.push({
@@ -2733,9 +2833,7 @@ function deleteWatchList(key) {
   }
   
 }
-
 function showOptionGraph(ce, pe, st, ed) {
-
   webix.ui({
     view:"window",
     height:500,
@@ -2748,7 +2846,7 @@ function showOptionGraph(ce, pe, st, ed) {
       { view:"label", label: "Chart: Strike Price: " + st + ", Expiry Date: " + ed},
       { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
         $$('optionChartWinId').close(); 
-        OCChart.destroy();
+        OCChart && OCChart.destroy();
        }
       }]
     },
@@ -2759,15 +2857,12 @@ function showOptionGraph(ce, pe, st, ed) {
     },
     on: {
       onShow: function() {
-        //showVolatilitySmileChart()
-
         document.getElementById("optionChainGraph").innerHTML = loader
         dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
       }
     }
   }).show();
 }
-
 function showOptionChart() {
   document.getElementById("optionChainGraph").innerHTML = ''
   let seriesOptions = webix.storage.session.get('OptionChainGraph')
@@ -2812,35 +2907,53 @@ function showOptionChart() {
       console.log('err', err);
   }
 }
-
 function showVolatilitySmileChart() {
-  prepareStrikeWithPremium()
-  let vs = []
-  CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
-  PE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
-  try {
-    Highcharts.chart('optionChainGraph', {
-      title: { text: '' },
-      yAxis: {
-          title: { text: '' }
-      },
-      plotOptions: {
-          series: {
-              label: {
-                  connectorAllowed: false
-              },
-          }
-      },
 
-      series: [{
-          name: 'Volatility Smile',
-          data: vs
-      }, ],
-  
-  });
-  }catch(e) {
-
-  }
+  !SelectedScript && webix.message({text: "Please select script", type:"error", expire: 500})
+  SelectedScript && webix.ui({
+    view:"window",
+    height:500,
+    width:590,
+    move: true,
+    modal: true,
+    id: 'volatilityWinId',
+    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
+      { width:4 },
+      { view:"label", label: "Volatility Skew of " + SelectedScript},
+      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
+        $$('volatilityWinId').close(); 
+        OCChart && OCChart.destroy();
+       }
+      }]
+    },
+    position:"center",
+    body:{
+      rows: [
+        {view: 'template', template: '<div id="volatilityGraph" style="width:100%;height:100%;"></div>'}]
+    },
+    on: {
+      onShow: function() {
+        prepareStrikeWithPremium()
+        let vs = []
+        CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+        PE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+        try {
+          OCChart = Highcharts.chart('volatilityGraph', {
+            title: { text: '' },
+            yAxis: {
+                title: { text: '' }
+            },
+            
+            series: [{
+                name: 'Volatility Smile',
+                data: vs
+            }, ],
+        });
+        }catch(e) {
+        }
+      }
+    }
+  }).show();
 
 }
 function toFixed(num, fixed) {
