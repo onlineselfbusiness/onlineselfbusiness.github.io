@@ -1048,7 +1048,7 @@ webix.ready(function () {
   }
 
   var menu_data_multi = []
-  menu_data_multi.push({ id: 'optionChain', value: 'Optin Chain'})
+  menu_data_multi.push({ id: 'optionChain', value: 'Option Chain'})
   menu_data_multi.push({ id: 'nifty50Stocks', value: 'Nifty 50 Stocks'})
   menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
@@ -1690,9 +1690,9 @@ webix.ready(function () {
                           let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
                           
                           if(pol > 0) {
-                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> " + pol + "</span>";
+                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")</span>";
                           } else {
-                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> " + pol + "</span>";
+                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> (" + pol + ")</span>";
                           }
                           $('.webix_cal_month_name').html($('.webix_cal_month_name').text() + ' ' + html)
                         }
@@ -1719,9 +1719,9 @@ webix.ready(function () {
                               let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
                               let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
                               if(pol > 0) {
-                                  html = "<span style='color:#1d922a;'><b>" + per + "%</b> " + pol + "</span>";
+                                  html = "<span style='color:#1d922a;'><b>" + per + "%</b> (" + pol + ")</span>";
                               } else {
-                                  html = "<span style='color:#d21616;'> <b>" + per + "%</b> " + pol + "</span>";
+                                  html = "<span style='color:#d21616;'> <b>" + per + "%</b> (" + pol + ")</span>";
                               }
                               months.get(i).innerHTML = months.get(i).innerHTML + ' ' + html
                             }
