@@ -1944,7 +1944,7 @@ webix.ready(function () {
                         }
                         },
                         {id:'action', header: 'Action', width: 100, template: function(obj) {
-                          return '<div><button onclick="deleteWatchList(\''+ obj.key + '\')">Delete</button></div>'
+                          return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\''+ obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
                         }},
                       ]   
                     }
@@ -2809,7 +2809,7 @@ function watchListCal() {
 function displayStrategyEntryDetails(obj){
   if(obj.name == 'Short Gamma') {
     return `<div style="width:100%;">
-            Script: <b>${obj.script}</b><br>
+            Script: <b>${obj.script}</b> &nbsp; Created Date: <b>${obj.createDate}</b><br>
             Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
             Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
 
@@ -2819,7 +2819,7 @@ function displayStrategyEntryDetails(obj){
           </div>`
   } else if(obj.name == 'Short Strangle') {
     return `<div style="width:100%;">
-            Script: <b>${obj.script}</b><br>
+            Script: <b>${obj.script}</b>&nbsp; Created Date: <b>${obj.createDate}</b><br>
             Sell <b>${obj.sellPut[0].lots}</b> lot of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
             Sell <b>${obj.sellCall[0].lots}</b> lot of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
             
@@ -2827,7 +2827,7 @@ function displayStrategyEntryDetails(obj){
           </div>`
   } else if(obj.name == 'Iron Condor') {
     return `<div style="width:100%;">
-            Script: <b>${obj.script}</b><br>
+            Script: <b>${obj.script}</b>&nbsp; Created Date: <b>${obj.createDate}</b><br>
             Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
             Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
 
