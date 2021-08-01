@@ -116,7 +116,7 @@
     .tgl_vid_aud.active {
     background: #2fb381;
   }
-    .tgl_vid_aud {
+  .tgl_vid_aud {
     width: 32px;
     height: 17px;
     background: #e9610c;
@@ -136,8 +136,8 @@
     -webkit-animation-duration: 2s;
     animation-name: audioright;
     animation-duration: 2s;
-}
-.tgl_vid_aud .tgic {
+  }
+  .tgl_vid_aud .tgic {
     display: inline-block;
     width: 14px;
     height: 14px;
@@ -151,7 +151,7 @@
     -webkit-animation-duration: 2s;
     animation-name: videoleft;
     animation-duration: 2s;
-}
+  }
   div[view_id="script_calendar"] div>span {
     width: 100% !important;
     font-size: medium
@@ -191,10 +191,19 @@
 $(function() {
   $( document ).on( "click", "div.tgl_vid_aud", function() {
     //alert($(this).data('action'))
+    let action = $(this).data('action')
     if($(this).hasClass('active')){
-		$(this).removeClass('active');
-    }else{		
+		  $(this).removeClass('active');
+      TableConfig[action] = 'inactive'
+    }else{
+      TableConfig[action] = 'active'
       $(this).addClass('active');
+    }
+    webix.storage.local.put('TableConfig', TableConfig)
+    if(action == 'optimize' && SelectedScript != '') {
+      let sData = OptionChainData[SelectedScript]
+      $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
+        selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
     }
 });
 })

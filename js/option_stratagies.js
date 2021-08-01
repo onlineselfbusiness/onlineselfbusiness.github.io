@@ -1,4 +1,26 @@
+let OptionChainData = webix.storage.local.get('OptionChainData')
+if (!OptionChainData) {
+  OptionChainData = {}
+  webix.storage.local.put('OptionChainData', OptionChainData)
+}
+// Cleanup old option chain script data
+(function() {
+  let d = new Date()
+  d.setDate(d.getDate()-5)
+  Object.keys(OptionChainData).forEach(s => {
+    let cd = OptionChainData[s]
+    let ocDate = new Date(cd.timestamp)
+    if(ocDate.getTime() < d.getTime()) {
+      delete OptionChainData[s]
+    }
+  })
+  webix.storage.local.put('OptionChainData', OptionChainData)
+})()
+let TableFilter = {}
 let twoMinutes = 2 * 60 * 1000 + 15 * 1000
+let DefaultTableConfig = {
+  optimize: 'active'
+}
 let globalConfig = {
   'default': { lotSize: 1, lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
   'BANKNIFTY': { lotSize: 25, lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
@@ -21,6 +43,14 @@ let OCChart
 function fetchScriptConfig() {
   return globalConfig[SelectedScript] || globalConfig['default']
 }
+function fetchTableConfig(param) {
+  return TableConfig[param] || DefaultTableConfig[param]
+}
+let TableConfig = webix.storage.local.get('TableConfig')
+if (!TableConfig) {
+  TableConfig = DefaultTableConfig
+  webix.storage.local.put('TableConfig', TableConfig)
+}
 let WatchList = webix.storage.local.get('WatchList')
 if (!WatchList) {
   WatchList = []
@@ -40,11 +70,6 @@ let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
 if (!ScriptHistoryData) {
   ScriptHistoryData = {}
   webix.storage.local.put('ScriptHistoryData', ScriptHistoryData)
-}
-let OptionChainData = webix.storage.local.get('OptionChainData')
-if (!OptionChainData) {
-  OptionChainData = {}
-  webix.storage.local.put('OptionChainData', OptionChainData)
 }
 let strategiesObj = {
 
@@ -407,13 +432,6 @@ function addCustomRow(config, label, strikeId, premiumId) {
 
   let viewId = $$('inputViewId').getBody().addView(rowView)
   config.count = config.count + 1
-
-}
-function formatDateWiseData() {
-  let optionChain = webix.storage.local.get('optionChain')
-  let data = optionChain.data['08-Jul-2021']
-  data = data.sort((a, b) => parseInt(Object.keys(a)[0]) - parseInt(Object.keys(b)[0]))
-  console.dir(data)
 
 }
 function prepareStrikeWithPremium() {
@@ -963,8 +981,8 @@ function initEventListeners() {
     webix.storage.local.put('OptionChainData', OptionChainData)
     let sData = OptionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
-
+    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
+      selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
   })
 
   let optionHistoryResId = document.querySelector('#optionHistoryResId')
@@ -1135,7 +1153,7 @@ webix.ready(function () {
                   $$('watchListDatatableId').parse(WatchList)
                 }
                 else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
-                else if(id == 'icharts') {window.open('https://www.icharts.in/screener-eod.html')}
+                else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts.html')}
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
                   continuousWiseAllCal()
@@ -1217,6 +1235,7 @@ webix.ready(function () {
                                 $$('expiryDateId').setValue('')
                                 SelectedExpiryDate = ''
                               } else {
+                                TableFilter = {}
                                 let sData = OptionChainData[SelectedScript]
                                 if(!sData) {
                                   $$('expiryDateId').define('options', [])
@@ -1264,6 +1283,10 @@ webix.ready(function () {
                                   let sData = OptionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
                                   sData.SelectedExpiryDate = SelectedExpiryDate
+                                  $$('strikePriceId').hide()
+                                  $$('algoStrategyId').show()
+                                  $$('algoStrategyButtonId').show()
+                                  TableFilter={}
                                   $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 }
                               }
@@ -1287,7 +1310,9 @@ webix.ready(function () {
                                   dispatchChangeEvent('#optionChainReqId', s)
                                 } else {
                                   Underlying_Value = sData.underlyingValue
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  //$$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
+                                    selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
                                 }
                               } else {
                                 dispatchChangeEvent('#optionChainReqId', s)
@@ -1295,6 +1320,7 @@ webix.ready(function () {
                             }
                           }
                         },
+                        {view: 'label', width: 350, id:'strikePriceId', hidden: true},
                         {
                           view:"combo", width:250, labelWidth:100, id:'algoStrategyId',
                           label: 'Algo Strategy:', placeholder:"Select Strategy", popupWidth: 600,
@@ -1305,7 +1331,7 @@ webix.ready(function () {
                           ]
                         },
                         {
-                          view: "button", type: "icon", icon: "mdi mdi-google-analytics",
+                          view: "button", type: "icon", icon: "mdi mdi-google-analytics", id:'algoStrategyButtonId',
                           width: 37, align: "left",
                           click: function () {
                             $$("sidebarId").hide();
@@ -1372,7 +1398,8 @@ webix.ready(function () {
                           <th width="4.34%" title="Best Bid/Buy Price">Bid Price<span> </span></th>
                           <th width="4.34%" title="Best Ask/Sell Price">Ask Price<span> </span></th>
                           <th width="4.34%" title="Best Ask/Sell Qty">Ask Qty<span> </span></th>
-                          <th width="6.34%">Strike Price<span> </span></th><th width="4.34%" title="Best Bid/Buy Qty">Bid Qty<span> </span></th>
+                          <th width="6.34%">${obj.selectedStrike ? 'EXPIRY DATE' : 'Strike Price'} <span> </span></th>
+                          <th width="4.34%" title="Best Bid/Buy Qty">Bid Qty<span> </span></th>
                           <th width="4.34%" title="Best Bid/Buy Price">Bid Price<span> </span></th>
                           <th width="4.34%" title="Best Ask/Sell Price">Ask Price<span> </span></th>
                           <th width="4.34%" title="Best Ask/Sell Qty">Ask Qty<span> </span></th>
@@ -1386,7 +1413,61 @@ webix.ready(function () {
                         </tr>
                         </thead>
                         <tbody id="indices-body">`
-                        if(Object.keys(obj).length > 0) {
+
+                        if(obj.selectedStrike) {
+                          let expiryDates = Object.keys(OptionChainData[SelectedScript].data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+                          
+                          for(let i=0; i<expiryDates.length; i++) {
+                            let strikeSelect = undefined
+                            OptionChainData[SelectedScript].data[expiryDates[i]].forEach(e => {
+                              if(e[obj.selectedStrike]) {
+                                strikeSelect = e[obj.selectedStrike]
+                              }
+                            })
+                            if(strikeSelect == undefined) {
+                              continue;
+                            }
+                            let st = obj.selectedStrike
+                            let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${expiryDates[i]}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
+                            let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${expiryDates[i]}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
+                            let ce = strikeSelect['CE'] || {}
+                            let pe = strikeSelect['PE'] || {}
+
+                            let stRow = `<td width="6.34%"><a class="bold" onclick="showAllPriceOfStrike(undefined, '${expiryDates[i]}')" href="javascript:;">${expiryDates[i]}</a></td>`
+                            let ceClass = obj.ceITM
+                            let peClass = obj.peITM
+                            let r = `
+                            <tr>
+                            <td width="2.34%">${ceHis}</td>
+                            <td width="5.14%" class="${ceClass}">${DecimalFixed(ce.openInterest, true)}</td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.changeinOpenInterest, true)}</td>
+                            <td width="5.54%" class="${ceClass}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
+                            <td width="3.34%" class="${ceClass}">${DecimalFixed(ce.impliedVolatility)}</td>
+                            <td width="4.34%" class="${ceClass}"><a class="bold" href="javascript:;">${DecimalFixed(ce.lastPrice)}</a></td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.change)}</td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.bidQty, true)}</td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.bidprice)}</td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askPrice)}</td>
+                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askQty, true)}</td>`
+
+                            + stRow +
+                            `
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidQty, true)}</td>
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidprice)}</td>
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askQty, true)}</td>
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.change)}</td>
+                            <td width="4.34%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.lastPrice)}</a></td>
+                            <td width="3.34%" class="${peClass}">${DecimalFixed(pe.impliedVolatility)}</td>
+                            <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
+                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.changeinOpenInterest, true)}</td>
+                            <td width="5.14%" class="${peClass}">${DecimalFixed(pe.openInterest, true)}</td>
+                            <td width="2.34%">${peHis}</td>
+                            </tr>`
+                            start = start + r
+
+                          }
+                        } else if(Object.keys(obj).length > 0) {
                           prepareStrikeWithPremium()
                           let [S1, S2, R1, R2] = findSupportResistence()
                           let arr = obj.data
@@ -1409,13 +1490,18 @@ webix.ready(function () {
                             let st = Object.keys(row)[0]
                             let ce = row[st]['CE'] || {}
                             let pe = row[st]['PE'] || {}
+                            if(ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0 && fetchTableConfig('optimize') == 'active') {
+                              continue;
+                            }
+                            
                             let ceIdentifier = ce.identifier
                             let peIdentifier = pe.identifier
                             let ceClass = st<=closest ? 'bg-yellow' : ''
                             let peClass = st>closest ? 'bg-yellow' : ''
-                            let stRow = `<td width="6.34%"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
+                            let stPer = DecimalFixed(((st - Underlying_Value) / Underlying_Value * 100)) + '%&#010;(' + DecimalFixed(st - Underlying_Value) + ')'
+                            let stRow = `<td width="6.34%"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
-                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
+                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             }
                             let ceChangeTx = ' redTxt'
                             if(ce.change > 0) {
@@ -1491,10 +1577,20 @@ webix.ready(function () {
                             let per = toFixed((Underlying_Value - preClose) / Underlying_Value * 100, 2)+ '%'
                             let diff = toFixed(Underlying_Value - preClose, 2)
 
-                            if(parseFloat(per)<0) {
-                              currVal = '<span style="color:#fd505c">'+ '<b>' + Underlying_Value + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                            let detailsLink = ''
+                            if(SelectedScript == 'NIFTY' || SelectedScript == 'BANKNIFTY') {
+                              detailsLink = Underlying_Value
                             } else {
-                              currVal = '<span style="color:#02a68a">'+ '<b>' + Underlying_Value + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                              if(parseFloat(per)<0) {
+                                detailsLink = '<a style="color:#fd505c;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">'+Underlying_Value+'</a>'
+                              } else {
+                                detailsLink = '<a style="color:#02a68a;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">'+Underlying_Value+'</a>'
+                              }
+                            }
+                            if(parseFloat(per)<0) {
+                              currVal = '<span style="color:#fd505c">'+ '<b>' + detailsLink + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                            } else {
+                              currVal = '<span style="color:#02a68a">'+ '<b>' + detailsLink + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
                             }
                           } catch(e){}
 
@@ -1638,9 +1734,9 @@ webix.ready(function () {
                             let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
                             
                             if(pol > 0) {
-                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
                             } else {
-                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
                             }
                         } else if(dArr[0] == 'Sat') {
                           let sat = new Date(dStr)
@@ -1664,9 +1760,9 @@ webix.ready(function () {
                             let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
                             
                             if(pol > 0) {
-                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;background-color: lightblue;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;background-color: lightblue;'><b>" + per + "%</b> <br/>" + pol + "</div>";
                             } else {
-                                html = "<div class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;background-color: lightblue;'> <b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;background-color: lightblue;'> <b>" + per + "%</b> <br/>" + pol + "</div>";
                             }
                           }
                         }
@@ -1674,35 +1770,7 @@ webix.ready(function () {
                     },
                     on : {
                       onAfterMonthChange: function(prev_date, next_date) {
-                        let date = prev_date
-                        let dArr = date.toDateString().split(' ')
-                        let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
-                        let ds = dStr.substr(3)
-
-                        let sDate = ''
-                        let eDate = ''
-                        let cArr = Object.keys(CalenderUI)
-                        for(let i=0; i<cArr.length-1; i++) {
-                          let d = cArr[i]
-                          if(eDate == '' && ds == d.substr(3)) {
-                            sDate = d
-                            eDate = d
-                          } else if(eDate != '' && ds == d.substr(3)) {
-                            sDate = d
-                          }
-                        }
-
-                        if(sDate != '' && eDate != '') {
-                          let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
-                          let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
-                          
-                          if(pol > 0) {
-                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")</span>";
-                          } else {
-                              html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> (" + pol + ")</span>";
-                          }
-                          $('.webix_cal_month_name').html($('.webix_cal_month_name').text() + ' ' + html)
-                        }
+                        displayMonthWisePer(prev_date)
                       },
                       onAfterZoom: function() {
                         let months = $('.webix_cal_body>.webix_cal_block span')
@@ -1737,8 +1805,12 @@ webix.ready(function () {
                         }
                       },
                       onAfterRender: function() {
-                        //alert('onAfterRender')
-                      }
+                        let mHeader = $('[view_id="script_calendar"]>.webix_cal_month>.webix_cal_month_name>.day').length
+                        if(mHeader == 0 && $$('scriptCalendarId').getValue() != '') {
+                          displayMonthWisePer($$('script_calendar').config.date)
+                          console.dir('onAfterRender')
+                        }
+                      },
                     }
                 },
                 {height:10},
@@ -1766,7 +1838,12 @@ webix.ready(function () {
                       view:"align", align:"middle,center",
                       body:{ view:'datatable', hover:"myhover",css: "rows", id:'etDatatableId', height: 500, width: 900, 
                       data: [{name: 'Hint :-)', event:'Please select date and click download'}], 
-                      columns: [{id:'name', header: 'Company Name', width: 200}, {id:'event', header: 'Event', width: 450, fillspace:true}]   }
+                      columns: [
+                        {id:'name', header: 'Company Name', width: 200, template: function(obj) {
+                          return obj.companyId != undefined ? `<a target="_blank" href="https://economictimes.indiatimes.com/${obj.seoName}/stocks/companyid-${obj.companyId}.cms">${obj.name}</a>` : obj.name;
+                        }},
+                      
+                      {id:'event', header: 'Event', width: 450, fillspace:true}]   }
                     },
                     {height: 30}
                   ]
@@ -1910,7 +1987,6 @@ webix.ready(function () {
                         dispatchChangeEvent('#nifty50StocksReqId')
                       }},{}
                     ]},
-                    
                     {
                       view:'datatable', hover:"myhover",css: "rows", id:'nifty50StockDatatableId',
                       data: [],
@@ -1932,7 +2008,6 @@ webix.ready(function () {
     ]
   })
   webix.delay(()=> webix.extend($$("mainWinId"), webix.ProgressBar))
-
   webix.ui({
     view:"popup",
     id:"table_pop",
@@ -1941,19 +2016,27 @@ webix.ready(function () {
     body:{
       rows: [
         { height: 30,
+          cols: [{view: 'template', template: 'Optimize Table', borderless: true},
+            {view: 'template', borderless: true, width: 50, template: function() {
+                return `<div class="tgl_vid_aud ${fetchTableConfig('optimize')}" data-action="optimize"><span class="tgic"></span></div>`
+              }
+            }
+          ]
+        },
+        /*{ height: 30,
           cols: [{view: 'template', template: 'Auto Refresh(2min)', borderless: true},
             {view: 'template', borderless: true, width: 50, template: `
-            <div class="tgl_vid_aud active" data-action="toggle_price_refresh"><span class="tgic"></span></div>
+            <div class="tgl_vid_aud active" data-action="autoRefresh"><span class="tgic"></span></div>
             `}
           ]
         },
         {height: 30,
           cols: [{view: 'template', template: 'Show Trend', borderless: true},
             {view: 'template', borderless: true, width: 50, template: `
-            <div class="tgl_vid_aud active" data-action="toggle_price_refresh"><span class="tgic"></span></div>
+            <div class="tgl_vid_aud active" data-action="showTrend"><span class="tgic"></span></div>
             `}
           ]
-        },
+        },*/
         {height: 30,
           cols: [{view: 'template', template: 'Volatility Skew', borderless: true},
             {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
@@ -2966,4 +3049,66 @@ function showVolatilitySmileChart() {
 function toFixed(num, fixed) {
   var re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
   return num.toString().match(re)[0];
+}
+function displayMonthWisePer(prev_date) {
+
+  if($('.webix_cal_month_name .day').length == 0) {
+    let date = prev_date
+    let dArr = date.toDateString().split(' ')
+    let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
+    let ds = dStr.substr(3)
+  
+    let sDate = ''
+    let eDate = ''
+    let cArr = Object.keys(CalenderUI)
+    for(let i=0; i<cArr.length-1; i++) {
+      let d = cArr[i]
+      if(eDate == '' && ds == d.substr(3)) {
+        sDate = d
+        eDate = d
+      } else if(eDate != '' && ds == d.substr(3)) {
+        sDate = d
+      }
+    }
+  
+    if(sDate != '' && eDate != '') {
+      let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
+      let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
+      
+      if(pol > 0) {
+          html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")</span>";
+      } else {
+          html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> (" + pol + ")</span>";
+      }
+      $('.webix_cal_month_name').html($('.webix_cal_month_name').text() + ' ' + html)
+    }
+  }
+ 
+}
+function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
+  let sData = OptionChainData[SelectedScript]
+  if(expiryDate) {
+    SelectedExpiryDate = expiryDate
+    $$('expiryDateId').setValue(SelectedExpiryDate)
+    $$('algoStrategyId').show()
+    $$('algoStrategyButtonId').show()
+    $$('strikePriceId').hide()
+    $$('strikePriceId').setValue('')
+  }
+  let d = {data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, ceITM, peITM}
+  if(selectedStrike) {
+    d['selectedStrike'] = selectedStrike
+    $$('algoStrategyId').hide()
+    $$('algoStrategyButtonId').hide()
+    $$('strikePriceId').show()
+    let stPer = DecimalFixed(((selectedStrike - Underlying_Value) / Underlying_Value * 100)) + '% (' + DecimalFixed(selectedStrike - Underlying_Value) + ')'
+    $$('strikePriceId').setValue('Selected Strike : ' + DecimalFixed(selectedStrike) + ' ' + stPer)
+  }
+  
+  $$('optionChainTemplateId').setValues(d)
+  TableFilter['selectedStrike'] = selectedStrike
+  TableFilter['expiryDate'] = expiryDate
+  TableFilter['ceITM'] = ceITM
+  TableFilter['peITM'] = peITM
+  return false
 }
