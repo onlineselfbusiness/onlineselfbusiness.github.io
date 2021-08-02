@@ -1085,6 +1085,7 @@ webix.ready(function () {
     {id:'niftyMaxPain', value:'Nifty Max Pain'},
     {id:'niftyTaDesk', value:'Nifty TA Desk'},
     {id:'tradingView', value:'Trading View'},{id:'icharts', value:'i Charts'},
+    {id:'allStrategyGraph', value:'All Option Strategies'},
     
   ]})
 
@@ -1153,6 +1154,7 @@ webix.ready(function () {
                   $$('watchListDatatableId').parse(WatchList)
                 }
                 else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
+                else if(id == 'allStrategyGraph') {window.open('charts.png')}
                 else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts.html')}
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
@@ -1734,9 +1736,9 @@ webix.ready(function () {
                             let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
                             
                             if(pol > 0) {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
                             } else {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
                             }
                         } else if(dArr[0] == 'Sat') {
                           let sat = new Date(dStr)
