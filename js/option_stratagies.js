@@ -1734,9 +1734,9 @@ webix.ready(function () {
                             let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
                             
                             if(pol > 0) {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
                             } else {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> <br/>" + pol + "<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
                             }
                         } else if(dArr[0] == 'Sat') {
                           let sat = new Date(dStr)
@@ -2807,6 +2807,8 @@ function watchListCal() {
   webix.storage.local.put('WatchList', WatchList)
 }
 function displayStrategyEntryDetails(obj){
+   
+
   if(obj.name == 'Short Gamma') {
     return `<div style="width:100%;">
             Script: <b>${obj.script}</b> &nbsp; Created Date: <b>${obj.createDate}</b><br>
@@ -2839,12 +2841,15 @@ function displayStrategyEntryDetails(obj){
   return ''
 }
 function displayStrategyLatestDetails(obj){
+  let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
+  let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
+  let remainingDays = parseInt((new Date(obj.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+  let style = 'style="color:#fd505c"'
+  if(obj.pol >= 0) {
+    style = 'style="color:#02a68a"'
+  }
   if(obj.name == 'Short Gamma') {
-    let style = 'style="color:#fd505c"'
-    if(obj.pol >= 0) {
-      style = 'style="color:#02a68a"'
-    }
-    return `<div style="width:100%;"><br>
+    return `<div style="width:100%;">No.Of Days ${days_difference} &nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellPut[0].latestIV}<br>
@@ -2861,11 +2866,7 @@ function displayStrategyLatestDetails(obj){
             Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
           </div>`
   } else if(obj.name == 'Short Strangle') {
-    let style = 'style="color:#fd505c"'
-    if(obj.pol >= 0) {
-      style = 'style="color:#02a68a"'
-    }
-    return `<div style="width:100%;">
+    return `<div style="width:100%;">No.Of Days ${days_difference}&nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellPut[0].latestIV}<br>
@@ -2873,22 +2874,16 @@ function displayStrategyLatestDetails(obj){
             <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellCall[0].latestIV}<br>
-            <br>
             Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
           </div>`
   } else if(obj.name == 'Iron Condor') {
-    let style = 'style="color:#fd505c"'
-    if(obj.pol >= 0) {
-      style = 'style="color:#02a68a"'
-    }
-    return `<div style="width:100%;"><br>
+    return `<div style="width:100%;">No.Of Days ${days_difference}&nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.buyPut[0].latestIV}<br>
             <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellPut[0].latestIV}<br>
-            
 
             <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
