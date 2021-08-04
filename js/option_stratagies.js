@@ -1049,6 +1049,13 @@ function initEventListeners() {
     showOptionChart()
   })
 
+  let googleGraphResId = document.querySelector('#googleGraphResId')
+  googleGraphResId.addEventListener('change', (e) => {
+    let html = sessionStorage.getItem('GoogleGraph')
+    let googleGraph = document.querySelector('#googleGraph')
+    googleGraph.innerHTML = html
+  })
+  
   let messageStatusId = document.querySelector('#messageStatusId')
   messageStatusId.addEventListener('change', (e) => {
     webix.message({ text: e.target.value, type:"info", expire: 500})
@@ -1084,7 +1091,9 @@ webix.ready(function () {
     {id:'trendlyne', value:'Trendlyne'},
     {id:'niftyMaxPain', value:'Nifty Max Pain'},
     {id:'niftyTaDesk', value:'Nifty TA Desk'},
-    {id:'tradingView', value:'Trading View'},{id:'icharts', value:'i Charts'},
+    {id:'tradingView', value:'Trading View'},
+    {id:'icharts', value:'i Charts'},
+    {id:'tickertape', value:'Ticker Tape'},
     {id:'allStrategyGraph', value:'All Option Strategies'},
     
   ]})
@@ -1155,7 +1164,10 @@ webix.ready(function () {
                 }
                 else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
                 else if(id == 'allStrategyGraph') {window.open('charts.png')}
-                else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts.html')}
+                else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts-v4.html')}
+                else if(id == 'tickertape') {window.open('https://www.tickertape.in/stocks')}
+                
+
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
                   continuousWiseAllCal()
@@ -1336,6 +1348,7 @@ webix.ready(function () {
                           view: "button", type: "icon", icon: "mdi mdi-google-analytics", id:'algoStrategyButtonId',
                           width: 37, align: "left",
                           click: function () {
+
                             $$("sidebarId").hide();
                             let s = $$('scriptId').getValue();
                             if(s == "") {
@@ -1438,6 +1451,7 @@ webix.ready(function () {
                             let stRow = `<td width="6.34%"><a class="bold" onclick="showAllPriceOfStrike(undefined, '${expiryDates[i]}')" href="javascript:;">${expiryDates[i]}</a></td>`
                             let ceClass = obj.ceITM
                             let peClass = obj.peITM
+
                             let r = `
                             <tr>
                             <td width="2.34%">${ceHis}</td>
@@ -1535,9 +1549,55 @@ webix.ready(function () {
                               peOI2 = 'green2'
                             }
 
+                            let ceBuildUp = ''
+                            let ceBuildUpTip = 'Unchanged'
+                            if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0) {
+                              ceBuildUp = ''
+                              ceBuildUpTip = 'Unchanged'
+                            } else if(ce.changeinOpenInterest>0) {
+                              if(ce.change>0) {
+                                ceBuildUp = 'background-color: rgb(0, 128, 0)'
+                                ceBuildUpTip = 'Long Buildup'
+                              }else {
+                                ceBuildUp = 'background-color: rgb(255, 0, 0)'
+                                ceBuildUpTip = 'Short Buildup'
+                              }
+                            } else {
+                              if(ce.change>0) {
+                                ceBuildUp = 'background-color: rgb(144, 238, 144)'
+                                ceBuildUpTip = 'Short Covering'
+                              } else {
+                                ceBuildUp = 'background-color: rgb(255, 165, 0)'
+                                ceBuildUpTip = 'Long Unwinding'
+                              }
+                            }
+
+                            let peBuildUp = ''
+                            let peBuildUpTip = 'Unchanged'
+                            if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0) {
+                              peBuildUp = ''
+                              peBuildUpTip = 'Unchanged'
+                            } else if(pe.changeinOpenInterest>0) {
+                              if(pe.change>0) {
+                                peBuildUp = 'background-color: rgb(0, 128, 0)'
+                                peBuildUpTip = 'Long Buildup'
+                              }else {
+                                peBuildUp = 'background-color: rgb(255, 0, 0)'
+                                peBuildUpTip = 'Short Buildup'
+                              }
+                            } else {
+                              if(pe.change>0) {
+                                peBuildUp = 'background-color: rgb(144, 238, 144)'
+                                peBuildUpTip = 'Short Covering'
+                              } else {
+                                peBuildUp = 'background-color: rgb(255, 165, 0)'
+                                peBuildUpTip = 'Long Unwinding'
+                              }
+                            }
+
                             let r = `
                             <tr>
-                            <td width="2.34%">${ceHis}</td>
+                            <td width="2.34%" style="${ceBuildUp}" title="${ceBuildUpTip}">${ceHis}</td>
                             <td width="5.14%" class="${ceClass} ${ceOI1} ${ceOI2}">${DecimalFixed(ce.openInterest, true)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.changeinOpenInterest, true)}</td>
                             <td width="5.54%" class="${ceClass}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
@@ -1561,7 +1621,7 @@ webix.ready(function () {
                             <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.changeinOpenInterest, true)}</td>
                             <td width="5.14%" class="${peClass} ${peOI1} ${peOI2}">${DecimalFixed(pe.openInterest, true)}</td>
-                            <td width="2.34%">${peHis}</td>
+                            <td width="2.34%" style="${peBuildUp}" title="${peBuildUpTip}">${peHis}</td>
                             </tr>`
                             start = start + r
                           }
@@ -2851,7 +2911,7 @@ function displayStrategyLatestDetails(obj){
     style = 'style="color:#02a68a"'
   }
   if(obj.name == 'Short Gamma') {
-    return `<div style="width:100%;">No.Of Days ${days_difference} &nbsp; Days Left: ${remainingDays}<br>
+    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellPut[0].latestIV}<br>
@@ -2868,7 +2928,7 @@ function displayStrategyLatestDetails(obj){
             Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
           </div>`
   } else if(obj.name == 'Short Strangle') {
-    return `<div style="width:100%;">No.Of Days ${days_difference}&nbsp; Days Left: ${remainingDays}<br>
+    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.sellPut[0].latestIV}<br>
@@ -2879,7 +2939,7 @@ function displayStrategyLatestDetails(obj){
             Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
           </div>`
   } else if(obj.name == 'Iron Condor') {
-    return `<div style="width:100%;">No.Of Days ${days_difference}&nbsp; Days Left: ${remainingDays}<br>
+    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
             <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
             [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
             IV: ${obj.buyPut[0].latestIV}<br>
@@ -3108,4 +3168,32 @@ function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
   TableFilter['ceITM'] = ceITM
   TableFilter['peITM'] = peITM
   return false
+}
+function showGoogleGraph() {
+  webix.ui({
+    view:"window",
+    width: window.innerWidth - 2,
+    height: window.innerHeight - 2,
+    position: 'center',
+    move: true,
+    modal: true,
+    id: 'googleChartWinId',
+    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
+      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
+        $$('googleChartWinId').close(); 
+       }
+      }]
+    },
+    position:"center",
+    body:{
+      rows: [
+        {view: 'template', template: '<div id="googleGraph" style="width:100%;height:100%;"></div>'}]
+    },
+    on: {
+      onShow: function() {
+        document.getElementById("googleGraph").innerHTML = loader
+        dispatchChangeEvent('#googleGraphReqId', '')
+      }
+    }
+  }).show();
 }
