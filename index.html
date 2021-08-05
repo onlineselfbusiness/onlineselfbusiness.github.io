@@ -209,7 +209,7 @@ $(function() {
       $(this).addClass('active');
     }
     webix.storage.local.put('TableConfig', TableConfig)
-    if(action == 'optimize' && SelectedScript != '') {
+    if((action == 'optimize' || action == 'buildup') && SelectedScript != '') {
       let sData = OptionChainData[SelectedScript]
       $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
         selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})

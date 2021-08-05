@@ -19,7 +19,8 @@ if (!OptionChainData) {
 let TableFilter = {}
 let twoMinutes = 2 * 60 * 1000 + 15 * 1000
 let DefaultTableConfig = {
-  optimize: 'active'
+  optimize: 'active',
+  buildup: 'active'
 }
 let globalConfig = {
   'default': { lotSize: 1, lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
@@ -1088,6 +1089,7 @@ webix.ready(function () {
     {id:'liveTV', value: 'Live TV'},
     {id:'indianMarket', value:'Indian Market'},
     {id:'resultCalendar', value:'Result Calendar'},
+    {id:'earningsCalendar', value:'Earnings Calendar'},
     {id:'trendlyne', value:'Trendlyne'},
     {id:'niftyMaxPain', value:'Nifty Max Pain'},
     {id:'niftyTaDesk', value:'Nifty TA Desk'},
@@ -1139,6 +1141,7 @@ webix.ready(function () {
                 } else if(id === 'liveTV') {window.open('https://www.cnbctv18.com/live-tv/')}
                 else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')}
                 else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
+                else if(id === 'earningsCalendar') {window.open('https://www.moneycontrol.com/earnings-calendar')}
                 else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
                 else if(id === 'calendarWise') { showViewId('calendarWiseViewId')}
                 else if(id == 'niftyMaxPain') {window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty')}
@@ -1548,50 +1551,52 @@ webix.ready(function () {
                             if(DecimalFixed(st).replaceAll(',', '') == S2) {
                               peOI2 = 'green2'
                             }
-
                             let ceBuildUp = ''
-                            let ceBuildUpTip = 'Unchanged'
-                            if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0) {
-                              ceBuildUp = ''
-                              ceBuildUpTip = 'Unchanged'
-                            } else if(ce.changeinOpenInterest>0) {
-                              if(ce.change>0) {
-                                ceBuildUp = 'background-color: rgb(0, 128, 0)'
-                                ceBuildUpTip = 'Long Buildup'
-                              }else {
-                                ceBuildUp = 'background-color: rgb(255, 0, 0)'
-                                ceBuildUpTip = 'Short Buildup'
-                              }
-                            } else {
-                              if(ce.change>0) {
-                                ceBuildUp = 'background-color: rgb(144, 238, 144)'
-                                ceBuildUpTip = 'Short Covering'
-                              } else {
-                                ceBuildUp = 'background-color: rgb(255, 165, 0)'
-                                ceBuildUpTip = 'Long Unwinding'
-                              }
-                            }
-
+                            let ceBuildUpTip = ''
                             let peBuildUp = ''
-                            let peBuildUpTip = 'Unchanged'
-                            if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0) {
-                              peBuildUp = ''
-                              peBuildUpTip = 'Unchanged'
-                            } else if(pe.changeinOpenInterest>0) {
-                              if(pe.change>0) {
-                                peBuildUp = 'background-color: rgb(0, 128, 0)'
-                                peBuildUpTip = 'Long Buildup'
-                              }else {
-                                peBuildUp = 'background-color: rgb(255, 0, 0)'
-                                peBuildUpTip = 'Short Buildup'
-                              }
-                            } else {
-                              if(pe.change>0) {
-                                peBuildUp = 'background-color: rgb(144, 238, 144)'
-                                peBuildUpTip = 'Short Covering'
+                            let peBuildUpTip = ''
+                            if(fetchTableConfig('buildup') == 'active') {
+                              if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0) {
+                                ceBuildUp = ''
+                                ceBuildUpTip = 'Unchanged'
+                              } else if(ce.changeinOpenInterest>0) {
+                                if(ce.change>0) {
+                                  ceBuildUp = 'background-color: rgb(0, 128, 0)'
+                                  ceBuildUpTip = 'Long Buildup'
+                                }else {
+                                  ceBuildUp = 'background-color: rgb(255, 0, 0)'
+                                  ceBuildUpTip = 'Short Buildup'
+                                }
                               } else {
-                                peBuildUp = 'background-color: rgb(255, 165, 0)'
-                                peBuildUpTip = 'Long Unwinding'
+                                if(ce.change>0) {
+                                  ceBuildUp = 'background-color: rgb(144, 238, 144)'
+                                  ceBuildUpTip = 'Short Covering'
+                                } else {
+                                  ceBuildUp = 'background-color: rgb(255, 165, 0)'
+                                  ceBuildUpTip = 'Long Unwinding'
+                                }
+                              }
+  
+                              
+                              if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0) {
+                                peBuildUp = ''
+                                peBuildUpTip = 'Unchanged'
+                              } else if(pe.changeinOpenInterest>0) {
+                                if(pe.change>0) {
+                                  peBuildUp = 'background-color: rgb(0, 128, 0)'
+                                  peBuildUpTip = 'Long Buildup'
+                                }else {
+                                  peBuildUp = 'background-color: rgb(255, 0, 0)'
+                                  peBuildUpTip = 'Short Buildup'
+                                }
+                              } else {
+                                if(pe.change>0) {
+                                  peBuildUp = 'background-color: rgb(144, 238, 144)'
+                                  peBuildUpTip = 'Short Covering'
+                                } else {
+                                  peBuildUp = 'background-color: rgb(255, 165, 0)'
+                                  peBuildUpTip = 'Long Unwinding'
+                                }
                               }
                             }
 
@@ -2091,14 +2096,14 @@ webix.ready(function () {
             <div class="tgl_vid_aud active" data-action="autoRefresh"><span class="tgic"></span></div>
             `}
           ]
-        },
+        },*/
         {height: 30,
-          cols: [{view: 'template', template: 'Show Trend', borderless: true},
+          cols: [{view: 'template', template: 'Buildup', borderless: true},
             {view: 'template', borderless: true, width: 50, template: `
-            <div class="tgl_vid_aud active" data-action="showTrend"><span class="tgic"></span></div>
+            <div class="tgl_vid_aud ${fetchTableConfig('buildup')}" data-action="buildup"><span class="tgic"></span></div>
             `}
           ]
-        },*/
+        },
         {height: 30,
           cols: [{view: 'template', template: 'Volatility Skew', borderless: true},
             {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
