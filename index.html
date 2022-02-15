@@ -7,26 +7,34 @@
   <!---->
   <link rel="stylesheet" href="https://cdn.webix.com/materialdesignicons/5.8.95/css/materialdesignicons.min.css"/>
   <link rel="stylesheet" href="https://cdn.webix.com/8.3/webix.css" type="text/css">
-
+  <!-- link rel="stylesheet" href="https://cdn.webix.com/8.3/skins/contrast.css" type="text/css" -->
+  <link rel="stylesheet" href="css/newWorldMarket.css" type="text/css">
+  <link rel="stylesheet" href="css/nse-styles.css" type="text/css">
   <script src="https://cdn.webix.com/8.3/webix.js" type="text/javascript"></script>
-
   <script src="https://cdn.amcharts.com/lib/3/amcharts.js"></script>
   <script src="https://cdn.amcharts.com/lib/3/serial.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highstock/6.0.3/highstock.js"></script>
-  <link rel="stylesheet" href="css/newWorldMarket.css" type="text/css">
-  <link rel="stylesheet" href="css/nse-styles.css" type="text/css">
   <!--
-  
   <link rel="stylesheet" href="css/materialdesignicons.min.css" />
   <link rel="stylesheet" href="css/webix.css" type="text/css">
   <script src="js/jquery.js"></script>
   <script src="js/webix.js" type="text/javascript"></script>
-
   <script src="js/amcharts.js"></script>
   <script src="js/serial.js"></script>
   -->
   <style>
+    .red {
+      color: red;
+      font-weight: bold;
+    }
+    .green {
+      color: green;
+      font-weight: bold;
+    }
+    td > a {
+      font-weight: bold;
+    }
     div[view_id='payoffTableId'] {
       width: 100% !important
     }
@@ -60,7 +68,7 @@
       background-color: lightblue;
     }
 
-    div[view_id='strategyChartToolbarId'] {
+    div[view_id='strategyChartToolbarId'], div[view_id='scriptAnalyticsId'] {
       background-color: #b4ddf7;
     }
 
@@ -162,9 +170,29 @@
   .webix_cal_outside>span>div {
     background-color: #e3e8e6f7 !important;
   }
+
+  .peSell {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    flex-direction: row;
+  }
+
+.sellButton {
+  background-color: #f44336!important;
+  border-color: #f44336!important;
+  cursor: pointer;
+  color: #fff;
+  position: absolute;
+  font-size: 13px;
+  height: 28px;
+  padding: 0 8px;
+  left: 10px;
+}
+
   </style>
 </head>
-
 <body>
   <input type="text" id="messageStatusId" hidden="true"/>
 
@@ -181,6 +209,9 @@
   <input type="text" id="etDatepickerReqId" hidden="true"/>
   <input type="text" id="etDatepickerResId" hidden="true"/>
 
+  <input type="text" id="mcResultCalendarReqId" hidden="true"/>
+  <input type="text" id="mcResultCalendarResId" hidden="true"/>
+
   <input type="text" id="nifty50StocksReqId" hidden="true"/>
   <input type="text" id="nifty50StocksResId" hidden="true"/>
 
@@ -192,6 +223,12 @@
 
   <input type="text" id="googleGraphReqId" hidden="true"/>
   <input type="text" id="googleGraphResId" hidden="true"/>
+
+  <input type="text" id="ichartScreenerReqId" hidden="true"/>
+  <input type="text" id="ichartScreenerResId" hidden="true"/>
+  
+  <input type="text" id="ichartSentimentReqId" hidden="true"/>
+  <input type="text" id="ichartSentimentResId" hidden="true"/>
   
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
@@ -216,8 +253,6 @@ $(function() {
     }
 });
 })
-
 </script>
 </body>
-
 </html>

@@ -3,6 +3,11 @@ if (!OptionChainData) {
   OptionChainData = {}
   webix.storage.local.put('OptionChainData', OptionChainData)
 }
+let DownloadTime = webix.storage.local.get('DownloadTime')
+if (!DownloadTime) {
+  DownloadTime = {}
+  webix.storage.local.put('DownloadTime', DownloadTime)
+}
 // Cleanup old option chain script data
 (function() {
   let d = new Date()
@@ -30,7 +35,7 @@ let globalConfig = {
 let loader = '<div class="loader-wrp"><div class="spin-loader" aria-hidden="true"></div></div>'
 let emptyRow = '<tr><td colspan="23" class="text-center emptyRow">No Record Found</td></tr>'
 let selectScriptRow = '<tr><td colspan="23" class="text-center emptyRow">Please select script and click on download</td></tr>'
-// [Strike Price, Bid Price, Ask Price, Volumn, OI]
+// [Strike Price, Bid Price, Ask Price, Volumn, OI, IV]
 let PE_OTM = []
 let PE_ITM = []
 let CE_OTM = []
@@ -437,7 +442,7 @@ function addCustomRow(config, label, strikeId, premiumId) {
 }
 function prepareStrikeWithPremium() {
 
-  // [Strike Price, Bid Price, Ask Price, Volumn, OI]
+  // [Strike Price, Bid Price, Ask Price, Volumn, OI, IV]
   PE_OTM = []
   PE_ITM = []
 
@@ -887,6 +892,38 @@ function findSupportResistence() {
   // [S1, S2, R1, R2]
   return [S[1], S[0], R[0], R[1]]
 }
+function findActiveCallAndPut() {
+
+  // [Strike Price, Bid Price, Ask Price, Volumn, OI]
+
+  let ceVol = []
+  CE_OTM.forEach(a => ceVol.push(a[3]))
+  ceVol.sort((a, b) => { return b - a })
+  let peVol = []
+  PE_OTM.forEach(a => peVol.push(a[3]))
+  peVol.sort((a, b) => { return b - a })
+
+  let R = []
+  CE_OTM.forEach(a => {
+    if (a[3] == ceVol[1]) {
+      R.push(a[0])
+    } else if (a[3] == ceVol[0]) {
+      R.push(a[0])
+    }
+  })
+  R.sort()
+  let S = []
+  PE_OTM.forEach(a => {
+    if (a[3] == peVol[1]) {
+      S.push(a[0])
+    } else if (a[3] == peVol[0]) {
+      S.push(a[0])
+    }
+  })
+  S.sort()
+  // [S1, S2, R1, R2]
+  return [S[1], S[0], R[0], R[1]]
+}
 function upperBoundLowerBoundGraph(underlyingVal, data) {
   let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(underlyingVal, data)
   let guides = []
@@ -1031,11 +1068,33 @@ function initEventListeners() {
     $$('etDatatableId').parse(jsonArr.searchResult)
   })
   
+  let mcResultCalendarResId = document.querySelector('#mcResultCalendarResId')
+  mcResultCalendarResId.addEventListener('change', (e) => {
+    let html = localStorage.getItem('AllResultCalendar')
+    $$('allResultCalendarId').setHTML(html);
+
+    let rcArr = webix.storage.local.get('AllResultCalendarArr')
+    let s = new Set()
+    rcArr.forEach(r => {
+        s.add(r[2])
+    })
+
+    let l = $$('resultDateId').getList()
+    l.clearAll()
+    let vArr = ['All']
+    for (var value of s) {
+      vArr.push(value);
+    }
+    l.parse(['All', ...vArr.sort()])
+    $$('allResultCalendarTempId').refresh()
+  })
+
   let maxPainStocksResId = document.querySelector('#maxPainStocksResId')
   maxPainStocksResId.addEventListener('change', (e) => {
     MaxPainList = webix.storage.local.get('MaxPainList')
     $$('maxPainForAllDatatableId').clearAll()
     $$('maxPainForAllDatatableId').parse(MaxPainList)
+    $$('maxPainTempId').refresh()
   })
 
   let nifty50StocksResId = document.querySelector('#nifty50StocksResId')
@@ -1061,9 +1120,40 @@ function initEventListeners() {
   messageStatusId.addEventListener('change', (e) => {
     webix.message({ text: e.target.value, type:"info", expire: 500})
   })
+
+  let ichartSentimentResId = document.querySelector('#ichartSentimentResId')
+  ichartSentimentResId.addEventListener('change', (e) => {
+    webix.ui({
+      view:"window",
+      fullscreen: true,
+      id: 'ichartSentimentWinId',
+      head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
+        { width:4 },
+        { view:"label", label: "i Chart Sentiment:"},
+        { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
+          $$('ichartSentimentWinId').close(); 
+         }
+        }]
+      },
+      position:"center",
+      body:{
+        rows: [
+          {view: 'template', template: '<div id="ichartSentiment" style="width:100%;height:100%;overflow: auto;"></div>'},
+        {height: 10}]
+      },
+      on: {
+        onShow: function() {
+          document.getElementById("ichartSentiment").innerHTML = sessionStorage.getItem('ichartSentiment')
+        }
+      }
+    }).show();
+  })
+
+
 }
 let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 
-            'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId']
+            'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
+          'moneycontroRCViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1075,6 +1165,7 @@ webix.ready(function () {
 
   var menu_data_multi = []
   menu_data_multi.push({ id: 'optionChain', value: 'Option Chain'})
+  menu_data_multi.push({ id: 'moneycontroRC', value: 'All Result Calendar'})
   menu_data_multi.push({ id: 'nifty50Stocks', value: 'Nifty 50 Stocks'})
   menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
@@ -1125,7 +1216,30 @@ webix.ready(function () {
             }
           },
           { view: "label", label: "Option Strategies" },
-          {},
+          {view: "button", type: "icon", icon: "mdi mdi-eye-settings", id:"ichartSentimentId", width: 30, align: "left", click: function() {
+              showiChartSentiment()
+            }
+          },
+          {
+            view: 'template', id:'scriptAnalyticsId', css:'webix-control', width: 650, template: function(obj) {
+
+              if(webix.isArray(obj)) {
+                let d1 = obj[3] > 0 ? `<span class="green">${obj[3]}%</span>` : `<span class="red">${obj[3]}%</span>`
+                let w1 = obj[4] > 0 ? `<span class="green">${obj[4]}%</span>` : `<span class="red">${obj[4]}%</span>`
+                let m1 = obj[5] > 0 ? `<span class="green">${obj[5]}%</span>` : `<span class="red">${obj[5]}%</span>`
+                let m3 = obj[6] > 0 ? `<span class="green">${obj[6]}%</span>` : `<span class="red">${obj[6]}%</span>`
+                let y1 = obj[7] > 0 ? `<span class="green">${obj[7]}%</span>` : `<span class="red">${obj[7]}%</span>`
+  
+                let yearWise = yearWisePercentageCal(SelectedScript)[0]
+                let yearW = yearWise['below52WksPer'] > 0 ? `<span class="green">${yearWise['below52WksPer']}%</span>` : `<span class="red">${yearWise['below52WksPer']}%</span>`
+                let h = `1D: ${d1}  1W: ${w1}  1M: ${m1}  3M: ${m3}  1Y: ${y1} Below 1Y: ${yearW} On Date: ${obj[44]}`
+                return h 
+              } else {
+                return ''
+              }
+                
+            }
+          },
         ]
       },
       {
@@ -1152,6 +1266,7 @@ webix.ready(function () {
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
+                else if(id == 'moneycontroRC') {showViewId('moneycontroRCViewId')}
                 else if(id == 'maxPainStocks') {
                   showViewId('maxPainForAllViewId')
                   //dispatchChangeEvent('#maxPainStocksReqId')
@@ -1284,6 +1399,7 @@ webix.ready(function () {
                                     $$('maxPainLabelId').setHTML('Max Pain: <b>' + v.max_pain + '</b>')
                                   }
                                 })
+                                $$('scriptAnalyticsId').setValues(webix.storage.local.get('ichartScreener')[id])
                               }
                             }
                           }
@@ -1489,6 +1605,7 @@ webix.ready(function () {
                         } else if(Object.keys(obj).length > 0) {
                           prepareStrikeWithPremium()
                           let [S1, S2, R1, R2] = findSupportResistence()
+                          let [PEV1, PEV2, CEV1, CEV2] = findSupportResistence()
                           let arr = obj.data
 
                           let fivePerLower = Underlying_Value - (Underlying_Value * 5 /100)
@@ -1534,6 +1651,24 @@ webix.ready(function () {
                             let ceHis = `<span onclick="fetchOptionHistory('CE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
                             let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
 
+                            let ceVol1 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == CEV1) {
+                              ceVol1 = 'green1'
+                            }
+                            let ceVol2 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == CEV2) {
+                              ceVol2 = 'green2'
+                            }
+
+                            let peVol1 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == PEV1) {
+                              peVol1 = 'green1'
+                            }
+                            let peVol2 = ''
+                            if(DecimalFixed(st).replaceAll(',', '') == PEV2) {
+                              peVol2 = 'green2'
+                            }
+
                             let ceOI1 = ''
                             if(DecimalFixed(st).replaceAll(',', '') == R1) {
                               ceOI1 = 'green1'
@@ -1551,12 +1686,13 @@ webix.ready(function () {
                             if(DecimalFixed(st).replaceAll(',', '') == S2) {
                               peOI2 = 'green2'
                             }
+
                             let ceBuildUp = ''
                             let ceBuildUpTip = ''
                             let peBuildUp = ''
                             let peBuildUpTip = ''
                             if(fetchTableConfig('buildup') == 'active') {
-                              if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0) {
+                              if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0 || ce.changeinOpenInterest == 0) {
                                 ceBuildUp = ''
                                 ceBuildUpTip = 'Unchanged'
                               } else if(ce.changeinOpenInterest>0) {
@@ -1576,9 +1712,8 @@ webix.ready(function () {
                                   ceBuildUpTip = 'Long Unwinding'
                                 }
                               }
-  
-                              
-                              if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0) {
+                                
+                              if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0 || pe.changeinOpenInterest == 0) {
                                 peBuildUp = ''
                                 peBuildUpTip = 'Unchanged'
                               } else if(pe.changeinOpenInterest>0) {
@@ -1605,7 +1740,7 @@ webix.ready(function () {
                             <td width="2.34%" style="${ceBuildUp}" title="${ceBuildUpTip}">${ceHis}</td>
                             <td width="5.14%" class="${ceClass} ${ceOI1} ${ceOI2}">${DecimalFixed(ce.openInterest, true)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.changeinOpenInterest, true)}</td>
-                            <td width="5.54%" class="${ceClass}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
+                            <td width="5.54%" class="${ceClass} ${ceVol1} ${ceVol2}">${DecimalFixed(ce.totalTradedVolume, true)}</td>
                             <td width="3.34%" class="${ceClass}">${DecimalFixed(ce.impliedVolatility)}</td>
                             <td width="4.34%" class="${ceClass}"><a class="bold" href="javascript:;">${DecimalFixed(ce.lastPrice)}</a></td>
                             <td width="4.34%" class="${ceClass} ${ceChangeTx}">${DecimalFixed(ce.change)}</td>
@@ -1623,7 +1758,7 @@ webix.ready(function () {
                             <td width="4.34%" class="${peClass} ${peChangeTx}">${DecimalFixed(pe.change)}</td>
                             <td width="4.34%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.lastPrice)}</a></td>
                             <td width="3.34%" class="${peClass}">${DecimalFixed(pe.impliedVolatility)}</td>
-                            <td width="5.54%" class="${peClass}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
+                            <td width="5.54%" class="${peClass} ${peVol1} ${peVol2}"><a class="bold" href="javascript:;">${DecimalFixed(pe.totalTradedVolume, true)}</a></td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.changeinOpenInterest, true)}</td>
                             <td width="5.14%" class="${peClass} ${peOI1} ${peOI2}">${DecimalFixed(pe.openInterest, true)}</td>
                             <td width="2.34%" style="${peBuildUp}" title="${peBuildUpTip}">${peHis}</td>
@@ -1668,7 +1803,7 @@ webix.ready(function () {
                       }
                       let end = `  </tbody>
                       </table></div></div>`
-
+                      webix.delay(()=> attachBuySellButtons(), 100);
                       return start + end
                     } 
                     },
@@ -1770,6 +1905,15 @@ webix.ready(function () {
                             }
                           }
                         },{},
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-download",label: 'i Chart',
+                          width: 130, align: "left",
+                          click: function () {
+                            if(window.confirm('Are you sure to download all sripts')) {
+                              dispatchChangeEvent('#ichartScreenerReqId')
+                            }
+                          }
+                        },
                         {
                           view: "button", type: "icon", icon: "mdi mdi-download",label: 'Download All',
                           width: 130, align: "left",
@@ -1898,6 +2042,9 @@ webix.ready(function () {
                       click: function () {
                         let sDate = $$('etDatepickerId').getValue().substr(0,10)
                         dispatchChangeEvent('#etDatepickerReqId', sDate)
+                      }},{view: "button", value:'7 Days', height:35, width: 45, align: "center",
+                      click: function () {
+                        dispatchChangeEvent('#etDatepickerReqId', 7)
                       }},{}
                      ]
                   },
@@ -1912,6 +2059,47 @@ webix.ready(function () {
                       
                       {id:'event', header: 'Event', width: 450, fillspace:true}]   }
                     },
+                    {height: 30}
+                  ]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'moneycontroRCViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    { height:35,
+                      cols: [
+                        {
+                          view:"combo", width:150, id:"resultDateId",
+                          placeholder:"Select Date",
+                          options:['All'],
+                          on:{
+                            onChange: function(id){
+                              if(id === 'All') {
+
+                              } else {
+                                
+                              }
+                            }
+                          }
+                        },
+                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
+                      click: function () {
+                        dispatchChangeEvent('#mcResultCalendarReqId')
+                      }},
+                      {view: "template", id: "allResultCalendarTempId", template: function(obj){
+                          return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['AllResultCalendarArr']
+                      }},
+                    {}
+                    ]
+                    },
+                    
+                  {view: 'template', width: 100, template: function(obj){
+                    return localStorage.getItem('AllResultCalendar')
+                  }, id: 'allResultCalendarId', scroll: "auto"},
                     {height: 30}
                   ]
                 }
@@ -2027,11 +2215,13 @@ webix.ready(function () {
                         {view: "button", type: "icon", icon: "mdi mdi-refresh", width:50, align: "center",
                         click: function () {
                           dispatchChangeEvent('#maxPainStocksReqId')
-                        }},{}
+                        }},{view: "template", id: "maxPainTempId", template: function(obj){
+                          return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['MaxPainList']
+                      }},{}
                       ]},
                     {
                       view:'datatable', hover:"myhover",css: "rows", id:'maxPainForAllDatatableId', 
-                      data: [],
+                      data: webix.storage.local.get('MaxPainList'),
                       columns: [
                         {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
                         {id:'max_pain', header: 'Max Pain', width: 200,}, 
@@ -2078,7 +2268,6 @@ webix.ready(function () {
   webix.ui({
     view:"popup",
     id:"table_pop",
-    
     width: 220,
     body:{
       rows: [
@@ -2115,7 +2304,6 @@ webix.ready(function () {
     }
   }).hide();
 })
-
 function shortStrangleCal(peOTM, ceOTM) {
   peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - 300) )
   ceOTM = ceOTM.filter(obj => obj[1] > 10 && obj[0] > (Underlying_Value + 300))
@@ -2746,9 +2934,17 @@ function displayContinuousData() {
   $$('AlldLossId').parse(negAll)
   $$('continuousLossId').getTabbar().render()
 }
-function yearWisePercentageCal() {
+function yearWisePercentageCal(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let sArr = []
+  if(scriptName) {
+    let temp = {}
+    temp[scriptName] = dd[scriptName]
+    dd = temp
+    if(!temp[scriptName]) {
+      return {}
+    }
+  }
   Object.keys(dd).forEach(s => {
     let d = dd[s]
     let cDate = d[0][0]
@@ -3201,4 +3397,131 @@ function showGoogleGraph() {
       }
     }
   }).show();
+}
+function attachBuySellButtons() {
+
+  $('#indices-body>tr>td:nth-child(14)').mouseleave((e) => {
+    $('.peSell').remove()
+  })
+  
+  $('#indices-body>tr>td:nth-child(14)').mouseenter((e) => {
+    let peSell = e.target.innerText
+    let st = $(e.target).parent().find('td:nth-child(12)').get(0).innerText.trim().replaceAll(',', '')
+    $(e.target).append(`
+      <div class="peSell">
+      <div style="transition-delay: 0.05s;">
+      <button type="button" class="sellButton" onclick="displayPESell('${st}', '${peSell}')">
+        <div>
+        <span class="fa-stack">
+          <strong class="fa-stack-1x">S</strong>
+        </span>
+        </div>
+      </button>
+      </div>
+      </div>
+  `)
+  })
+
+}
+function displayPESell(strikePrice, peSell) {
+  prepareStrikeWithPremium()
+  let sellPut = {
+    strikePrice: parseInt(strikePrice),
+    premium: peSell,
+    lotSize: 1
+  }
+  let d = optionChainPayoffCalCEPE([], [], [], [sellPut], [], [])
+  let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
+  let resultArr = []
+  resultArr.push({
+      data: d,
+      lowerBound: lowerBound,
+      lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
+      uppderBound: uppderBound,
+      uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
+      premiumRec: 0,
+  })
+
+
+  webix.ui({
+    view: "window",
+    width: window.innerWidth - 2,
+    height: window.innerHeight - 2,
+    position: 'center',
+    id: 'chartWinId',
+    head: {
+      view: "toolbar", id: 'strategyChartToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Sell Put : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
+        { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
+          if ($$("inputInfoId").isVisible()) {
+            $$("inputInfoId").hide();
+          } else {
+            $$("inputInfoId").show();
+          }
+        }},
+        { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
+      ]
+    },
+    body: {
+      rows:[
+        { id: 'inputInfoId', height: 70, cols: [
+          
+          {
+            rows: [
+              {view:'template', template: ''},
+              {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+0+'</b></div>'},
+            ]
+          },
+        ]},
+        {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
+      ]
+    }
+  }).show();
+  displayStrategyChart(d, parseInt(Underlying_Value))
+}
+function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
+
+  let lowerStrike = sellPutArr[0].strikePrice - 400;
+  let higherStrike = sellPutArr[0].strikePrice + 400;
+
+  let fullData = [];
+  for (let i = lowerStrike; i <= higherStrike; i = i + 1) {
+    let val = i + ' , ';
+    buyCallArr.forEach(function (obj) {
+      val += (buyCall(obj.strikePrice, obj.premium, i) * obj.lotSize) + ' , ';
+    });
+
+    sellCallArr.forEach(function (obj) {
+      val += (sellCall(obj.strikePrice, obj.premium, i) * obj.lotSize) + ' , ';
+    });
+
+    buyPutArr.forEach(function (obj) {
+      val += (buyPut(obj.strikePrice, obj.premium, i) * obj.lotSize) + ' , ';
+    });
+
+    sellPutArr.forEach(function (obj) {
+      val += (sellPut(obj.strikePrice, obj.premium, i) * obj.lotSize) + ' , ';
+    });
+    buyStockArr.forEach(function (obj) {
+      val += (buyStock(obj.strikePrice, i)) + ' , ';
+    });
+    sellStockArr.forEach(function (obj) {
+      val += (sellStock(obj.strikePrice, i)) + ' , ';
+    });
+    let t = 0;
+    val.substr(val.indexOf(',') + 1).split(' , ').forEach(function (v) { if (v.length > 0) { t = t + parseFloat(v.trim()) } })
+    val += parseFloat(t).toFixed(2);
+    fullData.push(Object.assign({}, val.split(',').map(v => parseInt(v))));
+  }
+  return fullData;
+}
+
+function showiChartSentiment() {
+  if(SelectedScript) {
+    dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
+  } else {
+    alert('Please select script')
+  }
+  
 }
