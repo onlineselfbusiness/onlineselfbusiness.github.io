@@ -8,6 +8,11 @@ if (!DownloadTime) {
   DownloadTime = {}
   webix.storage.local.put('DownloadTime', DownloadTime)
 }
+let CashAndCarry = webix.storage.local.get('CashAndCarry')
+if(!CashAndCarry) {
+  CashAndCarry = []
+  webix.storage.local.put('CashAndCarry', CashAndCarry)
+}
 // Cleanup old option chain script data
 (function() {
   let d = new Date()
@@ -849,14 +854,14 @@ function findLowerBoundUpperBound(underlyingVal, data) {
   for (let i = 0; i < data.length - 1; i++) {
     if (data[i][totalIndex] > 0) {
       lowerBound = data[i][0]
-      lowerBoundPer = parseFloat((lowerBound - underlyingVal) / underlyingVal * 100).toFixed(2) + '% ' + (lowerBound - underlyingVal)
+      lowerBoundPer = parseFloat((lowerBound - underlyingVal) / underlyingVal * 100).toFixed(2) + '% ' + parseFloat((lowerBound - underlyingVal)).toFixed(2)
       break
     }
   }
   for (let i = data.length - 1; i > 0; i--) {
     if (data[i][totalIndex] > 0) {
       uppderBound = data[i][0]
-      uppderBoundPer = parseFloat((uppderBound - underlyingVal) / underlyingVal * 100).toFixed(2) + '% ' + (uppderBound - underlyingVal)
+      uppderBoundPer = parseFloat((uppderBound - underlyingVal) / underlyingVal * 100).toFixed(2) + '% ' + parseFloat((uppderBound - underlyingVal)).toFixed(2)
       break
     }
   }
@@ -930,9 +935,9 @@ function upperBoundLowerBoundGraph(underlyingVal, data) {
   if (lowerBound != 0) {
     guides.push({
       "category": lowerBound,
-      "lineColor": "red",
+      "lineColor": "black",
       "lineAlpha": 1,
-      "dashLength": 3,
+      "dashLength": 10,
       "inside": false,
       "label": lowerBound + '(' + lowerBoundPer + ')',
       "position": top
@@ -941,9 +946,9 @@ function upperBoundLowerBoundGraph(underlyingVal, data) {
   if (uppderBound != 0) {
     guides.push({
       "category": uppderBound,
-      "lineColor": "blue",
+      "lineColor": "black",
       "lineAlpha": 1,
-      "dashLength": 3,
+      "dashLength": 10,
       "inside": false,
       "label": uppderBound + '(' + uppderBoundPer + ')',
       "position": top
@@ -1149,11 +1154,17 @@ function initEventListeners() {
     }).show();
   })
 
+  let cashAndCarryResId = document.querySelector('#cashAndCarryResId')
+  cashAndCarryResId.addEventListener('change', (e) => {
+    CashAndCarry = webix.storage.session.get('CashAndCarry')
+    $$('cashAndCarryDatatableId').refresh()
+    $$('revCashAndCarryDatatableId').refresh()
+  })
 
 }
 let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 
             'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
-          'moneycontroRCViewId']
+          'moneycontroRCViewId', 'cashAndCarryViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1176,6 +1187,7 @@ webix.ready(function () {
     { id: 'continuousWiseId', value: 'Continuous Wise'},
     { id: 'yearWiseId', value: 'Year Wise'},
   ]})
+  menu_data_multi.push({ id: 'cashAndCarry', value: 'Cash & Carry Arbitrage'})
   menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
     {id:'liveTV', value: 'Live TV'},
     {id:'indianMarket', value:'Indian Market'},
@@ -1216,8 +1228,21 @@ webix.ready(function () {
             }
           },
           { view: "label", label: "Option Strategies" },
+          { view: "button", label: "Open Strategy", width: 80, click: function(){ strategyCal() } },
+          {view: "button", type: "icon", icon: "mdi mdi-history", id:"scriptHistoryId", width: 30, align: "left", click: function() {
+            if(SelectedScript) {
+              openScriptDailyDetails(SelectedScript)
+            } else {
+              alert('Please select script')
+            }
+          }
+        },
           {view: "button", type: "icon", icon: "mdi mdi-eye-settings", id:"ichartSentimentId", width: 30, align: "left", click: function() {
-              showiChartSentiment()
+            if(SelectedScript) {
+              dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
+            } else {
+              alert('Please select script')
+            }
             }
           },
           {
@@ -1253,7 +1278,7 @@ webix.ready(function () {
                   showViewId('worldMarketViewId')
                   dispatchChangeEvent('#worldMarketId')
                 } else if(id === 'liveTV') {window.open('https://www.cnbctv18.com/live-tv/')}
-                else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf')}
+                else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf?t=' + new Date().getTime())}
                 else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
                 else if(id === 'earningsCalendar') {window.open('https://www.moneycontrol.com/earnings-calendar')}
                 else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
@@ -1267,6 +1292,7 @@ webix.ready(function () {
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
                 else if(id == 'moneycontroRC') {showViewId('moneycontroRCViewId')}
+                else if(id == 'cashAndCarry') {showViewId('cashAndCarryViewId')}
                 else if(id == 'maxPainStocks') {
                   showViewId('maxPainForAllViewId')
                   //dispatchChangeEvent('#maxPainStocksReqId')
@@ -2100,6 +2126,66 @@ webix.ready(function () {
                   {view: 'template', width: 100, template: function(obj){
                     return localStorage.getItem('AllResultCalendar')
                   }, id: 'allResultCalendarId', scroll: "auto"},
+                    {height: 30}
+                  ]
+                }
+              },
+              {
+                view: "scrollview",
+                scroll: "auto",
+                id: 'cashAndCarryViewId',
+                hidden: true,
+                body: {
+                  rows: [
+                    { height:35,
+                      cols: [
+                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
+                      click: function () {
+                        dispatchChangeEvent('#cashAndCarryReqId')
+                      }},
+                      {view: "template", id: "cashAndCarryTempId", template: function(obj){
+                          return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['CashAndCarry']
+                      }},]
+                    },
+                    {
+                      cols: [
+                        {
+                          rows: [{view: 'template', template: function(){ return '<center><b>Buy cash and Sell future</b></center>'}, height: 30},
+                          {
+                            view:'datatable', id:'cashAndCarryDatatableId', 
+                            data: prepareCashAndCarryData()[0],
+                            columns: [
+                              {id:'company', header: ['Company', {content: 'textFilter'}], width: 140, sort: 'string'}, 
+                              {id:'future', header: 'Future'}, 
+                              {id:'spot', header: 'Spot'}, 
+                              {id:'basis', header: 'Basis'}, 
+                              {id:'basisPer', header: 'Basis Per', sort: 'int'}, 
+                              {id:'preBasis', header: 'Pre Basis'}, 
+                              {id:'change', header: 'Change', sort: 'int'}, 
+                              {id:'lotSize', header: 'Lot Size'}, 
+                            ]   
+                          },]
+                        },
+                        {
+                          rows: [{view: 'template', template:function(){ return '<center><b>Sell cash and Buy future</b></center>'} , height: 30},
+                          {
+                            view:'datatable', id:'revCashAndCarryDatatableId', 
+                            data: prepareCashAndCarryData()[1],
+                            columns: [
+                              {id:'company', header: ['Company', {content: 'textFilter'}], width: 140, sort: 'string'}, 
+                              {id:'future', header: 'Future'}, 
+                              {id:'spot', header: 'Spot'}, 
+                              {id:'basis', header: 'Basis'}, 
+                              {id:'basisPer', header: 'Basis Per', sort: 'int'}, 
+                              {id:'preBasis', header: 'Pre Basis'}, 
+                              {id:'change', header: 'Change', sort: 'int'}, 
+                              {id:'lotSize', header: 'Lot Size'}, 
+                            ]   
+                          },]
+                        },
+                      ]
+                    },
+                    
                     {height: 30}
                   ]
                 }
@@ -3517,11 +3603,317 @@ function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr
   return fullData;
 }
 
-function showiChartSentiment() {
-  if(SelectedScript) {
-    dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
-  } else {
-    alert('Please select script')
+function openScriptDailyDetails(scriptName) {
+  let dd = webix.storage.local.get('ScriptHistoryData')
+  let sData = dd[scriptName].slice(0);
+  for(var i=0; i<sData.length - 1; i++) {
+    let s = sData[i]
+    s.push(parseFloat(sData[i][4] - sData[i+1][4]).toFixed(2))
+    s.push(parseFloat( (sData[i][4] - sData[i+1][4]) / sData[i+1][4] * 100).toFixed(2))
+    s.push(parseFloat(sData[i][2] - sData[i][3]).toFixed(2))
   }
-  
+
+  webix.ui({
+      view: "window",
+      id: "scriptWindowId",
+      fullscreen: true,
+      /*modal: true,
+      position: "center",
+      minHeight: 400,
+      scroll: "xy",
+      resize: true,
+      minWidth: 955,*/
+      head: {
+          rows: [
+              {
+                  view: "toolbar", cols: [
+                      {
+                          view: "label", label: scriptName, align: 'center', template: "<a target='_blank' href='https://nseindia.com/companytracker/cmtracker.jsp?symbol="
+                              + scriptName + "&cName=cmtracker_nsedef.css'> " + scriptName + " </a>"
+                      },
+                      { view: "button", label: 'X', width: 30, align: 'right', click: "  $$('scriptWindowDataTableId').config.profitDaysChart.destroy();$$('scriptWindowDataTableId').config.lossDaysChart.destroy();$$('scriptWindowId').destructor();" }
+                  ]
+              },
+              {
+                  cols: [
+                      {
+                          view: "select", id: "scriptSelectionId", width: 100,
+                          options: [{ id: 0, value: "1 week" }, { id: 1, value: "2 weeks" }, { id: 2, value: "3 weeks" }, { id: 3, value: "1 month" },
+                          { id: 4, value: "3 months" }, { id: 5, value: "1 year" }],
+                          on: {
+                              onChange: function (selectedVal) {
+                                  $$('scriptWindowDataTableId').clearAll()
+                                  let dataWeek = weeksData.weeksWise[parseInt(selectedVal)]
+                                  let index = (parseInt(selectedVal) + 1)
+                                  if (selectedVal === '4') {
+                                      index = 12
+                                  } else if (selectedVal === '5') {
+                                      index = 52
+                                  }
+                                  let endDate = dataWeek[index + 'weeks-date'].substr(14)
+                                  let endDataIndex = dd.scriptData[scriptName].findIndex(function (val) { return val[DateStr] === endDate })
+                                  let sData = dd.scriptData[scriptName].slice(0, endDataIndex + 1);
+                                  $$('scriptWindowDataTableId').parse(sData)
+                                  $$('scriptWindowDataTableId').config.total = sData.length;
+
+                                  let summaryLabel = "Date: " + dataWeek[index + 'weeks-date'] + " PL: " + fetchBGColor(dataWeek[index + 'weeks-pol'])
+                                      + " %: " + fetchBGColor(dataWeek[index + 'weeks-per']) + " High: <span style='color:green;'> " + dataWeek[index + 'weeks-high'] + "</span>"
+                                      + "( " + dataWeek[index + 'weeks-highDate'] + ")"
+                                      + " Low: " + + dataWeek[index + 'weeks-low'] + "( " + dataWeek[index + 'weeks-lowDate'] + ")"
+
+                                  $$('summaryId').setHTML(summaryLabel)
+                                  drawCharts(sData)
+                              }
+                          }
+                      },
+                      {
+                          view: "label", id: "summaryId", label: "Date: " + '1weeks-date' + " PL: " + fetchBGColor(10)
+                              + " %: " + fetchBGColor(1) + " High: " + '1weeks-high' + "( " + 1 + ")"
+                              + " Low: " + + 1 + "( " + 1 + ")"
+                      },
+                  ]
+              }
+          ]
+      }
+      ,
+      body: {
+          cols: [
+              {
+                  id: "scriptWindowDataTableId",
+                  view: "datatable",
+                  scroll: "xy",
+                  select: "row",
+                  columns: [
+                      {
+                          id: 0, header: "Date", template: function (obj) {
+                              return obj[0]
+                          }
+                      },
+                      {
+                          id: 4, header: "Close", template: function (obj) {
+                              return obj[4]
+                          }
+                      },
+                      {
+                          id: 5, header: ["PL", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
+                              return fetchBGColor(obj[5])
+                          }
+                      },
+                      {
+                          id: 6, header: ["%", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
+                              return fetchBGColor(obj[6])
+                          }
+                      },
+                      {
+                          id: 1, header: "Open", width: 70
+                      },
+                      {
+                          id: 3, header: "Low", width: 70
+                      },
+                      {
+                          id: 2, header: "High", width: 70
+                      },
+                      {
+                          id: 7, header: ["H-L", { content: "numberFilter" }], sort: "int", width: 70
+                      }
+                  ],
+                  data: sData,
+                  total: sData.length,
+                  on: {
+                      onAfterFilter: function () {
+                          webix.message("No.of records: " + this.count() + ' of ' + $$('scriptWindowDataTableId').config.total);
+                      }
+                  }
+              },
+              { view: "resizer" },
+              {
+                  rows: [
+                      {
+                          view: 'template', id: 'profitId', template: '<div style="width:100%;height:100%;" id="profitDaysId"></div>'
+                      },
+                      {
+                          view: 'template', id: 'lossId', template: '<div style="width:100%;height:100%;" id="lossDaysId"></div>'
+                      },
+                  ]
+              }]
+      },
+      on: {
+          onShow: function () {
+              drawCharts(sData)
+          }
+      }
+  }).show();
+}
+
+function fetchBGColor(val) {
+  let cls = 'class="' + (val > 0 ? 'green' : 'red') + '"'
+  return '<span ' + cls + '>' + val + '</span>'
+}
+
+function drawCharts(sData) {
+  let commonChart = {
+      chart: {
+          renderTo: '',
+          type: 'pie',
+          margin: [0, 200, 0, 0],
+          spacingTop: 0,
+          spacingBottom: 0,
+          spacingLeft: 0,
+          spacingRight: 0
+      },
+      title: {
+          //verticalAlign: 'middle',
+          floating: true,
+          text: '',
+      },
+      yAxis: {
+          title: {
+              text: ''
+          }
+      },
+      plotOptions: {
+          pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              colors: [],
+              dataLabels: {
+                  enabled: true,
+                  color: '#000000',
+                  connectorColor: '#000000',
+                  formatter: function () {
+                      return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
+                  }
+              }
+          }
+      },
+      tooltip: {
+          formatter: function () {
+              return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
+          }
+      },
+      legend: {
+          enabled: true,
+          floating: true,
+          verticalAlign: 'xbottom',
+          align: 'right',
+          layout: 'vertical',
+          y: 5,
+          labelFormatter: function () {
+              return this.name + '-->' + '<span style=\"color:' + this.color + '\">' + this.y + ' days</span>';
+          }
+      },
+      credits: { enabled: false },
+      series: [{
+          name: 'Profit Days',
+          data: [],
+          innerSize: '55%',
+          showInLegend: true,
+          dataLabels: {
+              enabled: true
+          }
+      }]
+  }
+
+  commonChart.chart.renderTo = 'profitDaysId'
+  commonChart.series[0].name = 'Profit Days',
+      commonChart.series[0].data = [["(0<1)%", 0], ["(1<2)%", 0], ["(2<3)%", 0], ["(3<4)%", 0], ["(4<5)%", 0], ["(5<6)%", 0], ["(6<7)%", 0], ["(7<8%)", 0], ["(8<9)%", 0], ["(>9)%", 0]]
+
+  for (let d of sData) {
+      if (d[6] >= 0 && d[6] < 1) {
+          commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
+      } else if (d[6] >= 1 && d[6] < 2) {
+          commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
+      } else if (d[6] >= 2 && d[6] < 3) {
+          commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
+      } else if (d[6] >= 3 && d[6] < 4) {
+          commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
+      } else if (d[6] >= 4 && d[6] < 5) {
+          commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
+      } else if (d[6] >= 5 && d[6] < 6) {
+          commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
+      } else if (d[6] >= 6 && d[6] < 7) {
+          commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
+      } else if (d[6] >= 7 && d[6] < 8) {
+          commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
+      } else if (d[6] >= 8 && d[6] < 9) {
+          commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
+      } else if (d[6] >= 9) {
+          commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
+      }
+  }
+  let pdata = []
+  for (let i = 0; i < 10; i++) {
+      if (commonChart.series[0].data[i][1] != 0) {
+          pdata.push(commonChart.series[0].data[i])
+      }
+  }
+  commonChart.series[0].data = pdata
+  if ($$('scriptWindowDataTableId').config.profitDaysChart) {
+      $$('scriptWindowDataTableId').config.profitDaysChart.destroy()
+  }
+  commonChart.plotOptions.pie.colors = ['#98FB98', '#90EE90', '#3CB371', '#20B2AA', '#ADFF2F', '#00FF7F', '#00FA9A', '#008000', '#00FF00', '#2E8B57',]
+  $$('scriptWindowDataTableId').config.profitDaysChart = new Highcharts.Chart(commonChart);
+  commonChart.chart.renderTo = 'lossDaysId'
+  commonChart.series[0].name = 'Loss Days',
+      commonChart.series[0].data = [["<-1%", 0], ["<-2%", 0], ["<-3%", 0], ["<-4%", 0], ["<-5%", 0], ["<-6%", 0], ["<-7%", 0], ["<-8%", 0], ["<-9%", 0], [">-9%", 0]]
+  for (let d of sData) {
+      if (d[6] < 0 && d[6] >= -1) {
+          commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
+      } else if (d[6] < -1 && d[6] >= -2) {
+          commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
+      } else if (d[6] < -2 && d[6] >= -3) {
+          commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
+      } else if (d[6] < -3 && d[6] >= -4) {
+          commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
+      } else if (d[6] < -4 && d[6] >= -5) {
+          commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
+      } else if (d[6] < -5 && d[6] >= -6) {
+          commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
+      } else if (d[6] < -6 && d[6] >= -7) {
+          commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
+      } else if (d[6] < -7 && d[6] >= -8) {
+          commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
+      } else if (d[6] < -8 && d[6] >= -9) {
+          commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
+      } else if (d[6] < -9) {
+          commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
+      }
+  }
+  let ldata = []
+  for (let i = 0; i < 10; i++) {
+      if (commonChart.series[0].data[i][1] != 0) {
+          ldata.push(commonChart.series[0].data[i])
+      }
+  }
+  commonChart.series[0].data = ldata
+  if ($$('scriptWindowDataTableId').config.lossDaysChart) {
+      $$('scriptWindowDataTableId').config.lossDaysChart.destroy()
+  }
+
+  commonChart.plotOptions.pie.colors = ['#FFA07A', '#FA8072', '#CD5C5C', '#DC143C', '#FF4500', '#E9967A', '#CD5C5C', '#FF6347', '#FF0000', '#8B0000',]
+  $$('scriptWindowDataTableId').config.lossDaysChart = new Highcharts.Chart(commonChart);
+}
+
+function prepareCashAndCarryData() {
+  let buyCash = []
+  let sellCash = []
+  CashAndCarry.forEach(a => {
+    let obj = {
+      company: a[0],
+      future: a[1],
+      spot: a[2],
+      basis: a[3],
+      basisPer: a[4],
+      preBasis: a[5],
+      change: a[6],
+      lotSize: a[7],
+    }
+    if(parseFloat(a[2].replaceAll(',', '')) < parseFloat(a[1].replaceAll(',', ''))) {
+      buyCash.push(obj)
+    } else {
+      sellCash.push(obj)
+    }
+
+  })
+  return [buyCash, sellCash]
 }

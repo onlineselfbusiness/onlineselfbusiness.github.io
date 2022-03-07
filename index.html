@@ -14,7 +14,9 @@
   <script src="https://cdn.amcharts.com/lib/3/amcharts.js"></script>
   <script src="https://cdn.amcharts.com/lib/3/serial.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highstock/6.0.3/highstock.js"></script>
+  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/highstock/6.0.3/highstock.js" integrity="sha512-xStuxZIFeepdcpLwBhqIuU761mDfYUDbV8C8lUiTX96W+kyL+AYmY9l3o/Ku30gEek9l+hUJGQpmT4pcVm6LeA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/9.3.3/highcharts.js" integrity="sha512-noXK66BSiB7VkjM8nmuM6q6TxiUnXnbC+IU1A7/KeNdp0wdOuKSB4vOAKKKi8h2AWjK9faRnEVckf9ajcTS82A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!--
   <link rel="stylesheet" href="css/materialdesignicons.min.css" />
   <link rel="stylesheet" href="css/webix.css" type="text/css">
@@ -121,10 +123,10 @@
       line-height: 30px !important;
     }
 
-    .tgl_vid_aud.active {
+    .tgl_vid_aud.active, .tgl_buy_sell.active {
     background: #2fb381;
   }
-  .tgl_vid_aud {
+  .tgl_vid_aud, .tgl_buy_sell {
     width: 32px;
     height: 17px;
     background: #e9610c;
@@ -137,7 +139,7 @@
     cursor: pointer;
     transition: 0.5s all;
   }
-  .tgl_vid_aud.active .tgic {
+  .tgl_vid_aud.active .tgic, .tgl_buy_sell.active .tgic {
     left: 16px;
     top: 1px;
     -webkit-animation-name: audioright;
@@ -145,7 +147,7 @@
     animation-name: audioright;
     animation-duration: 2s;
   }
-  .tgl_vid_aud .tgic {
+  .tgl_vid_aud .tgic, .tgl_buy_sell .tgic {
     display: inline-block;
     width: 14px;
     height: 14px;
@@ -191,6 +193,26 @@
   left: 10px;
 }
 
+div[view_id^="BuySell"] .webix_switch_box.webix_switch_on {
+    background-color: #45b001!important;
+}
+div[view_id^="BuySell"] .webix_switch_box {
+    background-color: #ec6500!important;
+    color: #fff!important;
+}
+
+.delete-icon  span {
+  color: #ec6500!important;
+}
+
+.active-icon  span {
+  color: #45b001!important;
+}
+
+.inactive-icon  span {
+  color: grey!important;
+}
+
   </style>
 </head>
 <body>
@@ -229,9 +251,14 @@
   
   <input type="text" id="ichartSentimentReqId" hidden="true"/>
   <input type="text" id="ichartSentimentResId" hidden="true"/>
+
+  <input type="text" id="cashAndCarryReqId" hidden="true"/>
+  <input type="text" id="cashAndCarryResId" hidden="true"/>
+  
   
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
+  <script src="js/strategy_calculation.js" type="text/javascript"></script>
 <script>
 
 $(function() {
@@ -251,6 +278,39 @@ $(function() {
       $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
         selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
     }
+});
+
+$( document ).on( "click", "div.tgl_buy_sell", function() {
+    let bOrs = 0
+    let action = $(this).data('action')
+    if($(this).hasClass('active')){
+      bOrs = 1
+		  $(this).removeClass('active');
+      $$('BuySell'+this.id).data = {id:"Sell", value: "Sell"}
+    }else{
+      bOrs = 2
+      $(this).addClass('active');
+      $$('BuySell'+this.id).data = {id:"Buy", value: "Buy"}
+    }
+    let type = $$('Type' + this.id).data.id
+    let sp = $$('StrikePrice' + this.id).getValue()
+    if(sp) {
+      if(type == 'CE') {
+        CE.forEach(obj => {
+          if(obj[0] == sp) {
+            $$('Premium' + this.id).setValue(obj[bOrs])
+          }
+        })
+      } else {
+        PE.forEach(obj => {
+          if(obj[0] == sp) {
+            $$('Premium' + this.id).setValue(obj[bOrs])
+          }
+        })
+      }
+    }
+    
+    console.dir(type)
 });
 })
 </script>
