@@ -1,4 +1,10 @@
-function strategyCal() {
+let BUY = 1
+let SELL = 0
+let CE_TYPE = 1
+let PE_TYPE = 0
+
+function strategyCal(UV, SS, SED, opStArr) {
+  let automaticCalStrategy = false
   let OptimizeChart = webix.storage.local.get('OptimizeChart')
   if(!OptimizeChart) {
     OptimizeChart = {
@@ -44,6 +50,12 @@ function strategyCal() {
   } else {
       return parseFloat((expiryStrikePrice - strikePrice) + premium).toFixed(2);
   }
+  }
+  function buyStock(stockPrice, expiryStrikePrice) {
+    return parseFloat(expiryStrikePrice - stockPrice).toFixed(2);
+  }
+  function sellStock(stockPrice, expiryStrikePrice) {
+    return parseFloat(stockPrice - expiryStrikePrice).toFixed(2);
   }
   function prepareStrikeWithPremium() {
   
@@ -219,7 +231,9 @@ function strategyCal() {
         if(parseInt(t) == 0) {
           breakPoints.push(i)
         }
-        fullData.push(Object.assign({}, val.split(',').map(v => parseInt(v))));
+        let tablePayOff = Object.assign({}, val.split(',').map(v => parseFloat(v)))
+        tablePayOff[0] = parseInt(tablePayOff[0])
+        fullData.push(tablePayOff);
       }
       //console.dir(breakPoints)
       if(OptimizeChart.optimizeChart == 1 && breakPoints.length > 0) {
@@ -245,7 +259,14 @@ function strategyCal() {
       for (let i = 0; i < data.length; i++) {
         let t = 0;
         for (let k = 1; k < keys.length - 1; k++) {
-          t += parseInt((data[i][k]));
+          t += (data[i][k]);
+        }
+        if(SelectedScript == 'NIFTY') {
+          t = t * 50
+        } else if(SelectedScript == 'BANKNIFTY') {
+          t = t * 25
+        } else {
+          t = t * ScriptNames[SelectedScript].lotSize
         }
         pData.push({ StockPrice: data[i][0], Final: t, Change: parseFloat((data[i][0] - Underlying_Value) * 100 / Underlying_Value).toFixed(2) }); // data[i][keys.length-1]
       }
@@ -284,7 +305,7 @@ function strategyCal() {
             "useDataSetColors": false,
             "showBalloon": true,
             "fillAlphas": 0.2,
-            "balloonText": "P&L [[value]] <br/>Chg. from Spot: ([[Change]]%)",
+            "balloonText": "P&L ₹[[value]] <br/>Chg. from Spot: ([[Change]]%)",
           },
         ],
         "categoryAxis": {
@@ -317,147 +338,218 @@ function strategyCal() {
     
   }
   function showChart() {
+
+    if($$('strategyCalChartWinId')) {
+      $$('strategyCalChartWinId').show()
+    } else {
+      /*let opstraSDResId = document.querySelector('#opstraSDResId')
+      opstraSDResId.addEventListener('change', (e) => {
+        //alert('Done')
+      })*/
+
       webix.ui({
-          view: "window",
-          width: window.innerWidth - 2,
-          height: window.innerHeight - 2,
-          position: 'center',
-          id: 'chartWinId',
-          head: {
-            view: "toolbar", id: 'strategyChartToolbarId', cols: [
-              { width: 4 },
-              { view: "label", label: "Payoff Chart "},
-              { view: "label", label: "", id: 'underlyingPriceId'},
-              { view: "switch", id: 'optimizeChartId', onLabel: "On", align: 'left', width: 70, offLabel:"Off", value: OptimizeChart.optimizeChart ,
-               on:{
-                onChange: function(newValue, oldValue, config){
-                  OptimizeChart.optimizeChart = newValue
-                  webix.storage.local.put('OptimizeChart', OptimizeChart)
-                  calculatePayOff()
-                }
-                }
-              },
-              { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
-            ]
-          },
-          body: {
-            cols:[
-              { height: window.innerHeight - 25, width: 470,
-                rows: [
-              { id: 'inputRowId',
-                rows:[
-                  {
-                    cols: [
-                      {
-                        view:"combo", width:120, id:"inputScriptId",
-                        placeholder:"Select Script",
-                        options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
-                        on:{
-                          onChange: function(id){
-                              SelectedScript = id
-                              SelectedExpiryDate = ''
-                              let sData = OptionChainData[SelectedScript]
-                              $$('inputExpiryDateId').define('options', [])
-                              $$('inputExpiryDateId').setValue('')
-                              if(SelectedScript && sData) {
-                                Underlying_Value = sData.underlyingValue
-                                let fetchTime = new Date(sData.fetchTime).toLocaleString()
-                                $$('underlyingPriceId').setHTML('Spot Price: <b>' + Underlying_Value + '</b> Last Downloaded: ' + sData.timestamp)
-                                let expiryDates = Object.keys(sData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
-                                $$('inputExpiryDateId').define('options', expiryDates)
-                                
-                                if(sData.SelectedExpiryDate){
-                                  SelectedExpiryDate = sData.SelectedExpiryDate
-                                } else {
-                                  SelectedExpiryDate = expiryDates[0].id
-                                }
-                                $$('inputExpiryDateId').setValue(SelectedExpiryDate)
+        view: "window",
+        width: window.innerWidth - 2,
+        height: window.innerHeight - 2,
+        position: 'center',
+        id: 'strategyCalChartWinId',
+        head: {
+          view: "toolbar", id: 'strategyCalChartToolbarId', cols: [
+            { width: 4 },
+            { view: "label", label: "Payoff Chart "},
+            { view: "label", label: "", id: 'underlyingPriceId'},
+            { view: "switch", id: 'optimizeChartId', onLabel: "On", align: 'left', width: 70, offLabel:"Off", value: OptimizeChart.optimizeChart ,
+            on:{
+              onChange: function(newValue, oldValue, config){
+                OptimizeChart.optimizeChart = newValue
+                webix.storage.local.put('OptimizeChart', OptimizeChart)
+                calculatePayOff()
+              }
+              }
+            },
+            { view: "button", label: 'X', width: 50, align: 'left', click: function () { 
+              //$$('chartWinId').close();
+              $$('strategyCalChartWinId').hide()
+              }
+            }
+          ]
+        },
+        body: {
+          cols:[
+            { height: window.innerHeight - 25, width: 470,
+              rows: [
+            { id: 'inputRowId',
+              rows:[
+                {
+                  cols: [
+                    {
+                      view:"combo", width:120, id:"inputScriptId",
+                      placeholder:"Select Script",
+                      options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
+                      on:{
+                        onChange: function(id){
+                            SelectedScript = id
+                            SelectedExpiryDate = ''
+                            let sData = OptionChainData[SelectedScript]
+                            $$('inputExpiryDateId').define('options', [])
+                            $$('inputExpiryDateId').setValue('')
+                            if(SelectedScript && sData) {
+                              Underlying_Value = sData.underlyingValue
+                              let fetchTime = new Date(sData.fetchTime).toLocaleString()
+                              $$('underlyingPriceId').setHTML('Spot Price: <b>' + Underlying_Value + '</b> Last Downloaded: ' + sData.timestamp)
+                              let expiryDates = Object.keys(sData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+                              $$('inputExpiryDateId').define('options', expiryDates)
+                              
+                              if(sData.SelectedExpiryDate){
+                                SelectedExpiryDate = sData.SelectedExpiryDate
+                              } else {
+                                SelectedExpiryDate = expiryDates[0].id
                               }
-                              clearRows()
-                          }
-                        }
-                      },
-                      {
-                        view:"combo", width:125, labelWidth:1, id:"inputExpiryDateId",
-                        label: '',  placeholder:"Select Date",
-                        options:[],on:{
-                          onChange: function(id){
-                            SelectedExpiryDate = id
-                            if(SelectedExpiryDate) {
-                              prepareStrikeWithPremium()
-                            } else {
-                              CE = []
-                              PE = []
-                              CE_ITM = []
-                              CE_OTM = []
-                              PE_ITM = []
-                              PE_OTM = []
+
+                              let OpstraSD = webix.storage.local.get('OpstraSD')
+                              let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
+                              if(!OpstraSD[sKey]) {
+                                dispatchChangeEvent('#opstraSDReqId', sKey)
+                              }
+
+                              $$('inputExpiryDateId').setValue(SelectedExpiryDate)
                             }
+                            clearRows()
+                            calculatePayOff()
+                        },
+                        onAfterRender: function() {
+                          webix.delay(function() {
+                            if(!automaticCalStrategy) {
+                              $$('inputScriptId').setValue('NIFTY')
+                              addDynamicRow(rowIndex++)
+                              calculatePayOff()
+                            }
+                            
+                          })
+                        }
+                      }
+                    },
+                    {
+                      view:"combo", width:125, labelWidth:1, id:"inputExpiryDateId",
+                      label: '',  placeholder:"Select Date",
+                      options:[],on:{
+                        onChange: function(id){
+                          SelectedExpiryDate = id
+                          if(SelectedExpiryDate) {
+                            prepareStrikeWithPremium()
+                          } else {
+                            CE = []
+                            PE = []
+                            CE_ITM = []
+                            CE_OTM = []
+                            PE_ITM = []
+                            PE_OTM = []
                           }
                         }
-                      },
-                      { view:"button", type: 'icon', width: 30, icon:"mdi mdi-refresh", click: function() { 
-                        if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
-                          calculatePayOff()
-                        } else {
-                          alert('Please Select Script and Expiery Date')
-                        }
-                      }},
-                      {},
-                      { view:"button", type: 'icon', width: 30, icon:"mdi mdi-plus", click: function() { 
+                      }
+                    },
+                    { view:"button", type: 'icon', width: 30, icon:"mdi mdi-refresh", click: function() { 
                       if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
-                        addDynamicRow(rowIndex++)
                         calculatePayOff()
                       } else {
                         alert('Please Select Script and Expiery Date')
                       }
-                    }}]
-                  },
-                {
-                  cols: [{ view: "label", width: 70, label: "Buy/Sell"},
-                  { view: "label", width: 70, label: "Type"},
-                  { view: "label", width: 170, label: "Strike Price"},
-                  { view: "label", label: "Premium", width: 70},
-                  { view: "label", label: "Lots", width: 40},
-                  { view: "label", label: "", width: 30},
-                  { view: "label", label: "", width: 30},
-                  ]
-              }
-                ], height: window.innerHeight - 200
-              },
+                    }},
+                    {},
+                    /*{ view:"button", value:"Stock", width: 30, icon:"mdi mdi-plus", click: function() { 
+                      if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
+                        addDynamicRow(rowIndex++, {
+                          buyOrSell: 1,
+                          type: 2,
+                          strikePrice: closest,
+                          premium: closest, 
+                          lots: 1
+                        })
+                        calculatePayOff()
+                      } else {
+                        alert('Please Select Script and Expiery Date')
+                      }
+                    }},*/
+                    { view:"button", type: 'icon', width: 30, icon:"mdi mdi-plus", click: function() { 
+                    if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
+                      addDynamicRow(rowIndex++)
+                      calculatePayOff()
+                    } else {
+                      alert('Please Select Script and Expiery Date')
+                    }
+                  }}]
+                },
               {
-                view:"scrollview", 
-                id:"scrollview", 
-                scroll:"y",
-                body:{
-                   rows:[
-                     {view: 'button', label:'Strangle', click: function() {
-                      StrangleStrategy()
-                     }},
-                     {view: 'button', label:'Iron Condor', click: function() {
-                      IronCondorStrategy()
-                     }},
-                     
-
-                   ]
-                 }
-              }
-            ]
+                cols: [{ view: "label", width: 70, label: "Buy/Sell"},
+                { view: "label", width: 70, label: "Type"},
+                { view: "label", width: 170, label: "Strike Price"},
+                { view: "label", label: "Premium", width: 70},
+                { view: "label", label: "Lots", width: 40},
+                { view: "label", label: "", width: 30},
+                { view: "label", label: "", width: 30},
+                ]
+            }
+              ], height: window.innerHeight - 200
             },
-              {view:'resizer'},
-              {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-            ]
-          }
-      }).show();
-      //displaySavedStrategyData()
+            {
+              view:"scrollview", 
+              id:"scrollview", 
+              scroll:"y",
+              body:{
+                rows:[
+                  {view: 'button', label:'Strangle', click: function() {
+                    StrangleStrategy()
+                  }},
+                  {view: 'button', label:'Iron Condor', click: function() {
+                    IronCondorStrategy()
+                  }},
+                  {
+                    cols: [
+                      {view: 'button', label:'Jade Lizard', click: function() {
+                        JadeLizardStrategy()
+                      }},
+                      {view: 'button', label:'Rev Jade Lizard', click: function() {
+                        RevJadeLizardStrategy()
+                      }},
+                    ]
+                  },
+                  {
+                    cols: [
+                      {view: 'button', label:'Call Front Ratio Spread', click: function() {
+                        CallFrontRationSpreadStrategy()
+                      }},
+                      {view: 'button', label:'Put Front Ratio Spread', click: function() {
+                        PutFrontRationSpreadStrategy()
+                      }},
+                    ]
+                  },
+
+                ]
+              }
+            }
+          ]
+          },
+            {view:'resizer'},
+            {
+              rows: [
+                {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
+                {height: 50},
+              ]
+            }
+            
+          ]
+        }
+    }).show();
+    }
+    //displaySavedStrategyData()
   }
   function addDynamicRow(rowId, json) {
     if(!json) {
       json = {
-        buyOrSell: 1,
-        type: 1,
+        buyOrSell: BUY,
+        type: CE_TYPE, // 1: CE, 0: PE, 2: Stock
         strikePrice: closest,
-        premium: '', 
+        premium: 0, 
         lots: 1
       }
     }
@@ -476,25 +568,27 @@ function strategyCal() {
       { view: "switch", id: 'BuySell' + rowId, onLabel: "Buy", width: 70, offLabel:"Sell", value: json.buyOrSell, on:{
         onChange: function(newValue, oldValue, config){
           let index = this.config.id.replaceAll('BuySell', '')
-          let v = $$('StrikePrice'+index).getValue()
-          let data = $$('Type' + index).getValue() == 1 ? CE : PE;
-          let option_data = []
-          data.forEach(obj => {
-            let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
-            option_data.push({id: obj[0], value: obj[0] + ' (' + (newValue == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
-          })
-          $$('StrikePrice'+index).getPopup().getList().clearAll()
-          $$('StrikePrice'+index).getPopup().getList().parse(option_data)
-
-          if(v) {
-            $$('Premium' + index).blockEvent()
-            if(newValue == 1) {
-              $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
-            } else {
-              $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
+          if($$('StrikePrice'+index)) {
+            let v = $$('StrikePrice'+index).getValue()
+            let data = $$('Type' + index).getValue() == 1 ? CE : PE;
+            let option_data = []
+            data.forEach(obj => {
+              let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
+              option_data.push({id: obj[0], value: obj[0] + ' (' + (newValue == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
+            })
+            $$('StrikePrice'+index).getPopup().getList().clearAll()
+            $$('StrikePrice'+index).getPopup().getList().parse(option_data)
+  
+            if(v) {
+              $$('Premium' + index).blockEvent()
+              if(newValue == 1) {
+                $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
+              } else {
+                $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
+              }
+              $$('Premium' + index).unblockEvent()
+              calculatePayOff()
             }
-            $$('Premium' + index).unblockEvent()
-            calculatePayOff()
           }
         }
       }},
@@ -522,7 +616,7 @@ function strategyCal() {
           $$('StrikePrice'+index).getPopup().getList().parse(option_data)
           if(v) {
             $$('Premium' + index).blockEvent()
-            if(bs == 1) {
+            if(bs == BUY) {
               $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
             } else {
               $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
@@ -540,7 +634,7 @@ function strategyCal() {
                 let bs = $$('BuySell' + index).getValue()
                 let data = $$('Type' + index).getValue() == 1 ? CE : PE;
                 $$('Premium' + index).blockEvent()
-                if(bs == 1) {
+                if(bs == BUY) {
                   $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][2])
                 } else {
                   $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][1])
@@ -661,13 +755,12 @@ function strategyCal() {
         displayStrategyChart([{}])
       }
   }
-  showChart()
   function StrangleStrategy() {
     if(SelectedScript != '' && SelectedExpiryDate != '') {
       clearRows()
       let pejson = {
-      buyOrSell: 0,
-      type: 0,
+      buyOrSell: SELL,
+      type: PE_TYPE,
       strikePrice: '',
       premium: '',
       lots: 1
@@ -686,8 +779,8 @@ function strategyCal() {
     }
     
     let cejson = {
-      buyOrSell: 0,
-      type: 1,
+      buyOrSell: SELL,
+      type: CE_TYPE,
       strikePrice: '',
       premium: '',
       lots: 1
@@ -717,15 +810,15 @@ function strategyCal() {
       let count = 0
       clearRows()
       let peBuy = {
-      buyOrSell: 1,
-      type: 0,
+      buyOrSell: BUY,
+      type: PE_TYPE,
       strikePrice: '',
       premium: '',
       lots: 1
       }
       let peSell = {
-        buyOrSell: 0,
-        type: 0,
+        buyOrSell: SELL,
+        type: PE_TYPE,
         strikePrice: '',
         premium: '',
         lots: 1
@@ -750,15 +843,15 @@ function strategyCal() {
       }
     
       let ceBuy = {
-        buyOrSell: 1,
-        type: 1,
+        buyOrSell: BUY,
+        type: CE_TYPE,
         strikePrice: '',
         premium: '',
         lots: 1
         }
       let ceSell = {
-        buyOrSell: 0,
-        type: 1,
+        buyOrSell: SELL,
+        type: CE_TYPE,
         strikePrice: '',
         premium: '',
         lots: 1
@@ -788,7 +881,201 @@ function strategyCal() {
         addDynamicRow(rowIndex++, ceBuy)
         calculatePayOff()
       } else {
-        alert("Not found metter strikes")
+        alert("Not found better strikes")
+      }
+    } else {
+      alert('Please select the script and expiry date')
+    }
+  }
+  function JadeLizardStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      let count = 0
+      clearRows()
+      let ceBuy = {
+        buyOrSell: BUY,
+        type: CE_TYPE,
+        strikePrice: CE_OTM[1][0],
+        premium: CE_OTM[1][2],
+        lots: 1
+        }
+      let ceSell = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: CE_OTM[0][0],
+        premium: CE_OTM[0][1],
+        lots: 1
+        }
+      let peSell = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: '',
+        premium: 0,
+        lots: 1
+      }
+      let stDiff = CE_OTM[1][0] - CE_OTM[0][0] - (ceSell.premium - ceBuy.premium)
+      for(let i=0; i<PE_OTM.length; i++) {
+        if(PE_OTM[i][1] >  (stDiff + 15)) {
+          peSell.strikePrice = PE_OTM[i][0]
+          peSell.premium = PE_OTM[i][1]
+          count++
+          break
+        }
+      }
+      
+      if(count == 1) {
+        addDynamicRow(rowIndex++, peSell)
+        addDynamicRow(rowIndex++, ceSell)
+        addDynamicRow(rowIndex++, ceBuy)
+        calculatePayOff()
+      } else {
+        alert("Not found better strikes")
+      }
+    } else {
+      alert('Please select the script and expiry date')
+    }
+  }
+  function RevJadeLizardStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      let count = 0
+      clearRows()
+      let peBuy = {
+        buyOrSell: BUY,
+        type: PE_TYPE,
+        strikePrice: PE_OTM[PE_OTM.length-2][0],
+        premium: PE_OTM[PE_OTM.length-2][2],
+        lots: 1
+        }
+      let peSell = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: PE_OTM[PE_OTM.length-1][0],
+        premium: PE_OTM[PE_OTM.length-1][1],
+        lots: 1
+        }
+      let ceSell = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: '',
+        premium: 0,
+        lots: 1
+      }
+      let stDiff = PE_OTM[PE_OTM.length-1][0] - PE_OTM[PE_OTM.length-2][0] - (peSell.premium - peBuy.premium)
+      for(let i=0; i<CE_OTM.length; i++) {
+        if(CE_OTM[i][1] <  (stDiff + 15)) {
+          ceSell.strikePrice = CE_OTM[i][0]
+          ceSell.premium = CE_OTM[i][1]
+          count++
+          break
+        }
+      }
+      
+      if(count == 1) {
+        addDynamicRow(rowIndex++, peBuy)
+        addDynamicRow(rowIndex++, peSell)
+        addDynamicRow(rowIndex++, ceSell)
+        calculatePayOff()
+      } else {
+        alert("Not found better strikes")
+      }
+    } else {
+      alert('Please select the script and expiry date')
+    }
+  }
+  function CallFrontRationSpreadStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      let count = 0
+      clearRows()
+      let threePer = Underlying_Value + (Underlying_Value * 4 / 100)
+      let stDiff = CE_OTM[1][0] - CE_OTM[0][0]
+      let ceBuy = {
+        buyOrSell: BUY,
+        type: CE_TYPE,
+        strikePrice: 0,
+        premium: 0,
+        lots: 1
+      }
+
+      for(let i=0; i<CE_OTM.length; i++) {
+        if(CE_OTM[i][0] > threePer) {
+          ceBuy.strikePrice = CE_OTM[i][0]
+          ceBuy.premium = CE_OTM[i][2]
+          count++
+          break
+        }
+      }
+
+      let ceSell = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: 0,
+        premium: 0,
+        lots: 2
+        }
+      for(let i=CE_OTM.length-1; i>0; i--) {
+        if(((CE_OTM[i][1] * ceSell.lots) - ceBuy.premium) >  (stDiff-15)) {
+          ceSell.strikePrice = CE_OTM[i][0]
+          ceSell.premium = CE_OTM[i][1]
+          count++
+          break
+        }
+      }
+      
+      if(count == 2) {
+        addDynamicRow(rowIndex++, ceBuy)
+        addDynamicRow(rowIndex++, ceSell)
+        calculatePayOff()
+      } else {
+        alert("Not found better strikes")
+      }
+    } else {
+      alert('Please select the script and expiry date')
+    }
+  }
+  function PutFrontRationSpreadStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      let count = 0
+      clearRows()
+      let threePer = Underlying_Value + (Underlying_Value * 4 / 100)
+      let stDiff = PE_OTM[PE_OTM.length-1][0] - PE_OTM[PE_OTM.length-2][0]
+      let peSell = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: 0,
+        premium: 0,
+        lots: 2
+        }
+      let peBuy = {
+        buyOrSell: BUY,
+        type: PE_TYPE,
+        strikePrice: 0,
+        premium: 0,
+        lots: 1
+      }
+
+      for(let i=0; i<PE_OTM.length - 1; i++) {
+        if(PE_OTM[i][1] > 10) {
+          peSell.strikePrice = PE_OTM[i][0]
+          peSell.premium = PE_OTM[i][1]
+          for(let j=i+1; j<PE_OTM.length - 1; j++) {
+            if(peSell.premium * peSell.lots - PE_OTM[j][2] > stDiff * 2) {
+              peBuy.strikePrice = PE_OTM[j][0]
+              peBuy.premium = PE_OTM[j][2]
+              count++
+              break
+            }
+          }
+          if(peBuy.premium != 0) {
+            break;
+          }
+        }
+      }
+   
+      if(count == 1) {
+        addDynamicRow(rowIndex++, peSell)
+        addDynamicRow(rowIndex++, peBuy)
+        calculatePayOff()
+      } else {
+        alert("Not found better strikes")
       }
     } else {
       alert('Please select the script and expiry date')
@@ -817,4 +1104,29 @@ function strategyCal() {
       calculatePayOff()
     }
   }
+  function automaticCal(UV, SS, SED, opStArr) {
+    Underlying_Value = UV
+    SelectedScript = SS
+    SelectedExpiryDate = SED
+    let buyCallArr = [], sellCallArr = [], buyPutArr = [], sellPutArr = []
+    $$("inputScriptId").setValue(SelectedScript)
+    prepareStrikeWithPremium()
+    opStArr.forEach(d => {
+      addDynamicRow(rowIndex++, d)
+    })
+    calculatePayOff()
+
+  }
+  if(UV != '' && SS != '' && SED != '' && opStArr) {
+    automaticCalStrategy = true
+    if($$('strategyCalChartWinId')) {
+      clearRows()
+    }
+    showChart()
+    automaticCal(UV, SS, SED, opStArr)
+  } else {
+    automaticCalStrategy = false
+    showChart()
+  }
+  
 }

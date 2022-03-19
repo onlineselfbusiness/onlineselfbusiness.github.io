@@ -213,6 +213,13 @@ div[view_id^="BuySell"] .webix_switch_box {
   color: grey!important;
 }
 
+.webix_list_item.webix_selected {
+  background: #b4f1c6!important;
+}
+
+a[title="JavaScript charts"] {
+  display: none!important;
+}
   </style>
 </head>
 <body>
@@ -255,6 +262,8 @@ div[view_id^="BuySell"] .webix_switch_box {
   <input type="text" id="cashAndCarryReqId" hidden="true"/>
   <input type="text" id="cashAndCarryResId" hidden="true"/>
   
+  <input type="text" id="opstraSDReqId" hidden="true"/>
+  <input type="text" id="opstraSDResId" hidden="true"/>
   
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
@@ -314,5 +323,6 @@ $( document ).on( "click", "div.tgl_buy_sell", function() {
 });
 })
 </script>
+<!--iframe src="https://opstra.definedge.com/"></iframe-->
 </body>
 </html>

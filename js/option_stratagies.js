@@ -3,6 +3,11 @@ if (!OptionChainData) {
   OptionChainData = {}
   webix.storage.local.put('OptionChainData', OptionChainData)
 }
+let OpstraSD = webix.storage.local.get('OpstraSD')
+if (!OpstraSD) {
+  OpstraSD = {}
+  webix.storage.local.put('OpstraSD', OpstraSD)
+}
 let DownloadTime = webix.storage.local.get('DownloadTime')
 if (!DownloadTime) {
   DownloadTime = {}
@@ -33,9 +38,10 @@ let DefaultTableConfig = {
   buildup: 'active'
 }
 let globalConfig = {
-  'default': { lotSize: 1, lowerPer: 4, higherPer: 4, creditAmt: 3, skipDiffPer: 1.45, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
+  'default': { lotSize: 1, lowerPer: 4, higherPer: 1, creditAmt: 3, skipDiffPer: 1, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
   'BANKNIFTY': { lotSize: 25, lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
   'NIFTY': { lotSize: 50, lowerPer: 4, higherPer: 4, creditAmt: 20, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 2, ironConderRange: 300 },
+  'TCS': { lotSize: 150, lowerPer: 1, higherPer: 1, creditAmt: 3, skipDiffPer: 1, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 5, ironConderRange: 10 },
 }
 let loader = '<div class="loader-wrp"><div class="spin-loader" aria-hidden="true"></div></div>'
 let emptyRow = '<tr><td colspan="23" class="text-center emptyRow">No Record Found</td></tr>'
@@ -684,6 +690,40 @@ function displayShortGamma() {
           let buyCallPre = obj.buyCallPre
           let premiumRec = obj.premiumRec
 
+          let peSell = {
+            buyOrSell: SELL,
+            type: PE_TYPE,
+            strikePrice: obj.sellPutSt,
+            premium: obj.sellPutPre,
+            lots: 2
+            }
+
+          let peBuy = {
+            buyOrSell: BUY,
+            type: PE_TYPE,
+            strikePrice: obj.buyPutSt,
+            premium: obj.buyPutPre,
+            lots: 1
+            }
+
+          let ceSell = {
+            buyOrSell: SELL,
+            type: CE_TYPE,
+            strikePrice: obj.sellCallSt,
+            premium: obj.sellCallPre,
+            lots: 2
+            }
+
+            let ceBuy = {
+              buyOrSell: BUY,
+              type: CE_TYPE,
+              strikePrice: obj.buyCallSt,
+              premium: obj.buyCallPre,
+              lots: 1
+              }
+
+            strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peSell, peBuy, ceSell, ceBuy])
+
           WatchObj = {
             key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt,
             name: 'Short Gamma',
@@ -698,6 +738,7 @@ function displayShortGamma() {
             buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: 12, latestPremium: buyPutPre, latestIV: 12, pl: 0}],
             buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: 12, latestPremium: buyCallPre, latestIV: 12, pl: 0}],
           }
+          /*
           webix.ui({
             view: "window",
             width: window.innerWidth - 2,
@@ -758,6 +799,7 @@ function displayShortGamma() {
             }
           }).show();
           displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
+          */
         }
       }
     }
@@ -2391,7 +2433,7 @@ webix.ready(function () {
   }).hide();
 })
 function shortStrangleCal(peOTM, ceOTM) {
-  peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - 300) )
+  peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - 300))
   ceOTM = ceOTM.filter(obj => obj[1] > 10 && obj[0] > (Underlying_Value + 300))
 
   let resultArr = []
@@ -2479,9 +2521,27 @@ function displayShortStrangle() {
             let obj = this.data.pull[id.row]
             let sellPutSt = obj.peSt
             let sellPutPre = obj.pePre
+
             let sellCallSt = obj.ceSt
             let sellCallPre = obj.cePre
             let premiumRec = obj.premiumRec
+
+            let ceSell = {
+              buyOrSell: SELL,
+              type: CE_TYPE,
+              strikePrice: obj.ceSt,
+              premium: obj.cePre,
+              lots: 1
+              }
+            let peSell = {
+              buyOrSell: SELL,
+              type: PE_TYPE,
+              strikePrice: obj.peSt,
+              premium: obj.pePre,
+              lots: 1
+              }
+
+              strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [ceSell, peSell])
 
             WatchObj = {
               key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+sellCallSt,
@@ -2494,6 +2554,7 @@ function displayShortStrangle() {
               sellPut: [{strikePrice: sellPutSt, lots: 1, entryPremium: sellPutPre, entryIV: obj.peiv, latestPremium: sellPutPre, latestIV: obj.peiv, pl: 0}],
               sellCall: [{strikePrice: sellCallSt, lots: 1, entryPremium: sellCallPre, entryIV: obj.ceiv, latestPremium: sellCallPre, latestIV: obj.ceiv, pl: 0}],
             }
+            /*
             webix.ui({
               view: "window",
               width: window.innerWidth - 2,
@@ -2550,8 +2611,9 @@ function displayShortStrangle() {
                   {view: 'template', borderless:true, template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
                 ]
               }
-            }).show();
-            displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
+            });//.show();
+            */
+            //displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
           }
         }
       },
@@ -2697,11 +2759,45 @@ function displayIronConderStrangle() {
             let buyPutPre = obj.buyPutPre
             let sellPutSt = obj.sellPutSt
             let sellPutPre = obj.sellPutPre
+
             let buyCallSt = obj.buyCallSt
             let buyCallPre = obj.buyCallPre
             let sellCallSt = obj.sellCallSt
             let sellCallPre = obj.sellCallPre
             let premiumRec = obj.premiumRec
+
+            let peBuy = {
+              buyOrSell: BUY,
+              type: PE_TYPE,
+              strikePrice: obj.buyPutSt,
+              premium: obj.buyPutPre,
+              lots: 1
+              }
+            
+            let peSell = {
+              buyOrSell: SELL,
+              type: PE_TYPE,
+              strikePrice: obj.sellPutSt,
+              premium: obj.sellPutPre,
+              lots: 1
+              }
+
+              let ceBuy = {
+                buyOrSell: BUY,
+                type: CE_TYPE,
+                strikePrice: obj.buyCallSt,
+                premium: obj.buyCallPre,
+                lots: 1
+                }
+                let ceSell = {
+                  buyOrSell: SELL,
+                  type: CE_TYPE,
+                  strikePrice: obj.sellCallSt,
+                  premium: obj.sellCallPre,
+                  lots: 1
+                  }
+
+              strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peBuy, peSell, ceBuy, ceSell])
 
             WatchObj = {
               key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt+","+'IronCondor',
@@ -2716,6 +2812,7 @@ function displayIronConderStrangle() {
               buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: obj.buyPutIV, latestPremium: buyPutPre, latestIV: obj.buyPutIV, pl: 0}],
               buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: obj.buyCallIV, latestPremium: buyCallPre, latestIV: obj.buyCallIV, pl: 0}],
             }
+            /*
             webix.ui({
               view: "window",
               width: window.innerWidth - 2,
@@ -2776,6 +2873,7 @@ function displayIronConderStrangle() {
               }
             }).show();
             displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
+            */
           }
         }
       },
