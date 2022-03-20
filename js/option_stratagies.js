@@ -2932,7 +2932,7 @@ function displayStrategyLatestDetails(obj){
   if(obj.pol >= 0) {
     style = 'style="color:#02a68a"'
   }
-  let html = ``
+  let html = `<div style="overflow:auto">@ Underlying_Value: ${obj.UV}<br>`
   let opStArr = obj.list
   for(let i=0; i<opStArr.length;i++) {
     html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy' : 'Sell'} <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE' }  @  ₹<b>${opStArr[i].premium}</b> 
@@ -2940,7 +2940,7 @@ function displayStrategyLatestDetails(obj){
     ₹<b><span ${style}>${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
   <br>`
   }
-  html = html + `Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>`
+  html = html + `Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b></div>`
 
   return html
 }
@@ -3094,13 +3094,19 @@ function showIntExtChart() {
   SelectedScript && webix.ui({
     view:"window",
     height:500,
-    width:590,
+    width:630,
     move: true,
     modal: true,
     id: 'intExtWinId',
     head:{ view:"toolbar", id:'IntExtWinToolbarId',cols:[
       { width:4 },
       { view:"label", label: "Intrinsic & Extrinsic of " + SelectedScript},
+      { view: "switch", onLabel: "CE", width: 70, offLabel:"PE", value: 1, on:{
+        onChange: function(newValue, oldValue, config){
+          OCChart && OCChart.destroy();
+          prepareDataForIntExt(newValue == 1 ? 'CE' : 'PE')
+        }
+      }},
       { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
         $$('intExtWinId').close(); 
         OCChart && OCChart.destroy();
@@ -3114,74 +3120,118 @@ function showIntExtChart() {
     },
     on: {
       onShow: function() {
-        prepareStrikeWithPremium()
-        let vs = []
-        CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
-        PE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
-        try {
-          OCChart = Highcharts.chart('intExtGraph', {
-            chart: {
-                type: 'column'
-            },
-            title: {
-                text: 'Intrinsic & Extrinsic'
-            },
-            xAxis: {
-                categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: ''
-                },
-                stackLabels: {
-                  enabled: true,
-                  style: {
-                    fontWeight: 'bold',
-                    color: ( // theme
-                        Highcharts.defaultOptions.title.style &&
-                        Highcharts.defaultOptions.title.style.color
-                    ) || 'gray'
-                  }
-                }
-            },
-            legend: {
-                align: 'right',
-                x: -30,
-                verticalAlign: 'top',
-                y: 25,
-                floating: true,
-                backgroundColor:
-                    Highcharts.defaultOptions.legend.backgroundColor || 'white',
-                borderColor: '#CCC',
-                borderWidth: 1,
-                shadow: false
-            },
-            tooltip: {
-                headerFormat: '<b>{point.x}</b><br/>',
-                pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
-            },
-            plotOptions: {
-                column: {
-                    stacking: 'normal',
-                    dataLabels: {
-                        enabled: true
-                    }
-                }
-            },
-            series: [{
-                name: 'Extrinsic',
-                data: [5, 3, 4, 7, 2]
-            }, {
-                name: 'Intrinsic',
-                data: [2, 2, 3, 2, 1]
-            }]
-        });
-        }catch(e) {
-        }
+        prepareDataForIntExt('CE')
       }
     }
   }).show();
+}
+
+function prepareDataForIntExt(type) {
+  let sData = OptionChainData[SelectedScript]
+  let ocArr = sData.data[SelectedExpiryDate]
+  let allOcs = []
+  for (let i = 0; i < ocArr.length; i++) {
+    allOcs.push(Object.keys(ocArr[i])[0])
+  }
+  let closest = allOcs.reduce(function (prev, curr) {
+      return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+  });
+
+  let tenPer = Underlying_Value * 5 /100
+  let upper = Underlying_Value + tenPer
+  let lower = Underlying_Value - tenPer
+
+  let intExt = []
+  for (let i = 0; i < ocArr.length; i++) {
+    let stPrice = Object.keys(ocArr[i])[0]
+    if(type =='CE') {
+      let ce = ocArr[i][stPrice]['CE']
+      if (ce) {
+        if(ce.strikePrice > lower && ce.strikePrice < upper) {
+          if(ce.strikePrice < Underlying_Value) {
+            let int = Underlying_Value - ce.strikePrice
+            intExt.push([ce.strikePrice, parseInt(int), parseInt(ce.lastPrice - int)])
+          } else {
+            intExt.push([ce.strikePrice, 0, parseInt(ce.lastPrice)])
+          }
+        }
+      }
+    } else {
+      let pe = ocArr[i][stPrice]['PE']
+      if (pe) {
+        if(pe.strikePrice > lower && pe.strikePrice < upper) {
+          if(pe.strikePrice > Underlying_Value) {
+            let int = pe.strikePrice - Underlying_Value
+            intExt.push([pe.strikePrice, parseInt(int), parseInt(pe.lastPrice - int)])
+          } else {
+            intExt.push([pe.strikePrice, 0, parseInt(pe.lastPrice)])
+          }
+        }
+      }
+    }
+  }
+
+  try {
+    OCChart = Highcharts.chart('intExtGraph', {
+      chart: {
+          type: 'column'
+      },
+      title: {
+          text: 'Intrinsic & Extrinsic'
+      },
+      xAxis: {
+          categories: intExt.map(s => s[0])
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: ''
+          },
+          stackLabels: {
+            enabled: true,
+            style: {
+              fontWeight: 'bold',
+              color: ( // theme
+                  Highcharts.defaultOptions.title.style &&
+                  Highcharts.defaultOptions.title.style.color
+              ) || 'gray'
+            }
+          }
+      },
+      legend: {
+          align: 'right',
+          x: -30,
+          verticalAlign: 'top',
+          y: 25,
+          floating: true,
+          backgroundColor:
+              Highcharts.defaultOptions.legend.backgroundColor || 'white',
+          borderColor: '#CCC',
+          borderWidth: 1,
+          shadow: false
+      },
+      tooltip: {
+          headerFormat: '<b>{point.x}</b><br/>',
+          pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+      },
+      plotOptions: {
+          column: {
+              stacking: 'normal',
+              dataLabels: {
+                  enabled: true
+              }
+          }
+      },
+      series: [{
+          name: 'Extrinsic',
+          data: intExt.map(s => s[2])
+      }, {
+          name: 'Intrinsic',
+          data: intExt.map(s => s[1])
+      }]
+  });
+  }catch(e) {
+  }
 }
 function toFixed(num, fixed) {
   var re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
