@@ -679,17 +679,6 @@ function displayShortGamma() {
         details_button: function (ev, id) {
 
           let obj = this.data.pull[id.row]
-          let sellPutSt = obj.sellPutSt
-          let sellPutPre = obj.sellPutPre
-          let buyPutSt = obj.buyPutSt
-          let buyPutPre = obj.buyPutPre
-
-          let sellCallSt = obj.sellCallSt
-          let sellCallPre = obj.sellCallPre
-          let buyCallSt = obj.buyCallSt
-          let buyCallPre = obj.buyCallPre
-          let premiumRec = obj.premiumRec
-
           let peSell = {
             buyOrSell: SELL,
             type: PE_TYPE,
@@ -714,175 +703,22 @@ function displayShortGamma() {
             lots: 2
             }
 
-            let ceBuy = {
-              buyOrSell: BUY,
-              type: CE_TYPE,
-              strikePrice: obj.buyCallSt,
-              premium: obj.buyCallPre,
-              lots: 1
-              }
-
-            strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peSell, peBuy, ceSell, ceBuy])
-
-          WatchObj = {
-            key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt,
-            name: 'Short Gamma',
-            script: SelectedScript,
-            expiryDate: SelectedExpiryDate,
-            lotSize: fetchScriptConfig().lotSize,
-            createDate: new Date,
-            pol:0,
-            sellPut: [{strikePrice: sellPutSt, lots: 2, entryPremium: sellPutPre, entryIV: 12, latestPremium: sellPutPre, latestIV: 12, pl: 0}],
-            sellCall: [{strikePrice: sellCallSt, lots: 2, entryPremium: sellCallPre, entryIV: 12, latestPremium: sellCallPre, latestIV: 12, pl: 0}],
-
-            buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: 12, latestPremium: buyPutPre, latestIV: 12, pl: 0}],
-            buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: 12, latestPremium: buyCallPre, latestIV: 12, pl: 0}],
-          }
-          /*
-          webix.ui({
-            view: "window",
-            width: window.innerWidth - 2,
-            height: window.innerHeight - 2,
-            position: 'center',
-            id: 'chartWinId',
-            head: {
-              view: "toolbar", id: 'strategyChartToolbarId', cols: [
-                { width: 4 },
-                { view: "label", label: "Short Gamma Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-                { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
-                  if ($$("inputInfoId").isVisible()) {
-                    $$("inputInfoId").hide();
-                  } else {
-                    $$("inputInfoId").show();
-                  }
-                }},
-                { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
-              ]
-            },
-            body: {
-              rows:[
-                { id: 'inputInfoId', height: 70, cols: [
-                  {
-                    rows: [
-                      {view:'template', template: '<div style="text-align: center;"><b>PUT</b></div>'},
-                      {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 2</b> Lots ' + SelectedScript + ' <b>' + sellPutSt + '</b>PE @ ₹<b>'+ sellPutPre + '</b></div>'},
-                      {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Buy 1</b> Lot ' + SelectedScript + ' <b>' + buyPutSt + '</b>PE @ ₹<b>'+ buyPutPre + '</b></div>'},
-                    ]
-                  },
-                  {
-                    rows: [
-                      {view:'template', template: '<div style="text-align: center;"><b>CALL</b></div>'},
-                      {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 2</b> Lots ' + SelectedScript + ' <b>' + sellCallSt + '</b>CE @ ₹<b>'+ sellCallPre + '</b></div>'},
-                      {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Buy 1</b> Lot ' + SelectedScript + ' <b>' + buyCallSt + '</b>CE @ ₹<b>'+ buyCallPre + '</b></div>'},
-                    ]
-                  },
-                  {
-                    rows: [
-                      {view:'template', template: ''},
-                      {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
-                      {view:'button', label: 'Watch It', click: function() {
-
-                        let r = WatchList.filter(obj => obj.key == WatchObj.key)
-                        if(r.length == 0) {
-                          WatchList.push(WatchObj)
-                          webix.storage.local.put('WatchList', WatchList)
-                          webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
-                        } else {
-                          webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
-                        }
-                      }},
-                    ]
-                  },
-                ]},
-                {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-              ]
+          let ceBuy = {
+            buyOrSell: BUY,
+            type: CE_TYPE,
+            strikePrice: obj.buyCallSt,
+            premium: obj.buyCallPre,
+            lots: 1
             }
-          }).show();
-          displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
-          */
+
+          strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peSell, peBuy, ceSell, ceBuy])
+         
         }
       }
     }
   }).show();
 }
-function displayStrategyChart(data, underlyingVal) {
 
-  let pData = [];
-  let keys = Object.keys(data[0]);
-  for (let i = 0; i < data.length; i++) {
-    let t = 0;
-    for (let k = 1; k < keys.length - 1; k++) {
-      t += parseInt((data[i][k]));
-    }
-    pData.push({ StockPrice: data[i][0], Final: t, Change: parseFloat((data[i][0] - underlyingVal) * 100 / underlyingVal).toFixed(2) }); // data[i][keys.length-1]
-  }
-  var chartdata = pData;
-  let guides = [{
-    "category": underlyingVal,
-    "lineColor": "green",
-    "lineAlpha": 1,
-    "dashLength": 3,
-    "inside": false,
-    "label": 'Spot Price: ' + underlyingVal,
-    "position": top
-  }]
-  
-  guides = guides.concat(upperBoundLowerBoundGraph(underlyingVal, data), supportResistenceGraph())
-
-  AmCharts.makeChart("strategyChartId", {
-    "path": "/amcharts/",
-    "type": "serial",
-    //"hideCredits":true,
-    "theme": "light",
-    "title": "Payoff",
-    "dataProvider": chartdata,
-    "categoryField": "StockPrice",
-    "graphs": [
-      {
-        "id": "graph1",
-        "title": "Price",
-        "valueField": "Final",
-        "xField": "Change",
-        "lineColor": "#45b001",
-        "fillColors": "	#45b001",
-        "negativeLineColor": "#ec6500",
-        "negativeFillColors": "#ec6500",
-        "lineThickness": 2,
-        "useDataSetColors": false,
-        "showBalloon": true,
-        "fillAlphas": 0.2,
-        "balloonText": "P&L [[value]] <br/>Chg. from Spot: ([[Change]]%)",
-      },
-    ],
-    "categoryAxis": {
-      "title": "Underlying Price",
-      "dashLength": 5,
-      "equalSpacing": true,
-      "guides": guides
-    },
-    "numberFormatter": {
-      "precision": 2,
-      "decimalSeparator": ".",
-      "thousandsSeparator": ","
-    },
-    "valueAxes": [{
-      "title": "Profit/Loss",
-    }],
-    "chartCursor": {
-      "valueLineEnabled": true,
-      "valueLineBalloonEnabled": false,
-      "cursorAlpha": 1,
-      "cursorColor": "#258cbb",
-      "limitToGraph": "graph1",
-      "valueLineAlpha": 0.2,
-      "valueZoomable": true,
-    },
-    "responsive": {
-      "enabled": true,
-    }
-  });
-
-}
 function findLowerBoundUpperBound(underlyingVal, data) {
   let lowerBound = 0
   let uppderBound = 0
@@ -1871,7 +1707,7 @@ webix.ready(function () {
                       }
                       let end = `  </tbody>
                       </table></div></div>`
-                      webix.delay(()=> attachBuySellButtons(), 100);
+                      //webix.delay(()=> attachBuySellButtons(), 100);
                       return start + end
                     } 
                     },
@@ -2318,10 +2154,7 @@ webix.ready(function () {
                       data: [],
                       rowHeight: 180,
                       columns: [
-                        {id:'name', header: ['Strategy Details', {content: 'textFilter'}], width: 200, sort: 'string'}, 
-                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 400, sort: 'int',template: function(obj) {
-                          return displayStrategyEntryDetails(obj)
-                        }}, 
+                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 400, sort: 'text'}, 
                         {id:'pol', header: ['Profit / Loss', {content: 'numberFilter'}], width: 400, sort: 'int', fillspace:true, template: function(obj) {
                           return displayStrategyLatestDetails(obj)
                         }
@@ -2425,6 +2258,13 @@ webix.ready(function () {
           cols: [{view: 'template', template: 'Volatility Skew', borderless: true},
             {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
               showVolatilitySmileChart()
+            }}
+          ]
+        },
+        {height: 30,
+          cols: [{view: 'template', template: 'Int-Ext', borderless: true},
+            {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
+              showIntExtChart()
             }}
           ]
         },
@@ -2542,78 +2382,6 @@ function displayShortStrangle() {
               }
 
               strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [ceSell, peSell])
-
-            WatchObj = {
-              key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+sellCallSt,
-              name: 'Short Strangle',
-              script: SelectedScript,
-              expiryDate: SelectedExpiryDate,
-              lotSize: fetchScriptConfig().lotSize,
-              createDate: new Date,
-              pol:0,
-              sellPut: [{strikePrice: sellPutSt, lots: 1, entryPremium: sellPutPre, entryIV: obj.peiv, latestPremium: sellPutPre, latestIV: obj.peiv, pl: 0}],
-              sellCall: [{strikePrice: sellCallSt, lots: 1, entryPremium: sellCallPre, entryIV: obj.ceiv, latestPremium: sellCallPre, latestIV: obj.ceiv, pl: 0}],
-            }
-            /*
-            webix.ui({
-              view: "window",
-              width: window.innerWidth - 2,
-              height: window.innerHeight - 2,
-              position: 'center',
-              id: 'chartWinId',
-              head: {
-                view: "toolbar", id: 'strategyChartToolbarId', cols: [
-                  { width: 4 },
-                  { view: "label", label: "Short Strangle : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-                  { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
-                    if ($$("inputInfoId").isVisible()) {
-                      $$("inputInfoId").hide();
-                    } else {
-                      $$("inputInfoId").show();
-                    }
-                  }},
-                  { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
-                ]
-              },
-              body: {
-                rows:[
-                  { id: 'inputInfoId', height: 70, cols: [
-                    {
-                      rows: [
-                        {view:'template', borderless:true, template: '<div style="text-align: center;">PUT</div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellPutSt + '</b>PE @ ₹<b>'+ sellPutPre + '</b></div>'},
-                      ]
-                    },
-                    {
-                      rows: [
-                        {view:'template', borderless:true, template: '<div style="text-align: center;">CALL</div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellCallSt + '</b>CE @ ₹<b>'+ sellCallPre + '</b></div>'},
-                      ]
-                    },
-                    {
-                      rows: [
-                        {view:'template', borderless:true, template: ''},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
-                        {view:'button', label: 'Watch It', click: function() {
-                          let r = WatchList.filter(obj => obj.key == WatchObj.key)
-                          if(r.length == 0) {
-                            WatchList.push(WatchObj)
-                            webix.storage.local.put('WatchList', WatchList)
-                            webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
-                          } else {
-                            webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
-                          }
-
-                        }},
-                      ]
-                    },
-                  ]},
-                  {view: 'template', borderless:true, template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-                ]
-              }
-            });//.show();
-            */
-            //displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
           }
         }
       },
@@ -2755,17 +2523,6 @@ function displayIronConderStrangle() {
           details_button: function (ev, id) {
   
             let obj = this.data.pull[id.row]
-            let buyPutSt = obj.buyPutSt
-            let buyPutPre = obj.buyPutPre
-            let sellPutSt = obj.sellPutSt
-            let sellPutPre = obj.sellPutPre
-
-            let buyCallSt = obj.buyCallSt
-            let buyCallPre = obj.buyCallPre
-            let sellCallSt = obj.sellCallSt
-            let sellCallPre = obj.sellCallPre
-            let premiumRec = obj.premiumRec
-
             let peBuy = {
               buyOrSell: BUY,
               type: PE_TYPE,
@@ -2798,82 +2555,6 @@ function displayIronConderStrangle() {
                   }
 
               strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peBuy, peSell, ceBuy, ceSell])
-
-            WatchObj = {
-              key: SelectedScript+","+SelectedExpiryDate+","+sellPutSt+","+buyPutSt+","+sellCallSt+","+buyCallSt+","+'IronCondor',
-              name: 'Iron Condor',
-              script: SelectedScript,
-              expiryDate: SelectedExpiryDate,
-              lotSize: fetchScriptConfig().lotSize,
-              createDate: new Date,
-              pol:0,
-              sellPut: [{strikePrice: sellPutSt, lots: 1, entryPremium: sellPutPre, entryIV: obj.sellPutIV, latestPremium: sellPutPre, latestIV: obj.sellPutIV, pl: 0}],
-              sellCall: [{strikePrice: sellCallSt, lots: 1, entryPremium: sellCallPre, entryIV: obj.sellCallIV, latestPremium: sellCallPre, latestIV: obj.sellCallIV, pl: 0}],
-              buyPut: [{strikePrice: buyPutSt, lots: 1, entryPremium: buyPutPre, entryIV: obj.buyPutIV, latestPremium: buyPutPre, latestIV: obj.buyPutIV, pl: 0}],
-              buyCall: [{strikePrice: buyCallSt, lots: 1, entryPremium: buyCallPre, entryIV: obj.buyCallIV, latestPremium: buyCallPre, latestIV: obj.buyCallIV, pl: 0}],
-            }
-            /*
-            webix.ui({
-              view: "window",
-              width: window.innerWidth - 2,
-              height: window.innerHeight - 2,
-              position: 'center',
-              id: 'chartWinId',
-              head: {
-                view: "toolbar", id: 'strategyChartToolbarId', cols: [
-                  { width: 4 },
-                  { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-                  { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
-                    if ($$("inputInfoId").isVisible()) {
-                      $$("inputInfoId").hide();
-                    } else {
-                      $$("inputInfoId").show();
-                    }
-                  }},
-                  { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
-                ]
-              },
-              body: {
-                rows:[
-                  { id: 'inputInfoId', height: 70, cols: [
-                    {
-                      rows: [
-                        {view:'template',  template: '<div style="text-align: center;">PUT</div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Buy 1</b> Lot ' + SelectedScript + ' <b>' + buyPutSt + '</b>PE @ ₹<b>'+ buyPutPre + '</b></div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellPutSt + '</b>PE @ ₹<b>'+ sellPutPre + '</b></div>'},
-                      ]
-                    },
-                    {
-                      rows: [
-                        {view:'template', template: '<div style="text-align: center;">CALL</div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Sell 1</b> Lot ' + SelectedScript + ' <b>' + sellCallSt + '</b>CE @ ₹<b>'+ sellCallPre + '</b></div>'},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;"><b>Buy 1</b> Lot ' + SelectedScript + ' <b>' + buyCallSt + '</b>CE @ ₹<b>'+ buyCallPre + '</b></div>'},
-                      ]
-                    },
-                    {
-                      rows: [
-                        {view:'template', template: ''},
-                        {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+premiumRec+'</b></div>'},
-                        {view:'button', label: 'Watch It', click: function() {
-
-                          let r = WatchList.filter(obj => obj.key == WatchObj.key)
-                          if(r.length == 0) {
-                            WatchList.push(WatchObj)
-                            webix.storage.local.put('WatchList', WatchList)
-                            webix.message({text: 'Added the strategy to watch list :)', type:"success", expire: 500})
-                          } else {
-                            webix.message({text: 'Sorry, Could not add same combination', type:"error", expire: 500})
-                          }
-                        }},
-                      ]
-                    },
-                  ]},
-                  {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-                ]
-              }
-            }).show();
-            displayStrategyChart(this.data.pull[id.row].data, parseInt(Underlying_Value))
-            */
           }
         }
       },
@@ -3172,84 +2853,40 @@ function watchListCal() {
   let OptionData = webix.storage.local.get('OptionChainData')
   WatchList = webix.storage.local.get('WatchList')
   for(let i=0;i<WatchList.length;i++) {
-      let strategy = WatchList[i]
-      strategy.pol = 0
-      let optionDataArr = OptionData[strategy.script]['data'][strategy.expiryDate]
-      if(optionDataArr) {
-          // Sell Put
-          if(strategy.sellPut) {
-              for(let j=0;j<strategy.sellPut.length; j++) {
-                  let sp = strategy.sellPut[j]
-                  for(let k=0; k<optionDataArr.length; k++) {
-                      let st = Object.keys(optionDataArr[k])[0]
-                      if(st == sp.strikePrice) {
-                          let pe = optionDataArr[k][st]['PE']
-                          if(pe) {
-                              sp.latestPremium = pe.askPrice
-                              sp.pl = sp.lots * (sp.entryPremium - sp.latestPremium) * strategy.lotSize
-                              strategy.pol += sp.pl
-                              sp.latestIV = pe.impliedVolatility
-                          }
-                      }
-                  }
+    let strategy = WatchList[i]
+    strategy.pol = 0
+    let optionDataArr = OptionData[strategy.script]['data'][strategy.expiryDate]
+    if(optionDataArr) {
+      let dArr = strategy.list
+      for(let i=0; i<dArr.length; i++) {
+        let json = dArr[i]
+        for(let k=0; k<optionDataArr.length; k++) {
+          let st = Object.keys(optionDataArr[k])[0]
+          if(st == json.strikePrice) {
+            let ceOrpe = optionDataArr[k][st][json.type == 1 ? 'CE' : 'PE']
+            if(ceOrpe) {
+              let lotSize = 0;
+              if(strategy.script == 'NIFTY') {
+                lotSize = 50
+              } else if(strategy.script == 'BANKNIFTY') {
+                lotSize = 25
+              } else {
+                lotSize = ScriptNames[strategy.script].lotSize
               }
-          }
-          // Buy Put
-          if(strategy.buyPut) {
-              for(let j=0;j<strategy.buyPut.length; j++) {
-                  let bp = strategy.buyPut[j]
-                  for(let k=0; k<optionDataArr.length; k++) {
-                      let st = Object.keys(optionDataArr[k])[0]
-                      if(st == bp.strikePrice) {
-                          let pe = optionDataArr[k][st]['PE']
-                          if(pe) {
-                              bp.latestPremium = pe.bidprice
-                              bp.pl = bp.lots * (bp.latestPremium - bp.entryPremium) * strategy.lotSize
-                              strategy.pol += bp.pl
-                              bp.latestIV = pe.impliedVolatility
-                          }
-                      }
-                  }
+              json.latestPremium = json.buyOrSell == 1 ? ceOrpe.bidprice : ceOrpe.askPrice
+              if(json.buyOrSell == 1) {
+                json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
+              } else {
+                json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
               }
+              strategy.pol += json.pl
+              break
+            }
           }
-          // Sell Call
-          if(strategy.sellCall) {
-              for(let j=0;j<strategy.sellCall.length; j++) {
-                  let sc = strategy.sellCall[j]
-                  for(let k=0; k<optionDataArr.length; k++) {
-                      let st = Object.keys(optionDataArr[k])[0]
-                      if(st == sc.strikePrice) {
-                          let ce = optionDataArr[k][st]['CE']
-                          if(ce) {
-                              sc.latestPremium = ce.askPrice
-                              sc.pl = sc.lots * (sc.entryPremium - sc.latestPremium) * strategy.lotSize
-                              strategy.pol += sc.pl
-                              sc.latestIV = ce.impliedVolatility
-                          }
-                      }
-                  }
-              }
-          }
-          // Buy Call
-          if(strategy.buyCall) {
-              for(let j=0;j<strategy.buyCall.length; j++) {
-                  let bc = strategy.buyCall[j]
-                  for(let k=0; k<optionDataArr.length; k++) {
-                      let st = Object.keys(optionDataArr[k])[0]
-                      if(st == bc.strikePrice) {
-                          let ce = optionDataArr[k][st]['CE']
-                          if(ce) {
-                              bc.latestPremium = ce.askPrice
-                              bc.pl = bc.lots * (bc.entryPremium - bc.latestPremium) * strategy.lotSize
-                              strategy.pol += bc.pl
-                              bc.latestIV = ce.impliedVolatility
-                          }
-                      }
-                  }
-              }
-          }
-          strategy.pol = parseFloat(parseFloat(strategy.pol).toFixed(2))
+        }
       }
+      strategy.pol = parseFloat(parseFloat(strategy.pol).toFixed(2))
+    }
   }
   webix.storage.local.put('WatchList', WatchList)
 }
@@ -3285,7 +2922,7 @@ function displayStrategyEntryDetails(obj){
             Expiry Date: ${obj.expiryDate}
           </div>`
   }
-  return ''
+  return obj.script
 }
 function displayStrategyLatestDetails(obj){
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
@@ -3295,53 +2932,17 @@ function displayStrategyLatestDetails(obj){
   if(obj.pol >= 0) {
     style = 'style="color:#02a68a"'
   }
-  if(obj.name == 'Short Gamma') {
-    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
-            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellPut[0].latestIV}<br>
-            <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
-            [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.buyPut[0].latestIV}<br>
-
-            <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].latestPremium}</b> 
-            [ ${parseFloat(obj.buyCall[0].latestPremium - obj.buyCall[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.buyCall[0].latestIV}<br>
-            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellCall[0].latestIV}<br>
-            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
-          </div>`
-  } else if(obj.name == 'Short Strangle') {
-    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
-            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellPut[0].latestIV}<br>
-
-            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellCall[0].latestIV}<br>
-            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
-          </div>`
-  } else if(obj.name == 'Iron Condor') {
-    return `<div style="width:100%;">No.Of Days ${days_difference},&nbsp; Days Left: ${remainingDays}<br>
-            <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].latestPremium}</b> 
-            [ ${parseFloat(obj.buyPut[0].latestPremium - obj.buyPut[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.buyPut[0].latestIV}<br>
-            <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellPut[0].latestPremium - obj.sellPut[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellPut[0].latestIV}<br>
-
-            <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].latestPremium}</b> 
-            [ ${parseFloat(obj.sellCall[0].latestPremium - obj.sellCall[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.sellCall[0].latestIV}<br>
-            <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].latestPremium}</b> 
-            [ ${parseFloat(obj.buyCall[0].latestPremium - obj.buyCall[0].entryPremium).toFixed(2)} ]
-            IV: ${obj.buyCall[0].latestIV}<br>
-            Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>
-          </div>`
+  let html = ``
+  let opStArr = obj.list
+  for(let i=0; i<opStArr.length;i++) {
+    html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy' : 'Sell'} <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE' }  @  ₹<b>${opStArr[i].premium}</b> 
+    [${opStArr[i].latestPremium}]
+    ₹<b><span ${style}>${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
+  <br>`
   }
-return ''
+  html = html + `Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b>`
+
+  return html
 }
 function deleteWatchList(key) {
   if(confirm('Are you sure to delete the strategy?')) {
@@ -3486,7 +3087,101 @@ function showVolatilitySmileChart() {
       }
     }
   }).show();
+}
 
+function showIntExtChart() {
+  !SelectedScript && webix.message({text: "Please select script", type:"error", expire: 500})
+  SelectedScript && webix.ui({
+    view:"window",
+    height:500,
+    width:590,
+    move: true,
+    modal: true,
+    id: 'intExtWinId',
+    head:{ view:"toolbar", id:'IntExtWinToolbarId',cols:[
+      { width:4 },
+      { view:"label", label: "Intrinsic & Extrinsic of " + SelectedScript},
+      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
+        $$('intExtWinId').close(); 
+        OCChart && OCChart.destroy();
+       }
+      }]
+    },
+    position:"center",
+    body:{
+      rows: [
+        {view: 'template', template: '<div id="intExtGraph" style="width:100%;height:100%;"></div>'}]
+    },
+    on: {
+      onShow: function() {
+        prepareStrikeWithPremium()
+        let vs = []
+        CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+        PE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
+        try {
+          OCChart = Highcharts.chart('intExtGraph', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Intrinsic & Extrinsic'
+            },
+            xAxis: {
+                categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: ''
+                },
+                stackLabels: {
+                  enabled: true,
+                  style: {
+                    fontWeight: 'bold',
+                    color: ( // theme
+                        Highcharts.defaultOptions.title.style &&
+                        Highcharts.defaultOptions.title.style.color
+                    ) || 'gray'
+                  }
+                }
+            },
+            legend: {
+                align: 'right',
+                x: -30,
+                verticalAlign: 'top',
+                y: 25,
+                floating: true,
+                backgroundColor:
+                    Highcharts.defaultOptions.legend.backgroundColor || 'white',
+                borderColor: '#CCC',
+                borderWidth: 1,
+                shadow: false
+            },
+            tooltip: {
+                headerFormat: '<b>{point.x}</b><br/>',
+                pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: true
+                    }
+                }
+            },
+            series: [{
+                name: 'Extrinsic',
+                data: [5, 3, 4, 7, 2]
+            }, {
+                name: 'Intrinsic',
+                data: [2, 2, 3, 2, 1]
+            }]
+        });
+        }catch(e) {
+        }
+      }
+    }
+  }).show();
 }
 function toFixed(num, fixed) {
   var re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
@@ -3662,7 +3357,7 @@ function displayPESell(strikePrice, peSell) {
       ]
     }
   }).show();
-  displayStrategyChart(d, parseInt(Underlying_Value))
+
 }
 function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
 

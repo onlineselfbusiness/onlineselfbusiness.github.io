@@ -358,6 +358,9 @@ function strategyCal(UV, SS, SED, opStArr) {
             { width: 4 },
             { view: "label", label: "Payoff Chart "},
             { view: "label", label: "", id: 'underlyingPriceId'},
+            { view: "button", label: "Watch It", width: 100, click: function() {
+              addToWatchList()
+            }},
             { view: "switch", id: 'optimizeChartId', onLabel: "On", align: 'left', width: 70, offLabel:"Off", value: OptimizeChart.optimizeChart ,
             on:{
               onChange: function(newValue, oldValue, config){
@@ -406,11 +409,11 @@ function strategyCal(UV, SS, SED, opStArr) {
                                 SelectedExpiryDate = expiryDates[0].id
                               }
 
-                              let OpstraSD = webix.storage.local.get('OpstraSD')
+                              /*let OpstraSD = webix.storage.local.get('OpstraSD')
                               let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
                               if(!OpstraSD[sKey]) {
                                 dispatchChangeEvent('#opstraSDReqId', sKey)
-                              }
+                              }*/
 
                               $$('inputExpiryDateId').setValue(SelectedExpiryDate)
                             }
@@ -711,7 +714,7 @@ function strategyCal(UV, SS, SED, opStArr) {
           })
           }
       }
-      
+
       let buyCallArr = [], sellCallArr = [], buyPutArr = [], sellPutArr = [], buyStockArr = []
 
       iData.forEach(obj => {
@@ -1117,6 +1120,43 @@ function strategyCal(UV, SS, SED, opStArr) {
     calculatePayOff()
 
   }
+  function addToWatchList() {
+    let rows = $$('inputRowId').getChildViews()
+    let tempArr = []
+    for(let i=2; i<rows.length; i++) {
+      tempArr.push(rows[i].config.id.replaceAll('input', ''))
+    }
+    let opList = []
+    for(let i=0; i<tempArr.length; i++) {
+      let json = {
+        buyOrSell: $$('BuySell'+ tempArr[i]).getValue(),
+        type: $$('Type'+ tempArr[i]).getValue(),
+        strikePrice: $$('StrikePrice'+ tempArr[i]).getValue(),
+        premium: parseFloat($$('Premium'+ tempArr[i]).getValue()),
+        lots: parseInt($$('Lot'+ tempArr[i]).getValue()),
+        latestPremium: 0,
+        pl: 0
+      }
+      opList.push(json)
+    }
+    let watchObj = {
+      script: SelectedScript,
+      expiryDate: SelectedExpiryDate,
+      UV: Underlying_Value,
+      createDate: new Date(),
+      list: opList,
+      key: webix.uid()
+    }
+
+    let WatchList = webix.storage.local.get('WatchList')
+    if (!WatchList) {
+      WatchList = []
+    }
+    WatchList.push(watchObj)
+    webix.storage.local.put('WatchList', WatchList)
+    webix.message({text: "Added to watch list successfully", type:"success"})
+  }
+
   if(UV != '' && SS != '' && SED != '' && opStArr) {
     automaticCalStrategy = true
     if($$('strategyCalChartWinId')) {
