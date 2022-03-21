@@ -2928,19 +2928,15 @@ function displayStrategyLatestDetails(obj){
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
   let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
   let remainingDays = parseInt((new Date(obj.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-  let style = 'style="color:#18c915"'
-  if(obj.pol >= 0) {
-    style = 'style="color:#02a68a"'
-  }
-  let html = `<div style="overflow:auto">Purchased Underlying Value @ ${obj.UV}<br>`
+  let html = `<div>Purchased Underlying Value @ ${obj.UV}<br>`
   let opStArr = obj.list
   for(let i=0; i<opStArr.length;i++) {
     html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy' : 'Sell'} <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE' }  @  ₹<b>${opStArr[i].premium}</b> 
     [${opStArr[i].latestPremium}]
-    ₹<b><span ${style}>${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
+    ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
   <br>`
   }
-  html = html + `Profit/Loss: ₹<b><span ${style}>${obj.pol}</span></b></div>`
+  html = html + `Profit/Loss: ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b></div>`
 
   return html
 }
