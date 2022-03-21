@@ -2936,7 +2936,7 @@ function displayStrategyLatestDetails(obj){
     ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
   <br>`
   }
-  html = html + `Profit/Loss: ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b></div>`
+  html = html + `Profit/Loss: ₹<b><span style="color:${obj.pol < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b></div>`
 
   return html
 }
