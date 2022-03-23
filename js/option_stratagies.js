@@ -3367,7 +3367,6 @@ function displayPESell(strikePrice, peSell) {
       premiumRec: 0,
   })
 
-
   webix.ui({
     view: "window",
     width: window.innerWidth - 2,

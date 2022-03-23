@@ -22,6 +22,8 @@ function strategyCal(UV, SS, SED, opStArr) {
   let CE_ITM = []
   let rowIndex = 1
   let closest = 0
+  let IV = 0
+  let supportResShowId = 1
 
   function buyCall(strikePrice, premium, expiryStrikePrice) {
       if (strikePrice >= expiryStrikePrice) {
@@ -238,17 +240,15 @@ function strategyCal(UV, SS, SED, opStArr) {
       //console.dir(breakPoints)
       if(OptimizeChart.optimizeChart == 1 && breakPoints.length > 0) {
         let cData = []
-        let l = breakPoints[0]
-        l = l - (l * 6 /100)
-        let h = breakPoints[breakPoints.length-1]
-        h = h + (h * 6 /100)
+        let sd = calculateStandardDeviation()
         fullData.forEach(r => {
-          if(r[0] >= l && r[0] <= h) {
+          if(r[0] >= (Underlying_Value - 3 * sd) && r[0] <= (Underlying_Value + 3 * sd)) {
             cData.push(r)
           }
         })
         fullData = cData
       }
+
       console.dir(fullData)
       return fullData;
   }
@@ -273,15 +273,17 @@ function strategyCal(UV, SS, SED, opStArr) {
       var chartdata = pData;
       let guides = [{
         "category": parseInt(Underlying_Value),
-        "lineColor": "green",
+        //"lineColor": "green",
         "lineAlpha": 2,
         "dashLength": 5,
         "inside": false,
-        "label": 'Spot Price: ' + Underlying_Value,
-        "position": top
+        "label": Underlying_Value,
+        "position": top,
+        lineColor: "#0000FF",
+        lineThickness: 2,
       }]
       
-      guides = guides.concat(upperBoundLowerBoundGraph(Underlying_Value, data), supportResistenceGraph())
+      guides = guides.concat(upperBoundLowerBoundGraph(Underlying_Value, data), supportResShowId == 1 ? supportResistenceGraph() : [], addStandardDeviation())
     
       AmCharts.makeChart("strategyChartId", {
         "path": "/amcharts/",
@@ -338,15 +340,18 @@ function strategyCal(UV, SS, SED, opStArr) {
     
   }
   function showChart() {
-
+    let opstraSDResId = document.querySelector('#opstraSDResId')
+    if(!opstraSDResId.flag) {
+      opstraSDResId.flag = true
+      opstraSDResId.addEventListener('change', (e) => {
+        fetchStandardDeviation()
+        calculatePayOff()
+      })
+    }
+      
     if($$('strategyCalChartWinId')) {
       $$('strategyCalChartWinId').show()
     } else {
-      /*let opstraSDResId = document.querySelector('#opstraSDResId')
-      opstraSDResId.addEventListener('change', (e) => {
-        //alert('Done')
-      })*/
-
       webix.ui({
         view: "window",
         width: window.innerWidth - 2,
@@ -409,12 +414,7 @@ function strategyCal(UV, SS, SED, opStArr) {
                                 SelectedExpiryDate = expiryDates[0].id
                               }
 
-                              /*let OpstraSD = webix.storage.local.get('OpstraSD')
-                              let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
-                              if(!OpstraSD[sKey]) {
-                                dispatchChangeEvent('#opstraSDReqId', sKey)
-                              }*/
-
+                              fetchStandardDeviation()
                               $$('inputExpiryDateId').setValue(SelectedExpiryDate)
                             }
                             clearRows()
@@ -427,7 +427,6 @@ function strategyCal(UV, SS, SED, opStArr) {
                               addDynamicRow(rowIndex++)
                               calculatePayOff()
                             }
-                            
                           })
                         }
                       }
@@ -439,6 +438,9 @@ function strategyCal(UV, SS, SED, opStArr) {
                         onChange: function(id){
                           SelectedExpiryDate = id
                           if(SelectedExpiryDate) {
+                            clearRows()
+                            calculatePayOff()
+                            fetchStandardDeviation()
                             prepareStrikeWithPremium()
                           } else {
                             CE = []
@@ -526,7 +528,6 @@ function strategyCal(UV, SS, SED, opStArr) {
                       }},
                     ]
                   },
-
                 ]
               }
             }
@@ -536,10 +537,20 @@ function strategyCal(UV, SS, SED, opStArr) {
             {
               rows: [
                 {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-                {height: 50},
+                {height: 50, cols: [
+                  { view: "switch", id: 'supportResShowId', onLabel: "On", align: 'left', width: 70, offLabel:"Off", value: 1 ,
+                    on:{
+                      onChange: function(newValue, oldValue, config){
+                        supportResShowId = newValue
+                        calculatePayOff()
+                      }
+                      }
+                    },
+                    { view: 'template', id: 'ivTemplateId', template: ''},
+                    {}
+              ]},
               ]
             }
-            
           ]
         }
     }).show();
@@ -1155,6 +1166,89 @@ function strategyCal(UV, SS, SED, opStArr) {
     WatchList.push(watchObj)
     webix.storage.local.put('WatchList', WatchList)
     webix.message({text: "Added to watch list successfully", type:"success"})
+  }
+  function fetchStandardDeviation() {
+    let OpstraSD = webix.storage.local.get('OpstraSD')
+    let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
+    if(!OpstraSD[sKey]) {
+      dispatchChangeEvent('#opstraSDReqId', sKey)
+    } else {
+      IV = OpstraSD[sKey]['iv']
+      let fetchTime = new Date(OpstraSD[sKey]['fetchTime'])
+      let currentTime = new Date()
+      if(currentTime.getTime() - fetchTime.getTime() > 20 * 60 * 1000) {
+        dispatchChangeEvent('#opstraSDReqId', sKey)
+      }else {
+        $$('ivTemplateId').setHTML('<b>IV</b>: ' + IV + ' <b>IV Percentile</b>: ' + OpstraSD[sKey]['ivPercentile'])
+      }
+    }
+  }
+  function calculateStandardDeviation() {
+    let ed = SelectedExpiryDate.split('-')
+    let d2 = new Date(ed[1] + ' ' + ed[0] + ' ' + ed[2])
+    let d1 = new Date()
+    let DTE = Math.ceil((d2.getTime() - d1.getTime())/ (24 * 60 * 60 * 1000))
+    let SD = Underlying_Value * (IV / 100) * Math.sqrt(DTE / 365)
+    return SD
+  }
+  function addStandardDeviation() {
+    let SD = calculateStandardDeviation()
+    let guide = [{
+      category: Math.trunc(Underlying_Value - SD),
+      toCategory: Math.trunc(Underlying_Value + SD),
+      lineColor: "#a2b7a7",
+      lineAlpha: .1,
+      fillAlpha: .2,
+      fillColor: "#a2b7a7",
+      dashLength: 1,
+      inside: !1
+    }, {
+        category: Math.trunc(Underlying_Value - SD),
+        lineColor: "#a2b7a7",
+        lineAlpha: .1,
+        dashLength: 1,
+        inside: !1,
+        labelRotation: 0,
+        label: "-1σ",
+        position: "top"
+    }, {
+        category: Math.trunc(Underlying_Value + SD),
+        lineColor: "#a2b7a7",
+        lineAlpha: .1,
+        dashLength: 1,
+        inside: !1,
+        labelRotation: 0,
+        label: "+1σ",
+        position: "top"
+    }, {
+        category: Math.trunc(Underlying_Value - 2 * SD),
+        toCategory: Math.trunc(Underlying_Value + 2 * SD),
+        lineColor: "#c5d2c8",
+        lineAlpha: .1,
+        fillAlpha: .2,
+        fillColor: "#c5d2c8",
+        dashLength: 1,
+        inside: !1
+    }, {
+        category: Math.trunc(Underlying_Value - 2 * SD),
+        lineColor: "#c5d2c8",
+        lineAlpha: .1,
+        dashLength: 1,
+        inside: !1,
+        labelRotation: 0,
+        label: "-2σ",
+        position: "top"
+    }, {
+        category: Math.trunc(Underlying_Value + 2 * SD),
+        lineColor: "#c5d2c8",
+        lineAlpha: .1,
+        dashLength: 1,
+        inside: !1,
+        labelRotation: 0,
+        label: "+2σ",
+        position: "top"
+    }]
+  return guide;
   }
 
   if(UV != '' && SS != '' && SED != '' && opStArr) {
