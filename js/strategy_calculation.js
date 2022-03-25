@@ -253,7 +253,9 @@ function strategyCal(UV, SS, SED, opStArr) {
       return fullData;
   }
   function displayStrategyChart(data) {
-
+    if(data.length == 0) {
+      return
+    }
       let pData = [];
       let keys = Object.keys(data[0]);
       for (let i = 0; i < data.length; i++) {
@@ -345,6 +347,8 @@ function strategyCal(UV, SS, SED, opStArr) {
       opstraSDResId.flag = true
       opstraSDResId.addEventListener('change', (e) => {
         fetchStandardDeviation()
+        let reqId = document.getElementById('opstraSDReqId')
+        delete reqId.flag
         calculatePayOff()
       })
     }
@@ -439,9 +443,9 @@ function strategyCal(UV, SS, SED, opStArr) {
                           SelectedExpiryDate = id
                           if(SelectedExpiryDate) {
                             clearRows()
-                            calculatePayOff()
                             fetchStandardDeviation()
                             prepareStrikeWithPremium()
+                            calculatePayOff()
                           } else {
                             CE = []
                             PE = []
@@ -536,8 +540,7 @@ function strategyCal(UV, SS, SED, opStArr) {
             {view:'resizer'},
             {
               rows: [
-                {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
-                {height: 50, cols: [
+                {height: 30, cols: [
                   { view: "switch", id: 'supportResShowId', onLabel: "On", align: 'left', width: 70, offLabel:"Off", value: 1 ,
                     on:{
                       onChange: function(newValue, oldValue, config){
@@ -546,9 +549,11 @@ function strategyCal(UV, SS, SED, opStArr) {
                       }
                       }
                     },
-                    { view: 'template', id: 'ivTemplateId', template: ''},
+                    { view: 'template', id: 'ivTemplateId', borderless:true, template: ''},
                     {}
               ]},
+              {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
+              { height: 10}  
               ]
             }
           ]
@@ -766,7 +771,7 @@ function strategyCal(UV, SS, SED, opStArr) {
         let data = optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, [], []);
         displayStrategyChart(data)
       } else {
-        displayStrategyChart([{}])
+        //displayStrategyChart([])
       }
   }
   function StrangleStrategy() {
@@ -1170,16 +1175,23 @@ function strategyCal(UV, SS, SED, opStArr) {
   function fetchStandardDeviation() {
     let OpstraSD = webix.storage.local.get('OpstraSD')
     let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
+    let reqId = document.getElementById('opstraSDReqId')
     if(!OpstraSD[sKey]) {
-      dispatchChangeEvent('#opstraSDReqId', sKey)
+      if(!reqId.flag) {
+        reqId.flag = true
+        dispatchChangeEvent('#opstraSDReqId', sKey)
+      }
     } else {
       IV = OpstraSD[sKey]['iv']
       let fetchTime = new Date(OpstraSD[sKey]['fetchTime'])
       let currentTime = new Date()
       if(currentTime.getTime() - fetchTime.getTime() > 20 * 60 * 1000) {
-        dispatchChangeEvent('#opstraSDReqId', sKey)
+        if(!reqId.flag) {
+          reqId.flag = true
+          dispatchChangeEvent('#opstraSDReqId', sKey)
+        }
       }else {
-        $$('ivTemplateId').setHTML('<b>IV</b>: ' + IV + ' <b>IV Percentile</b>: ' + OpstraSD[sKey]['ivPercentile'])
+        $$('ivTemplateId').setHTML(`<b>IV: <span style="color:#4bb714 !important;background-color: gold !important;">` + IV + `</span></b> <b>IV Percentile: <span style="color:#4bb714 !important;background-color: gold !important">` + OpstraSD[sKey]['ivPercentile'] + `</span></b>`)
       }
     }
   }
@@ -1188,8 +1200,7 @@ function strategyCal(UV, SS, SED, opStArr) {
     let d2 = new Date(ed[1] + ' ' + ed[0] + ' ' + ed[2])
     let d1 = new Date()
     let DTE = Math.ceil((d2.getTime() - d1.getTime())/ (24 * 60 * 60 * 1000))
-    let SD = Underlying_Value * (IV / 100) * Math.sqrt(DTE / 365)
-    return SD
+    return Underlying_Value * (IV / 100) * Math.sqrt(DTE / 365)
   }
   function addStandardDeviation() {
     let SD = calculateStandardDeviation()

@@ -18,6 +18,7 @@ if(!CashAndCarry) {
   CashAndCarry = []
   webix.storage.local.put('CashAndCarry', CashAndCarry)
 }
+
 // Cleanup old option chain script data
 (function() {
   let d = new Date()
@@ -1271,6 +1272,8 @@ webix.ready(function () {
                                 $$('expiryDateId').setValue('')
                                 SelectedExpiryDate = ''
                               } else {
+                                DownloadTime['lastViewedScript'] = id
+                                webix.storage.local.put('DownloadTime', DownloadTime)
                                 TableFilter = {}
                                 let sData = OptionChainData[SelectedScript]
                                 if(!sData) {
@@ -1305,6 +1308,9 @@ webix.ready(function () {
                                 })
                                 $$('scriptAnalyticsId').setValues(webix.storage.local.get('ichartScreener')[id])
                               }
+                            },
+                            onAfterRender: function() {
+                              $$('scriptId').setValue(DownloadTime['lastViewedScript'] || 'NIFTY')
                             }
                           }
                         },
