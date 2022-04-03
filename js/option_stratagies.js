@@ -477,7 +477,7 @@ function prepareStrikeWithPremium() {
   CE_ITM = []
 
   let sData = OptionChainData[SelectedScript]
-  let ocArr = sData.data[SelectedExpiryDate]
+  let ocArr = sData.data[SelectedExpiryDate] || []
   let allOcs = []
   for (let i = 0; i < ocArr.length; i++) {
     allOcs.push(Object.keys(ocArr[i])[0])
