@@ -7,6 +7,15 @@ let OpstraSD = webix.storage.local.get('OpstraSD')
 if (!OpstraSD) {
   OpstraSD = {}
   webix.storage.local.put('OpstraSD', OpstraSD)
+} else {
+  let k = Object.keys(OpstraSD)
+  for(let i=0; i<k.length; i++) {
+    let t1 = new Date(k[i].split('&')[1]).getTime()
+    if(t1 < new Date().getTime()) {
+      delete OpstraSD[k[i]]
+    }
+  }
+  webix.storage.local.put('OpstraSD', OpstraSD)
 }
 let DownloadTime = webix.storage.local.get('DownloadTime')
 if (!DownloadTime) {
@@ -17,6 +26,12 @@ let CashAndCarry = webix.storage.local.get('CashAndCarry')
 if(!CashAndCarry) {
   CashAndCarry = []
   webix.storage.local.put('CashAndCarry', CashAndCarry)
+}
+
+let iChartScreener = webix.storage.local.get('iChartScreener')
+if(!iChartScreener) {
+  iChartScreener = []
+  webix.storage.local.put('iChartScreener', CashAndCarry)
 }
 
 // Cleanup old option chain script data
@@ -42,7 +57,7 @@ let globalConfig = {
   'default': { lotSize: 1, lowerPer: 4, higherPer: 1, creditAmt: 3, skipDiffPer: 1, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 7, ironConderRange: 10 },
   'BANKNIFTY': { lotSize: 25, lowerPer: 6, higherPer: 6, creditAmt: 40, skipDiffPer: 1.45, lowerLimitPer: 12, upperLimitPer: 12, outerLimitPer: 4, ironConderRange: 500 },
   'NIFTY': { lotSize: 50, lowerPer: 4, higherPer: 4, creditAmt: 20, skipDiffPer: 1.45, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 2, ironConderRange: 300 },
-  'TCS': { lotSize: 150, lowerPer: 1, higherPer: 1, creditAmt: 3, skipDiffPer: 1, lowerLimitPer: 5, upperLimitPer: 5, outerLimitPer: 5, ironConderRange: 10 },
+  'TCS': { lotSize: 150, lowerPer: 1, higherPer: 1, creditAmt: 3, skipDiffPer: 1, lowerLimitPer: 7, upperLimitPer: 7, outerLimitPer: 5, ironConderRange: 10 },
 }
 let loader = '<div class="loader-wrp"><div class="spin-loader" aria-hidden="true"></div></div>'
 let emptyRow = '<tr><td colspan="23" class="text-center emptyRow">No Record Found</td></tr>'
@@ -1022,12 +1037,12 @@ function initEventListeners() {
       position:"center",
       body:{
         rows: [
-          {view: 'template', template: '<div id="ichartSentiment" style="width:100%;height:100%;overflow: auto;"></div>'},
+          {view: 'template', template: '<div id="iChartSentiment" style="width:100%;height:100%;overflow: auto;"></div>'},
         {height: 10}]
       },
       on: {
         onShow: function() {
-          document.getElementById("ichartSentiment").innerHTML = sessionStorage.getItem('ichartSentiment')
+          document.getElementById("iChartSentiment").innerHTML = sessionStorage.getItem('iChartSentiment')
         }
       }
     }).show();
@@ -1087,7 +1102,7 @@ webix.ready(function () {
     {id:'pasiId', value: 'Pasi Technologies'},{id:'eqsisId', value:'Eqsis'},{id:'niftyIndicesId', value:'Nifty Indices'},
   ]})
   
-  menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
+  //menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
   webix.ui({
     id:'mainWinId',
     rows: [
@@ -1107,7 +1122,8 @@ webix.ready(function () {
             }
           },
           { view: "label", label: "Option Strategies" },
-          { view: "button", label: "Open Strategy", width: 80, click: function(){ strategyCal() } },
+          { view:"button", label: "Technical", width: 85, click: function(){ showStreakAnalytics() }},
+          { view: "button", label: "Open Strategy", width: 120, click: function(){ strategyCal() } },
           {view: "button", type: "icon", icon: "mdi mdi-history", id:"scriptHistoryId", width: 30, align: "left", click: function() {
             if(SelectedScript) {
               openScriptDailyDetails(SelectedScript)
@@ -1126,14 +1142,12 @@ webix.ready(function () {
           },
           {
             view: 'template', id:'scriptAnalyticsId', css:'webix-control', width: 650, template: function(obj) {
-
               if(webix.isArray(obj)) {
                 let d1 = obj[3] > 0 ? `<span class="green">${obj[3]}%</span>` : `<span class="red">${obj[3]}%</span>`
                 let w1 = obj[4] > 0 ? `<span class="green">${obj[4]}%</span>` : `<span class="red">${obj[4]}%</span>`
                 let m1 = obj[5] > 0 ? `<span class="green">${obj[5]}%</span>` : `<span class="red">${obj[5]}%</span>`
                 let m3 = obj[6] > 0 ? `<span class="green">${obj[6]}%</span>` : `<span class="red">${obj[6]}%</span>`
                 let y1 = obj[7] > 0 ? `<span class="green">${obj[7]}%</span>` : `<span class="red">${obj[7]}%</span>`
-  
                 let yearWise = yearWisePercentageCal(SelectedScript)[0]
                 let yearW = yearWise['below52WksPer'] > 0 ? `<span class="green">${yearWise['below52WksPer']}%</span>` : `<span class="red">${yearWise['below52WksPer']}%</span>`
                 let h = `1D: ${d1}  1W: ${w1}  1M: ${m1}  3M: ${m3}  1Y: ${y1} Below 1Y: ${yearW} On Date: ${obj[44]}`
@@ -1141,7 +1155,6 @@ webix.ready(function () {
               } else {
                 return ''
               }
-                
             }
           },
         ]
@@ -1189,8 +1202,6 @@ webix.ready(function () {
                 else if(id == 'allStrategyGraph') {window.open('charts.png')}
                 else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts-v4.html')}
                 else if(id == 'tickertape') {window.open('https://www.tickertape.in/stocks')}
-                
-
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
                   continuousWiseAllCal()
@@ -1230,9 +1241,7 @@ webix.ready(function () {
                           }
                         }]
                     });
-
                     $$('inputViewId').getBody().addView(submitButton);
-
                   } else {
                     strategyLabel = strategiesObj[id].label
                     prepareStrategy(strategiesObj[id])
@@ -1293,7 +1302,7 @@ webix.ready(function () {
                                   } else {
                                     SelectedExpiryDate = expiryDates[0].id
                                   }
-                                  
+
                                   $$('expiryDateId').setValue(SelectedExpiryDate)
                                   $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
                                 } else {
@@ -1306,7 +1315,7 @@ webix.ready(function () {
                                     $$('maxPainLabelId').setHTML('Max Pain: <b>' + v.max_pain + '</b>')
                                   }
                                 })
-                                $$('scriptAnalyticsId').setValues(webix.storage.local.get('ichartScreener')[id])
+                                $$('scriptAnalyticsId').setValues(webix.storage.local.get('iChartScreener')[id])
                               }
                             },
                             onAfterRender: function() {
@@ -1460,7 +1469,7 @@ webix.ready(function () {
 
                         if(obj.selectedStrike) {
                           let expiryDates = Object.keys(OptionChainData[SelectedScript].data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
-                          
+
                           for(let i=0; i<expiryDates.length; i++) {
                             let strikeSelect = undefined
                             OptionChainData[SelectedScript].data[expiryDates[i]].forEach(e => {
@@ -1510,7 +1519,6 @@ webix.ready(function () {
                             <td width="2.34%">${peHis}</td>
                             </tr>`
                             start = start + r
-
                           }
                         } else if(Object.keys(obj).length > 0) {
                           prepareStrikeWithPremium()
@@ -1539,7 +1547,7 @@ webix.ready(function () {
                             if(ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0 && fetchTableConfig('optimize') == 'active') {
                               continue;
                             }
-                            
+
                             let ceIdentifier = ce.identifier
                             let peIdentifier = pe.identifier
                             let ceClass = st<=closest ? 'bg-yellow' : ''
@@ -1777,8 +1785,8 @@ webix.ready(function () {
                     }},
                     {
                       cols:[
-                        {view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="worldMarket">Loading ...</div</div>'},
-                        {view:'template', width:400, template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;background-color: #fbf7f1;"><div id="sgxNifty">Loading ...</div</div>'},
+                        {view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="worldMarket">Loading ...</div</div>'},
+                        {view:'template', width:400, template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="sgxNifty">Loading ...</div</div>'},
                       ]
                     }
                   ]
@@ -1844,7 +1852,6 @@ webix.ready(function () {
                     cellHeight: 70,
                     events:webix.Date.isHoliday,
                     align: 'center',
-                    
                     dayTemplate: function(date){
                         let dArr = date.toDateString().split(' ')
                         let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
@@ -2069,7 +2076,6 @@ webix.ready(function () {
                         },
                       ]
                     },
-                    
                     {height: 30}
                   ]
                 }
@@ -2099,17 +2105,17 @@ webix.ready(function () {
                                   }
                               },
                               {
-                                  header: "Continuous Profit",
-                                  css:'green-background',
-                                  body: {
-                                      view: "tabview",
-                                      id: "continuousProfitId",
-                                      tabbar: {
-                                          id: "continuousProfitTabbarId"
-                                      },
-                                      cells: generateContinuousCells('Profit'),
-                                      data: []
-                                  }
+                                header: "Continuous Profit",
+                                css:'green-background',
+                                body: {
+                                    view: "tabview",
+                                    id: "continuousProfitId",
+                                    tabbar: {
+                                        id: "continuousProfitTabbarId"
+                                    },
+                                    cells: generateContinuousCells('Profit'),
+                                    data: []
+                                }
                               }
                           ]
                       }
@@ -2160,8 +2166,8 @@ webix.ready(function () {
                       data: [],
                       rowHeight: 180,
                       columns: [
-                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 400, sort: 'text'}, 
-                        {id:'pol', header: ['Profit / Loss', {content: 'numberFilter'}], width: 400, sort: 'int', fillspace:true, template: function(obj) {
+                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 150, sort: 'text'}, 
+                        {id:'pol', header: ['Profit / Loss'], width: 400, sort: 'int', fillspace:true, template: function(obj) {
                           return displayStrategyLatestDetails(obj)
                         }
                         },
@@ -2897,7 +2903,6 @@ function watchListCal() {
   webix.storage.local.put('WatchList', WatchList)
 }
 function displayStrategyEntryDetails(obj){
-   
 
   if(obj.name == 'Short Gamma') {
     return `<div style="width:100%;">
@@ -2934,7 +2939,8 @@ function displayStrategyLatestDetails(obj){
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
   let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
   let remainingDays = parseInt((new Date(obj.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-  let html = `<div>Purchased Underlying Value @ ${obj.UV}<br>`
+  let html = `<div style="width:100%;height:100%;overflow:auto;">Expiry Date: <b>${obj.expiryDate}</b>, Purchased Underlying @ <b>${obj.UV}</b>, `
+  html += `DTE: <b>${remainingDays}</b>, Created Date: ${obj.createDate} <br>`
   let opStArr = obj.list
   for(let i=0; i<opStArr.length;i++) {
     html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy' : 'Sell'} <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE' }  @  ₹<b>${opStArr[i].premium}</b> 
@@ -3090,7 +3096,6 @@ function showVolatilitySmileChart() {
     }
   }).show();
 }
-
 function showIntExtChart() {
   !SelectedScript && webix.message({text: "Please select script", type:"error", expire: 500})
   SelectedScript && webix.ui({
@@ -3127,7 +3132,6 @@ function showIntExtChart() {
     }
   }).show();
 }
-
 function prepareDataForIntExt(type) {
   let sData = OptionChainData[SelectedScript]
   let ocArr = sData.data[SelectedExpiryDate]
@@ -3446,7 +3450,6 @@ function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr
   }
   return fullData;
 }
-
 function openScriptDailyDetails(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let sData = dd[scriptName].slice(0);
@@ -3588,12 +3591,10 @@ function openScriptDailyDetails(scriptName) {
       }
   }).show();
 }
-
 function fetchBGColor(val) {
   let cls = 'class="' + (val > 0 ? 'green' : 'red') + '"'
   return '<span ' + cls + '>' + val + '</span>'
 }
-
 function drawCharts(sData) {
   let commonChart = {
       chart: {
@@ -3737,7 +3738,6 @@ function drawCharts(sData) {
   commonChart.plotOptions.pie.colors = ['#FFA07A', '#FA8072', '#CD5C5C', '#DC143C', '#FF4500', '#E9967A', '#CD5C5C', '#FF6347', '#FF0000', '#8B0000',]
   $$('scriptWindowDataTableId').config.lossDaysChart = new Highcharts.Chart(commonChart);
 }
-
 function prepareCashAndCarryData() {
   let buyCash = []
   let sellCash = []

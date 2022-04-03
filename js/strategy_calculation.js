@@ -194,7 +194,7 @@ function strategyCal(UV, SS, SED, opStArr) {
   function optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
       let arr = [].concat(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr);
       let spArr = [];
-      arr.forEach(function (obj) { spArr.push(obj.strikePrice) });
+      arr.forEach(function (obj) { spArr.push(obj.strikePrice || obj.premium) });
       spArr.sort();
     
       //let config = fetchScriptConfig()
@@ -222,10 +222,10 @@ function strategyCal(UV, SS, SED, opStArr) {
           val += (sellPut(obj.strikePrice, obj.premium, i) * obj.lots) + ' , ';
         });
         buyStockArr.forEach(function (obj) {
-          val += (buyStock(obj.strikePrice, i)) + ' , ';
+          val += (buyStock(obj.premium, i) * obj.lots) + ' , ';
         });
         sellStockArr.forEach(function (obj) {
-          val += (sellStock(obj.strikePrice, i)) + ' , ';
+          val += (sellStock(obj.premium, i) * obj.lots) + ' , ';
         });
         let t = 0;
         val.substr(val.indexOf(',') + 1).split(' , ').forEach(function (v) { if (v.length > 0) { t = t + parseFloat(v.trim()) } })
@@ -246,16 +246,17 @@ function strategyCal(UV, SS, SED, opStArr) {
             cData.push(r)
           }
         })
-        fullData = cData
+        if(cData.length > 0) {
+          fullData = cData
+        }
       }
-
       console.dir(fullData)
       return fullData;
   }
   function displayStrategyChart(data) {
-    if(data.length == 0) {
-      return
-    }
+    //if(data.length == 0) {
+      //data[{}]
+    //}
       let pData = [];
       let keys = Object.keys(data[0]);
       for (let i = 0; i < data.length; i++) {
@@ -465,20 +466,22 @@ function strategyCal(UV, SS, SED, opStArr) {
                       }
                     }},
                     {},
-                    /*{ view:"button", value:"Stock", width: 30, icon:"mdi mdi-plus", click: function() { 
+                    { view:"button", value:"₹", width: 30, icon:"mdi mdi-plus", click: function() { 
                       if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
+                        let OpstraSD = webix.storage.local.get('OpstraSD')
+                        let sKey = SelectedScript + '&' + SelectedExpiryDate.replaceAll('-', '')
                         addDynamicRow(rowIndex++, {
                           buyOrSell: 1,
-                          type: 2,
-                          strikePrice: closest,
-                          premium: closest, 
+                          type: undefined,
+                          strikePrice: 0,
+                          premium:  (OpstraSD[sKey] && OpstraSD[sKey]['futuresPrice'])  || Underlying_Value , 
                           lots: 1
                         })
                         calculatePayOff()
                       } else {
                         alert('Please Select Script and Expiery Date')
                       }
-                    }},*/
+                    }},
                     { view:"button", type: 'icon', width: 30, icon:"mdi mdi-plus", click: function() { 
                     if(SelectedScript != '' && Underlying_Value != '' && SelectedExpiryDate != '') {
                       addDynamicRow(rowIndex++)
@@ -573,34 +576,70 @@ function strategyCal(UV, SS, SED, opStArr) {
       }
     }
     let option_data = []
-    let d = json.type == 1 ? CE : PE
-    d.forEach(obj => {
+    
+    if(json.type != undefined) {
+      let d = json.type == 1 ? CE : PE
+      d.forEach(obj => {
       let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
       option_data.push({id: obj[0], value: obj[0] + ' (' + ( json.buyOrSell == 1 ? obj[2] : obj[1]) + ', ' + per + '%)' })
       if(obj[0] == json.strikePrice) {
         json.premium = json.buyOrSell == 1 ? obj[2] : obj[1]
       }
     })
-
-    $$('inputRowId').addView({id: 'input' + rowId,
-    cols: [
-      { view: "switch", id: 'BuySell' + rowId, onLabel: "Buy", width: 70, offLabel:"Sell", value: json.buyOrSell, on:{
-        onChange: function(newValue, oldValue, config){
-          let index = this.config.id.replaceAll('BuySell', '')
-          if($$('StrikePrice'+index)) {
-            let v = $$('StrikePrice'+index).getValue()
-            let data = $$('Type' + index).getValue() == 1 ? CE : PE;
+      $$('inputRowId').addView({id: 'input' + rowId,
+      cols: [
+        { view: "switch", id: 'BuySell' + rowId, onLabel: "Buy", width: 70, offLabel:"Sell", value: json.buyOrSell, on:{
+          onChange: function(newValue, oldValue, config){
+            let index = this.config.id.replaceAll('BuySell', '')
+            if($$('StrikePrice'+index)) {
+              let v = $$('StrikePrice'+index).getValue()
+              let data = $$('Type' + index).getValue() == 1 ? CE : PE;
+              let option_data = []
+              data.forEach(obj => {
+                let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
+                option_data.push({id: obj[0], value: obj[0] + ' (' + (newValue == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
+              })
+              $$('StrikePrice'+index).getPopup().getList().clearAll()
+              $$('StrikePrice'+index).getPopup().getList().parse(option_data)
+    
+              if(v) {
+                $$('Premium' + index).blockEvent()
+                if(newValue == 1) {
+                  $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
+                } else {
+                  $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
+                }
+                $$('Premium' + index).unblockEvent()
+                calculatePayOff()
+              }
+            }
+          }
+        }},
+        { view: "switch", id: 'Type' + rowId, onLabel: "CE", width: 70, offLabel:"PE", value: json.type , on:{
+          onChange: function(newValue, oldValue, config){
+            let index = this.config.id.replaceAll('Type', '')
+            let bs = $$('BuySell' + index).getValue()
             let option_data = []
-            data.forEach(obj => {
-              let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
-              option_data.push({id: obj[0], value: obj[0] + ' (' + (newValue == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
-            })
+            let data = []
+            if(newValue == 1) {
+              data = CE
+              CE.forEach(obj => {
+                let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
+                option_data.push({id: obj[0], value: obj[0] + ' (' + (bs == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)')) })
+              })
+            } else {
+              data = PE
+              PE.forEach(obj => {
+                let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
+                option_data.push({id: obj[0], value: obj[0] + ' (' + (bs == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
+              })
+            }
+            let v = $$('StrikePrice'+index).getValue()
             $$('StrikePrice'+index).getPopup().getList().clearAll()
             $$('StrikePrice'+index).getPopup().getList().parse(option_data)
-  
             if(v) {
               $$('Premium' + index).blockEvent()
-              if(newValue == 1) {
+              if(bs == BUY) {
                 $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
               } else {
                 $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
@@ -609,65 +648,42 @@ function strategyCal(UV, SS, SED, opStArr) {
               calculatePayOff()
             }
           }
-        }
-      }},
-      { view: "switch", id: 'Type' + rowId, onLabel: "CE", width: 70, offLabel:"PE", value: json.type , on:{
-        onChange: function(newValue, oldValue, config){
-          let index = this.config.id.replaceAll('Type', '')
-          let bs = $$('BuySell' + index).getValue()
-          let option_data = []
-          let data = []
-          if(newValue == 1) {
-            data = CE
-            CE.forEach(obj => {
-              let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
-              option_data.push({id: obj[0], value: obj[0] + ' (' + (bs == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)')) })
-            })
-          } else {
-            data = PE
-            PE.forEach(obj => {
-              let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
-              option_data.push({id: obj[0], value: obj[0] + ' (' + (bs == 1 ? (obj[2] + ', ' + per + '%)') : (obj[1] + ', ' + per + '%)') )})
-            })
-          }
-          let v = $$('StrikePrice'+index).getValue()
-          $$('StrikePrice'+index).getPopup().getList().clearAll()
-          $$('StrikePrice'+index).getPopup().getList().parse(option_data)
-          if(v) {
-            $$('Premium' + index).blockEvent()
-            if(bs == BUY) {
-              $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][2])
-            } else {
-              $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == v)[0][1])
-            }
-            $$('Premium' + index).unblockEvent()
-            calculatePayOff()
-          }
-        }
-      }},
-      { view:"combo", id: 'StrikePrice' + rowId, width: 170, label: '', labelWidth: 1, value: json.strikePrice, options: option_data,
-        on:{
-            onChange: function(id){
-              if(id) {
-                let index = this.config.id.replaceAll('StrikePrice', '')
-                let bs = $$('BuySell' + index).getValue()
-                let data = $$('Type' + index).getValue() == 1 ? CE : PE;
-                $$('Premium' + index).blockEvent()
-                if(bs == BUY) {
-                  $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][2])
-                } else {
-                  $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][1])
+        }},
+        { view:"combo", id: 'StrikePrice' + rowId, width: 170, label: '', labelWidth: 1, value: json.strikePrice, options: option_data,
+          on:{
+              onChange: function(id){
+                if(id) {
+                  let index = this.config.id.replaceAll('StrikePrice', '')
+                  let bs = $$('BuySell' + index).getValue()
+                  let data = $$('Type' + index).getValue() == 1 ? CE : PE;
+                  $$('Premium' + index).blockEvent()
+                  if(bs == BUY) {
+                    $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][2])
+                  } else {
+                    $$('Premium' + index).setValue(data.filter(obj => obj[0] + '' == id)[0][1])
+                  }
+                  $$('Premium' + index).unblockEvent()
+                  calculatePayOff()
                 }
-                $$('Premium' + index).unblockEvent()
+              }
+          }
+      },
+      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 70, 
+        on:{
+          onChange: function(newValue, oldValue, config){
+            let index = this.config.id.replaceAll('Premium', '')
+            let v = $$('StrikePrice'+index).getValue()
+            if(v) {
+              if(newValue > 0) {
                 calculatePayOff()
               }
             }
+          }
         }
-    },
-    { view: "text", id: 'Premium' + rowId, value: json.premium, width: 70, 
-      on:{
+      },
+      { view: "text", id: 'Lot' + rowId, value: json.lots, width: 40, on:{
         onChange: function(newValue, oldValue, config){
-          let index = this.config.id.replaceAll('Premium', '')
+          let index = this.config.id.replaceAll('Lot', '')
           let v = $$('StrikePrice'+index).getValue()
           if(v) {
             if(newValue > 0) {
@@ -675,38 +691,67 @@ function strategyCal(UV, SS, SED, opStArr) {
             }
           }
         }
-      }
-    },
-    { view: "text", id: 'Lot' + rowId, value: json.lots, width: 40, on:{
-      onChange: function(newValue, oldValue, config){
-        let index = this.config.id.replaceAll('Lot', '')
-        let v = $$('StrikePrice'+index).getValue()
-        if(v) {
-          if(newValue > 0) {
+      }},
+      { view:"button", type: 'icon', id: 'Active' + rowId, icon:"mdi mdi-circle", width: 30, css: 'active-icon', value:'Active', click: function() { 
+        let index = this.config.id.replaceAll('Active', '')
+        if($$(this.config.id).getNode().classList.contains('active-icon')) {
+          $$(this.config.id).getNode().classList.remove('active-icon')
+          $$(this.config.id).getNode().classList.add('inactive-icon')
+          $$(this.config.id).setValue('InActive')
+        } else {
+          $$(this.config.id).getNode().classList.remove('inactive-icon')
+          $$(this.config.id).getNode().classList.add('active-icon')
+          $$(this.config.id).setValue('Active')
+        }
+        calculatePayOff()
+      }},
+      { view:"button", type: 'icon', icon:"mdi mdi-delete", width: 30, css: 'delete-icon', click: function() { 
+          $$('inputRowId').removeView('input' + rowId)
+          calculatePayOff()
+        }}
+      ]
+      });
+    } else {
+      $$('inputRowId').addView({id: 'input' + rowId,
+      cols: [
+        { view: "switch", id: 'BuySell' + rowId, onLabel: "Buy", width: 70, offLabel:"Sell", value: json.buyOrSell, on:{
+          onChange: function(newValue, oldValue, config){
+            calculatePayOff()
+          }
+        }},
+        { id: 'Type' + rowId, width: 70},
+        { id: 'StrikePrice' + rowId, width: 170 },
+      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 70, 
+        on:{
+          onChange: function(newValue, oldValue, config){
             calculatePayOff()
           }
         }
-      }
-    }},
-    { view:"button", type: 'icon', id: 'Active' + rowId, icon:"mdi mdi-circle", width: 30, css: 'active-icon', value:'Active', click: function() { 
-      let index = this.config.id.replaceAll('Active', '')
-      if($$(this.config.id).getNode().classList.contains('active-icon')) {
-        $$(this.config.id).getNode().classList.remove('active-icon')
-        $$(this.config.id).getNode().classList.add('inactive-icon')
-        $$(this.config.id).setValue('InActive')
-      } else {
-        $$(this.config.id).getNode().classList.remove('inactive-icon')
-        $$(this.config.id).getNode().classList.add('active-icon')
-        $$(this.config.id).setValue('Active')
-      }
-      calculatePayOff()
-    }},
-    { view:"button", type: 'icon', icon:"mdi mdi-delete", width: 30, css: 'delete-icon', click: function() { 
-        $$('inputRowId').removeView('input' + rowId)
+      },
+      { view: "text", id: 'Lot' + rowId, value: json.lots, width: 40, on:{
+        onChange: function(newValue, oldValue, config){
+          calculatePayOff()
+        }
+      }},
+      { view:"button", type: 'icon', id: 'Active' + rowId, icon:"mdi mdi-circle", width: 30, css: 'active-icon', value:'Active', click: function() { 
+        if($$(this.config.id).getNode().classList.contains('active-icon')) {
+          $$(this.config.id).getNode().classList.remove('active-icon')
+          $$(this.config.id).getNode().classList.add('inactive-icon')
+          $$(this.config.id).setValue('InActive')
+        } else {
+          $$(this.config.id).getNode().classList.remove('inactive-icon')
+          $$(this.config.id).getNode().classList.add('active-icon')
+          $$(this.config.id).setValue('Active')
+        }
         calculatePayOff()
-      }}
-    ]
-    });
+      }},
+      { view:"button", type: 'icon', icon:"mdi mdi-delete", width: 30, css: 'delete-icon', click: function() { 
+          $$('inputRowId').removeView('input' + rowId)
+          calculatePayOff()
+        }}
+      ]
+      });
+    }
   }
   function calculatePayOff() {
       let iData = []
@@ -716,22 +761,22 @@ function strategyCal(UV, SS, SED, opStArr) {
           //l = (l==1) ? "Buy" : "Sell"
           let t = rows[i].getChildViews()[1].config.value
           //t = (t==1) ? "CE" : "PE"
-          let s = rows[i].getChildViews()[2].getValue()
+          let s = (rows[i].getChildViews()[2].getValue && rows[i].getChildViews()[2].getValue()) || ''
           let p = rows[i].getChildViews()[3].getValue()
           let lot = rows[i].getChildViews()[4].getValue()
           let a = rows[i].getChildViews()[5].getValue()
-          if(s != '' && p != '' && lot != '' && a == 'Active') {
+          if(p != '' && lot != '' && a == 'Active') {
             iData.push({
               buyOrSell: l,
               type: t,
               strikePrice: s,
               premium: p,
               lots: lot
-          })
+            })
           }
       }
 
-      let buyCallArr = [], sellCallArr = [], buyPutArr = [], sellPutArr = [], buyStockArr = []
+      let buyCallArr = [], sellCallArr = [], buyPutArr = [], sellPutArr = [], buyStockArr = [], sellStockArr = []
 
       iData.forEach(obj => {
           if(obj.buyOrSell == 1 && obj.type == 0) {
@@ -758,6 +803,16 @@ function strategyCal(UV, SS, SED, opStArr) {
                   premium: parseFloat(obj.premium),
                   lots: parseInt(obj.lots)
                 })
+          } else if(obj.buyOrSell == 1 && obj.type == undefined) {
+            buyStockArr.push({
+              premium: parseFloat(obj.premium),
+              lots: parseInt(obj.lots)
+            })
+          } else if(obj.buyOrSell == 0 && obj.type == undefined) {
+            sellStockArr.push({
+              premium: parseFloat(obj.premium),
+              lots: parseInt(obj.lots)
+            })
           }
       })
       let tempData = {
@@ -768,10 +823,10 @@ function strategyCal(UV, SS, SED, opStArr) {
       }
       webix.storage.local.put('StrategyData', tempData)
       if(iData.length > 0) {
-        let data = optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, [], []);
+        let data = optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr);
         displayStrategyChart(data)
       } else {
-        //displayStrategyChart([])
+        displayStrategyChart([{}])
       }
   }
   function StrangleStrategy() {
@@ -1127,7 +1182,6 @@ function strategyCal(UV, SS, SED, opStArr) {
     Underlying_Value = UV
     SelectedScript = SS
     SelectedExpiryDate = SED
-    let buyCallArr = [], sellCallArr = [], buyPutArr = [], sellPutArr = []
     $$("inputScriptId").setValue(SelectedScript)
     prepareStrikeWithPremium()
     opStArr.forEach(d => {
@@ -1147,7 +1201,7 @@ function strategyCal(UV, SS, SED, opStArr) {
       let json = {
         buyOrSell: $$('BuySell'+ tempArr[i]).getValue(),
         type: $$('Type'+ tempArr[i]).getValue(),
-        strikePrice: $$('StrikePrice'+ tempArr[i]).getValue(),
+        strikePrice: ($$('StrikePrice'+ tempArr[i]).getValue && $$('StrikePrice'+ tempArr[i]).getValue()) || '',
         premium: parseFloat($$('Premium'+ tempArr[i]).getValue()),
         lots: parseInt($$('Lot'+ tempArr[i]).getValue()),
         latestPremium: 0,
@@ -1191,7 +1245,10 @@ function strategyCal(UV, SS, SED, opStArr) {
           dispatchChangeEvent('#opstraSDReqId', sKey)
         }
       }else {
-        $$('ivTemplateId').setHTML(`<b>IV: <span style="color:#4bb714 !important;background-color: gold !important;">` + IV + `</span></b> <b>IV Percentile: <span style="color:#4bb714 !important;background-color: gold !important">` + OpstraSD[sKey]['ivPercentile'] + `</span></b>`)
+        $$('ivTemplateId').setHTML(`<b>IV: <span style="color:#4bb714 !important;">` + IV 
+        + `</span></b>, &nbsp; <b>IV Percentile: <span style="color:#4bb714 !important;">` 
+        + OpstraSD[sKey]['ivPercentile'] + `</span></b>,&nbsp; <b>Future : <span style="color:#4bb714 !important;">` 
+        + OpstraSD[sKey]['futuresPrice'] + `</span></b>`)
       }
     }
   }
@@ -1273,5 +1330,42 @@ function strategyCal(UV, SS, SED, opStArr) {
     automaticCalStrategy = false
     showChart()
   }
-  
+}
+
+function showStreakAnalytics() {
+  let scriptName = $$('scriptId').getValue()
+  if(scriptName == 'NIFTY' || scriptName == 'BANKNIFTY') {
+    alert('Please select Stock')
+    return
+  }
+
+  webix.ui({
+    view: "window",
+    width: window.innerWidth - 2,
+    height: window.innerHeight - 2,
+    position: 'center',
+    id: 'streakWinId',
+    head: {
+      view: "toolbar",  id: 'streakToolbarId', cols: [
+        { },
+        { view: "button", label: "Fundamentals", width: 150, click: function() {
+          window.open("https://stocks.tickertape.in/" + scriptName + "?broker=kite&theme=dark")
+        }},
+        { view: "button", label: 'X', width: 50, click: function () { 
+          $$('streakWinId').close()
+          }
+        }
+      ]
+    },
+    body: {
+      cols: [
+        {  width: 100, borderless: true},
+        { 
+          view:"iframe", borderless: true, id:"technical-body", src:"https://mo.streak.tech/?utm_source=context-menu&utm_medium=kite&stock=NSE:" + scriptName + "&theme=dark"
+        },
+        {  width: 100, borderless: true},
+      ]
+    }
+  }).show()
+
 }

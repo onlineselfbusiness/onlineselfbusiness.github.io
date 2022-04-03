@@ -290,41 +290,11 @@ $(function() {
         selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
     }
 });
-
-$( document ).on( "click", "div.tgl_buy_sell", function() {
-    let bOrs = 0
-    let action = $(this).data('action')
-    if($(this).hasClass('active')){
-      bOrs = 1
-		  $(this).removeClass('active');
-      $$('BuySell'+this.id).data = {id:"Sell", value: "Sell"}
-    }else{
-      bOrs = 2
-      $(this).addClass('active');
-      $$('BuySell'+this.id).data = {id:"Buy", value: "Buy"}
-    }
-    let type = $$('Type' + this.id).data.id
-    let sp = $$('StrikePrice' + this.id).getValue()
-    if(sp) {
-      if(type == 'CE') {
-        CE.forEach(obj => {
-          if(obj[0] == sp) {
-            $$('Premium' + this.id).setValue(obj[bOrs])
-          }
-        })
-      } else {
-        PE.forEach(obj => {
-          if(obj[0] == sp) {
-            $$('Premium' + this.id).setValue(obj[bOrs])
-          }
-        })
-      }
-    }
-    
-    console.dir(type)
-});
 })
 </script>
-<iframe id="opstraSDiFrameId" hidden style="width:0px;height:0px;" src="https://opstra.definedge.com/"></iframe-->
+<!--iframe id="opstraSDiFrameId" hidden style="width:0px;height:0px;" src="https://opstra.definedge.com/"></iframe-->
+<iframe id="opstraSDiFrameId" hidden style="width:0px;height:0px;" src="https://opstra.definedge.com/moment.min.js"></iframe>
+<iframe id="ichartFrameId" hidden style="width:0px;height:0px;" src="https://main.icharts.in/cal.js"></iframe>
+<!--  https://main.icharts.in/images/favicon.ico -->
 </body>
 </html>
