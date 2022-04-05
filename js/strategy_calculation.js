@@ -1200,7 +1200,7 @@ function strategyCal(UV, SS, SED, opStArr) {
     for(let i=0; i<tempArr.length; i++) {
       let json = {
         buyOrSell: $$('BuySell'+ tempArr[i]).getValue(),
-        type: $$('Type'+ tempArr[i]).getValue(),
+        type: ( $$('Type'+ tempArr[i]).getValue && $$('Type'+ tempArr[i]).getValue()) || '',
         strikePrice: ($$('StrikePrice'+ tempArr[i]).getValue && $$('StrikePrice'+ tempArr[i]).getValue()) || '',
         premium: parseFloat($$('Premium'+ tempArr[i]).getValue()),
         lots: parseInt($$('Lot'+ tempArr[i]).getValue()),
