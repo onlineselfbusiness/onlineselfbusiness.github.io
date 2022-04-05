@@ -2867,35 +2867,41 @@ function watchListCal() {
   for(let i=0;i<WatchList.length;i++) {
     let strategy = WatchList[i]
     strategy.pol = 0
+    let lotSize = 0;
+    if(strategy.script == 'NIFTY') {
+      lotSize = 50
+    } else if(strategy.script == 'BANKNIFTY') {
+      lotSize = 25
+    } else {
+      lotSize = ScriptNames[strategy.script].lotSize
+    }
     let optionDataArr = OptionData[strategy.script]['data'][strategy.expiryDate]
     if(optionDataArr) {
       let dArr = strategy.list
       for(let i=0; i<dArr.length; i++) {
         let json = dArr[i]
-        for(let k=0; k<optionDataArr.length; k++) {
-          let st = Object.keys(optionDataArr[k])[0]
-          if(st == json.strikePrice) {
-            let ceOrpe = optionDataArr[k][st][json.type == 1 ? 'CE' : 'PE']
-            if(ceOrpe) {
-              let lotSize = 0;
-              if(strategy.script == 'NIFTY') {
-                lotSize = 50
-              } else if(strategy.script == 'BANKNIFTY') {
-                lotSize = 25
-              } else {
-                lotSize = ScriptNames[strategy.script].lotSize
+        if(json.type == '') {
+            json.latestPremium = OptionData[strategy.script]['underlyingValue']
+            json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
+        } else {
+          for(let k=0; k<optionDataArr.length; k++) {
+            let st = Object.keys(optionDataArr[k])[0]
+            if(st == json.strikePrice) {
+              let ceOrpe = optionDataArr[k][st][json.type == 1 ? 'CE' : 'PE']
+              if(ceOrpe) {
+                json.latestPremium = json.buyOrSell == 1 ? ceOrpe.bidprice : ceOrpe.askPrice
+                if(json.buyOrSell == 1) {
+                  json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
+                } else {
+                  json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
+                }
+                strategy.pol += json.pl
+                break
               }
-              json.latestPremium = json.buyOrSell == 1 ? ceOrpe.bidprice : ceOrpe.askPrice
-              if(json.buyOrSell == 1) {
-                json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
-              } else {
-                json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
-              }
-              strategy.pol += json.pl
-              break
             }
           }
         }
+        
       }
       strategy.pol = parseFloat(parseFloat(strategy.pol).toFixed(2))
     }
@@ -2943,8 +2949,13 @@ function displayStrategyLatestDetails(obj){
   html += `DTE: <b>${remainingDays}</b>, Created Date: ${obj.createDate} <br>`
   let opStArr = obj.list
   for(let i=0; i<opStArr.length;i++) {
-    html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy' : 'Sell'} <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE' }  @  ₹<b>${opStArr[i].premium}</b> 
-    [${opStArr[i].latestPremium}]
+    if(opStArr[i].strikePrice == '') {
+      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) Futures ₹<b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
+    } else {
+      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE'}  @  ₹<b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
+    }
+    
+    html = html + `
     ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
   <br>`
   }
