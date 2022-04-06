@@ -1075,7 +1075,7 @@ webix.ready(function () {
   menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
   menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
-  menu_data_multi.push({ id: 'watchList', value: 'Strategy Watch List'})
+  menu_data_multi.push({ id: 'watchList', value: 'Watch List'})
   menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
     {id:'calendarWise', value: 'Calendar Wise'},
     { id: 'continuousWiseId', value: 'Continuous Wise'},
@@ -1200,7 +1200,7 @@ webix.ready(function () {
                 }
                 else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
                 else if(id == 'allStrategyGraph') {window.open('charts.png')}
-                else if(id == 'icharts') {window.open('https://www.icharts.in/hcharts-v4.html')}
+                else if(id == 'icharts') {window.open('https://main.icharts.in/hcharts-v4.html')}
                 else if(id == 'tickertape') {window.open('https://www.tickertape.in/stocks')}
                 else if(id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
@@ -2882,7 +2882,12 @@ function watchListCal() {
         let json = dArr[i]
         if(json.type == '') {
             json.latestPremium = OptionData[strategy.script]['underlyingValue']
-            json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
+            if(json.buyOrSell == 1) {
+              json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
+            } else {
+              json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
+            }
+            strategy.pol += json.pl
         } else {
           for(let k=0; k<optionDataArr.length; k++) {
             let st = Object.keys(optionDataArr[k])[0]
@@ -2901,46 +2906,13 @@ function watchListCal() {
             }
           }
         }
-        
       }
       strategy.pol = parseFloat(parseFloat(strategy.pol).toFixed(2))
     }
   }
   webix.storage.local.put('WatchList', WatchList)
 }
-function displayStrategyEntryDetails(obj){
 
-  if(obj.name == 'Short Gamma') {
-    return `<div style="width:100%;">
-            Script: <b>${obj.script}</b> &nbsp; Created Date: <b>${obj.createDate}</b><br>
-            Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
-            Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
-
-            Buy <b>${obj.buyCall[0].lots}</b> lot of <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].entryPremium}</b> IV: ${obj.buyCall[0].entryIV}<br>
-            Sell <b>${obj.sellCall[0].lots}</b> lots of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
-            Expiry Date: ${obj.expiryDate}
-          </div>`
-  } else if(obj.name == 'Short Strangle') {
-    return `<div style="width:100%;">
-            Script: <b>${obj.script}</b>&nbsp; Created Date: <b>${obj.createDate}</b><br>
-            Sell <b>${obj.sellPut[0].lots}</b> lot of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
-            Sell <b>${obj.sellCall[0].lots}</b> lot of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
-            
-            Expiry Date: ${obj.expiryDate}
-          </div>`
-  } else if(obj.name == 'Iron Condor') {
-    return `<div style="width:100%;">
-            Script: <b>${obj.script}</b>&nbsp; Created Date: <b>${obj.createDate}</b><br>
-            Buy <b>${obj.buyPut[0].lots}</b> lot of <b>${obj.buyPut[0].strikePrice}</b>PE @  ₹<b>${obj.buyPut[0].entryPremium}</b> IV: ${obj.buyPut[0].entryIV}<br>
-            Sell <b>${obj.sellPut[0].lots}</b> lots of <b>${obj.sellPut[0].strikePrice}</b>PE @  ₹<b>${obj.sellPut[0].entryPremium}</b> IV: ${obj.sellPut[0].entryIV}<br>
-
-            Sell <b>${obj.sellCall[0].lots}</b> lots of <b>${obj.sellCall[0].strikePrice}</b>CE @  ₹<b>${obj.sellCall[0].entryPremium}</b> IV: ${obj.sellCall[0].entryIV}<br>
-            Buy <b>${obj.buyCall[0].lots}</b> lot of <b>${obj.buyCall[0].strikePrice}</b>CE @  ₹<b>${obj.buyCall[0].entryPremium}</b> IV: ${obj.buyCall[0].entryIV}<br>
-            Expiry Date: ${obj.expiryDate}
-          </div>`
-  }
-  return obj.script
-}
 function displayStrategyLatestDetails(obj){
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
   let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
@@ -2949,18 +2921,14 @@ function displayStrategyLatestDetails(obj){
   html += `DTE: <b>${remainingDays}</b>, Created Date: ${obj.createDate} <br>`
   let opStArr = obj.list
   for(let i=0; i<opStArr.length;i++) {
-    if(opStArr[i].strikePrice == '') {
-      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) Futures ₹<b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
+    if(opStArr[i].type == '') {
+      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) Futures ₹ <b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
     } else {
-      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE'}  @  ₹<b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
+      html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE'}  @  ₹ <b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
     }
-    
-    html = html + `
-    ₹<b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b>
-  <br>`
+    html = html + ` ₹ <b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b> <br>`
   }
   html = html + `Profit/Loss: ₹<b><span style="color:${obj.pol < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b></div>`
-
   return html
 }
 function deleteWatchList(key) {
