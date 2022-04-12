@@ -1,7 +1,7 @@
 var ScriptNames = {
     'HDFCBANK': { companyId: 9195, name:'hdfc-bank-ltd', mcName: 'HDFC Bank', lotSize: 1},
     'RELIANCE': { companyId: 13215, name:'reliance-industries-ltd', mcName: 'Reliance', lotSize: 1},
-    'INFY': { companyId: 10960, name:'infosys-ltd', mcName: 'Infosys', lotSize: 1},
+    'INFY': { companyId: 10960, name:'infosys-ltd', mcName: 'Infosys', lotSize: 300},
     'HDFC': { companyId: 13640, name:'housing-development-finance-corporation-ltd', mcName: 'HDFC', lotSize: 1},
     'ICICIBANK':{ companyId: 9194, name:'icici-bank-ltd', mcName: 'ICICI Bank', lotSize: 1},
     'TCS': { companyId: 8345, name:'tata-consultancy-services-ltd', mcName: 'TCS', lotSize: 150},

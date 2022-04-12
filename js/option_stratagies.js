@@ -1808,6 +1808,9 @@ webix.ready(function () {
                           onChange: function(id){
                             CalenderUI = processDataForCalenderUI(id)
                             $$('script_calendar').refresh()
+                          },
+                          onAfterRender: function() {
+                            $$("scriptCalendarId").setValue(DownloadTime['lastViewedScript'])
                           }
                         }
                         },
