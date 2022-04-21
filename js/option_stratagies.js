@@ -1122,6 +1122,23 @@ webix.ready(function () {
             }
           },
           { view: "label", label: "Option Strategies" },
+          {view: "template", id: "tradingViewTempId", width: 50, template: function(obj){
+            return '<div class="webix_tv"><svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg"><path d="M14 22H7V11H0V4h14v18zM28 22h-8l7.5-18h8L28 22z" fill="currentColor"></path><circle cx="20" cy="8" r="4" fill="currentColor"></circle></svg></div>'
+          }, onClick:{
+            "webix_tv":function(ev, id){
+                let s = $$('scriptId').getValue()
+                if(s=='') {
+                  alert('Please select Script')
+                } else if(s == 'NIFTY') {
+                  window.open('https://www.moneycontrol.com/mc/indianindices/chart?indice_id=9')
+                } else if(s == 'BANKNIFTY') {
+                  window.open('https://www.moneycontrol.com/mc/indianindices/chart?indice_id=23')
+                } else {
+                  window.open('https://www.moneycontrol.com/mc/stock/chart?scId=' + s + '&exchangeId=' + s + '&ex=NSE')
+                }
+                return false;
+            }
+        }},
           { view:"button", label: "Technical", width: 85, click: function(){ showStreakAnalytics() }},
           { view: "button", label: "Open Strategy", width: 120, click: function(){ strategyCal() } },
           {view: "button", type: "icon", icon: "mdi mdi-history", id:"scriptHistoryId", width: 30, align: "left", click: function() {
