@@ -1081,6 +1081,11 @@ webix.ready(function () {
     { id: 'continuousWiseId', value: 'Continuous Wise'},
     { id: 'yearWiseId', value: 'Year Wise'},
   ]})
+  menu_data_multi.push({ id: 'news', value: 'News', data: [
+    {id:'businesstodayId', value: 'Business Today'},
+    { id: 'moneycontrolId', value: 'Moneycontrol'},
+    { id: 'dalalstreetId', value: 'Dalal Street'},
+  ]})
   menu_data_multi.push({ id: 'cashAndCarry', value: 'Cash & Carry Arbitrage'})
   menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
     {id:'liveTV', value: 'Live TV'},
@@ -1134,7 +1139,7 @@ webix.ready(function () {
                 } else if(s == 'BANKNIFTY') {
                   window.open('https://www.moneycontrol.com/mc/indianindices/chart?indice_id=23')
                 } else {
-                  window.open('https://www.moneycontrol.com/mc/stock/chart?scId=' + s + '&exchangeId=' + s + '&ex=NSE')
+                  window.open('https://www.moneycontrol.com/mc/stock/chart?scId=' + s + '&exchangeId=' + s + '&ex=NSE&theme=dark')
                 }
                 return false;
             }
@@ -1152,6 +1157,7 @@ webix.ready(function () {
           {view: "button", type: "icon", icon: "mdi mdi-eye-settings", id:"ichartSentimentId", width: 30, align: "left", click: function() {
             if(SelectedScript) {
               dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
+              //dispatchChangeEvent('#businesstodayReqId')
             } else {
               alert('Please select script')
             }
@@ -1199,6 +1205,13 @@ webix.ready(function () {
                 else if(id == 'pasiId') {window.open('http://www.pasitechnologies.com/')}
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
                 else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
+
+                else if(id == 'businesstodayId') {window.open('https://www.businesstoday.in/markets'); window.open('https://www.businesstoday.in/latest/corporate')}
+                else if(id == 'moneycontrolId') {window.open('https://www.moneycontrol.com/news/business/markets/')}
+                else if(id == 'dalalstreetId') {window.open('https://www.dsij.in/insight/trending-news/mindshare');
+                    window.open('https://www.dsij.in/markets/reports/market-reports');
+                    window.open('https://www.dsij.in/markets/reports/broker-reports')
+                    }
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
                 else if(id == 'moneycontroRC') {showViewId('moneycontroRCViewId')}
                 else if(id == 'cashAndCarry') {showViewId('cashAndCarryViewId')}
