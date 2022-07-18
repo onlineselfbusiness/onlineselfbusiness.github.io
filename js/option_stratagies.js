@@ -31,8 +31,14 @@ if(!CashAndCarry) {
 let iChartScreener = webix.storage.local.get('iChartScreener')
 if(!iChartScreener) {
   iChartScreener = []
-  webix.storage.local.put('iChartScreener', CashAndCarry)
+  webix.storage.local.put('iChartScreener', iChartScreener)
 }
+/*
+let PriceApi = webix.storage.local.get('PriceApi')
+if(!PriceApi) {
+  PriceApi = {}
+  webix.storage.local.put('PriceApi', PriceApi)
+}*/
 
 // Cleanup old option chain script data
 (function() {
@@ -904,8 +910,28 @@ function initEventListeners() {
   let optionChainResId = document.querySelector('#optionChainResId')
   optionChainResId.addEventListener('change', (e) => {
     let tempData = webix.storage.session.get('tempData')
+    let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+    if(expiryDates.length > 4) {
+      let near = new Date(expiryDates[0])
+      let nearArr = near.toDateString().split(' ')
+
+      let next = new Date(expiryDates[0])
+      next.setMonth(next.getMonth()+1)
+      let nextArr = next.toDateString().split(' ')
+
+      let far = new Date(expiryDates[0])
+      far.setMonth(far.getMonth()+2)
+      let farArr = far.toDateString().split(' ')
+
+      let dsArr = [nearArr[1] + '-' + nearArr[3], nextArr[1] + '-' + nextArr[3], farArr[1] + '-' + farArr[3],]
+      for(let i=0; i<expiryDates.length; i++) {
+        if(!dsArr.includes(expiryDates[i].substring(3))) {
+          delete tempData.data[expiryDates[i]]
+        }
+      }
+    }
     if(SelectedExpiryDate == '') {
-      let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+      expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
       $$('expiryDateId').define('options', expiryDates)
       tempData.SelectedExpiryDate = expiryDates[0].id
       SelectedExpiryDate = tempData.SelectedExpiryDate
@@ -938,7 +964,7 @@ function initEventListeners() {
     webix.ui({
       view:"window",
       height:450,
-      width:590,
+      width:650,
       move: true,
       modal: true,
       id: 'optionHisWinId',
@@ -953,7 +979,7 @@ function initEventListeners() {
         view:"datatable", hover:"myhover",css: "rows",
         columns:[{id: 'dateId', header: 'Date'},{id:'priceId', header: 'Price'},
         {id:'changeId', header: 'Change'}, {id: 'perId', header: '%'},
-        {id: 'oi', header: 'OI',fillspace:true}, {id:'changeOI', header: 'Change In OI', width: 120}],
+        {id: 'oi', header: 'OI'}, {id:'changeOI', header: 'Change In OI', width: 120}],
         data: d
       }
     }).show();
@@ -1055,8 +1081,17 @@ function initEventListeners() {
     $$('revCashAndCarryDatatableId').refresh()
   })
 
+  let priceApiResId = document.querySelector('#priceApiResId')
+  priceApiResId.addEventListener('change', (e) => {
+    let id = $$("scriptCalendarId").getValue()
+    if(id) {
+      CalenderUI = processDataForCalenderUI(id)
+      $$('script_calendar').refresh()
+    }
+  })
+
 }
-let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId','etEconomicCalendarViewId', 
             'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
           'moneycontroRCViewId', 'cashAndCarryViewId']
 webix.ready(function () {
@@ -1075,6 +1110,7 @@ webix.ready(function () {
   menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
   menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
   menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
+  menu_data_multi.push({ id: 'etEconomicCalendar', value: 'Economic Calendar'})
   menu_data_multi.push({ id: 'watchList', value: 'Watch List'})
   menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
     {id:'calendarWise', value: 'Calendar Wise'},
@@ -1157,6 +1193,7 @@ webix.ready(function () {
           {view: "button", type: "icon", icon: "mdi mdi-eye-settings", id:"ichartSentimentId", width: 30, align: "left", click: function() {
             if(SelectedScript) {
               dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
+              //dispatchChangeEvent('#priceApiReqId', SelectedScript)
               //dispatchChangeEvent('#businesstodayReqId')
             } else {
               alert('Please select script')
@@ -1204,15 +1241,21 @@ webix.ready(function () {
                 else if(id == 'neostoxId') {window.open('https://neostox.com/')}
                 else if(id == 'pasiId') {window.open('http://www.pasitechnologies.com/')}
                 else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
-                else if(id == 'niftyIndicesId') {window.open('https://www.niftyindices.com/market-data/live-index-watch')}
-
-                else if(id == 'businesstodayId') {window.open('https://www.businesstoday.in/markets'); window.open('https://www.businesstoday.in/latest/corporate')}
-                else if(id == 'moneycontrolId') {window.open('https://www.moneycontrol.com/news/business/markets/')}
-                else if(id == 'dalalstreetId') {window.open('https://www.dsij.in/insight/trending-news/mindshare');
+                else if(id == 'niftyIndicesId') {
+                  window.open('https://www.niftyindices.com/market-data/live-index-watch')
+                }
+                else if(id == 'businesstodayId') {
+                  window.open('https://www.businesstoday.in/markets');
+                 window.open('https://www.businesstoday.in/latest/corporate')}
+                else if(id == 'moneycontrolId') {
+                    window.open('https://www.moneycontrol.com/news/business/markets/')}
+                else if(id == 'dalalstreetId') {
+                    window.open('https://www.dsij.in/insight/trending-news/mindshare');
                     window.open('https://www.dsij.in/markets/reports/market-reports');
-                    window.open('https://www.dsij.in/markets/reports/broker-reports')
+                    window.open('https://www.dsij.in/markets/reports/broker-reports');
                     }
                 else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
+                else if(id == 'etEconomicCalendar') {window.open('https://www.moneycontrol.com/economic-calendar');}
                 else if(id == 'moneycontroRC') {showViewId('moneycontroRCViewId')}
                 else if(id == 'cashAndCarry') {showViewId('cashAndCarryViewId')}
                 else if(id == 'maxPainStocks') {
@@ -1850,7 +1893,8 @@ webix.ready(function () {
                           click: function () {
                             let id = $$('scriptCalendarId').getValue()
                             if(id != '') {
-                              dispatchChangeEvent('#scriptHistoryId', id)
+                              //dispatchChangeEvent('#scriptHistoryId', id)
+                              dispatchChangeEvent('#priceApiReqId', id)
                             } else {
 
                             }
@@ -1870,7 +1914,8 @@ webix.ready(function () {
                           width: 130, align: "left",
                           click: function () {
                             if(window.confirm('Are you sure to download all sripts')) {
-                              dispatchChangeEvent('#scriptHistoryId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() )
+                              //dispatchChangeEvent('#scriptHistoryId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() )
+                              dispatchChangeEvent('#priceApiReqId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString())
                             }
                           }
                         },{width: 15}
@@ -2637,9 +2682,7 @@ let GlobalMarketTimings = [
   {country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime:'1 : 30 PM', closeTime: '10 : 00 PM'},
   {country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime:'7 : 00 PM', closeTime: '1 : 30 AM'}
 ]
-function fetchScriptHistory() {
-  dispatchChangeEvent('#scriptHistoryId')
-}
+
 function dispatchChangeEvent(elementId, eleVal) {
   let e = new Event("change")
   let element = document.querySelector(elementId)
@@ -2662,9 +2705,9 @@ function processDataForCalenderUI(id) {
 function showViewId(id) {
   ViewIds.forEach(v => {
     if(v == id) {
-      $$(v).show()
+      $$(v) && $$(v).show()
     } else {
-      $$(v).hide()
+      $$(v) && $$(v).hide()
     }
   })
 }
