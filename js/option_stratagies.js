@@ -1602,6 +1602,8 @@ webix.ready(function () {
                           let fivePerLower = Underlying_Value - (Underlying_Value * 5 /100)
                           let fivePerHigher = Underlying_Value + (Underlying_Value * 5 /100)
 
+                          let pePerLower = Underlying_Value - (Underlying_Value * 10 /100)
+
                           let sData = OptionChainData[SelectedScript]
                           let ocArr = sData.data[SelectedExpiryDate]
                           let allOcs = []
@@ -1617,9 +1619,17 @@ webix.ready(function () {
                             let st = Object.keys(row)[0]
                             let ce = row[st]['CE'] || {}
                             let pe = row[st]['PE'] || {}
-                            if(ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0 && fetchTableConfig('optimize') == 'active') {
-                              continue;
+                            if(fetchTableConfig('optimize') == 'active') {
+                              if(ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0) {
+                                continue;
+                              }
+                              if(Underlying_Value > st && !pe.bidPrice && !pe.askPrice) {
+                                continue;
+                              }else if(Underlying_Value < st && !ce.bidPrice && !ce.askPrice) {
+                                continue;
+                              }
                             }
+                            
 
                             let ceIdentifier = ce.identifier
                             let peIdentifier = pe.identifier
@@ -1725,6 +1735,10 @@ webix.ready(function () {
                                 }
                               }
                             }
+                            let peSellClass = ''
+                            if(parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
+                              peSellClass = 'bg-purple'
+                            }
 
                             let r = `
                             <tr>
@@ -1743,7 +1757,7 @@ webix.ready(function () {
                             + stRow +
                             `
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidQty, true)}</td>
-                            <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidprice)}</td>
+                            <td width="4.34%" class="${peClass} ${peSellClass}">${DecimalFixed(pe.bidprice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askQty, true)}</td>
                             <td width="4.34%" class="${peClass} ${peChangeTx}">${DecimalFixed(pe.change)}</td>

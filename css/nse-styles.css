@@ -3655,6 +3655,10 @@ footer .foot-col.last .follow_links li a {
   background-color: rgba(251, 245, 205, 0.41) !important;
 }
 
+.bg-purple {
+  background-color: rgb(198 188 209) !important;
+}
+
 .optionChainTable .bg-yellow {
   background-color: rgba(222, 214, 162, 0.41) !important;
 }
