@@ -953,7 +953,9 @@ function initEventListeners() {
     let optionHistory = webix.storage.session.get('optionHistory')
     let input = webix.storage.session.get('optionHistoryInput')
     let d = []
-    
+    if(!optionHistory || !optionHistory.data) {
+      alert('Something went wrong :-)');
+    }
     let t = optionHistory.data
     for(let i=0; i<t.length-1; i++) {
       let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE']) / t[i+1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
@@ -1625,7 +1627,7 @@ webix.ready(function () {
                               }
                               if(Underlying_Value > st && !pe.bidPrice && !pe.askPrice) {
                                 continue;
-                              }else if(Underlying_Value < st && !ce.bidPrice && !ce.askPrice) {
+                              } else if(Underlying_Value < st && !ce.bidPrice && !ce.askPrice) {
                                 continue;
                               }
                             }
