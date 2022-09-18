@@ -9,9 +9,9 @@ if (!OpstraSD) {
   webix.storage.local.put('OpstraSD', OpstraSD)
 } else {
   let k = Object.keys(OpstraSD)
-  for(let i=0; i<k.length; i++) {
+  for (let i = 0; i < k.length; i++) {
     let t1 = new Date(k[i].split('&')[1]).getTime()
-    if(t1 < new Date().getTime()) {
+    if (t1 < new Date().getTime()) {
       delete OpstraSD[k[i]]
     }
   }
@@ -23,13 +23,13 @@ if (!DownloadTime) {
   webix.storage.local.put('DownloadTime', DownloadTime)
 }
 let CashAndCarry = webix.storage.local.get('CashAndCarry')
-if(!CashAndCarry) {
+if (!CashAndCarry) {
   CashAndCarry = []
   webix.storage.local.put('CashAndCarry', CashAndCarry)
 }
 
 let iChartScreener = webix.storage.local.get('iChartScreener')
-if(!iChartScreener) {
+if (!iChartScreener) {
   iChartScreener = []
   webix.storage.local.put('iChartScreener', iChartScreener)
 }
@@ -41,13 +41,13 @@ if(!PriceApi) {
 }*/
 
 // Cleanup old option chain script data
-(function() {
+(function () {
   let d = new Date()
-  d.setDate(d.getDate()-5)
+  d.setDate(d.getDate() - 5)
   Object.keys(OptionChainData).forEach(s => {
     let cd = OptionChainData[s]
     let ocDate = new Date(cd.timestamp)
-    if(ocDate.getTime() < d.getTime()) {
+    if (ocDate.getTime() < d.getTime()) {
       delete OptionChainData[s]
     }
   })
@@ -158,17 +158,19 @@ let optionViews = {
     { view: "label", label: '', width: 150, align: "center" },
     { view: "text", align: "center", width: 90, inputAlign: "center", },
     { view: "text", align: "center", width: 70, inputAlign: "center", },
-    { view: "text", align: "center", width: 70, inputAlign: "center", value: 1, 
+    {
+      view: "text", align: "center", width: 70, inputAlign: "center", value: 1,
       on: {
-        onBlur: function() {
-        let v = this.getValue().trim()
-        if(v == '' || isNaN(v) || v < 1 ) {
-          this.setValue(1)
-        } else {
-          this.setValue(v)
+        onBlur: function () {
+          let v = this.getValue().trim()
+          if (v == '' || isNaN(v) || v < 1) {
+            this.setValue(1)
+          } else {
+            this.setValue(v)
+          }
         }
       }
-    }},
+    },
   ]
 };
 let keyIds = ['buyCall', 'sellCall', 'buyPut', 'sellPut', 'buyStock', 'sellStock'];
@@ -214,7 +216,7 @@ let submitButton = {
         }
 
       }
-    },{ view: "label", label: '', align: "center" },]
+    }, { view: "label", label: '', align: "center" },]
 };
 function buyCall(strikePrice, premium, expiryStrikePrice) {
   if (strikePrice >= expiryStrikePrice) {
@@ -381,7 +383,7 @@ function preparePayoffTable(columns, data) {
   $$('payoffViewId').getBody().removeView('payoffLabelId');
   $$('payoffViewId').getBody().addView(
     {
-      view: 'datatable', id: 'payoffTableId', headerRowHeight: 120, autowidth: true, hover:"myhover",css: "rows",
+      view: 'datatable', id: 'payoffTableId', headerRowHeight: 120, autowidth: true, hover: "myhover", css: "rows",
       resizeColumn: true,
       columns: columns, data: data,
     }
@@ -489,7 +491,7 @@ function prepareStrikeWithPremium() {
     allOcs.push(Object.keys(ocArr[i])[0])
   }
   let closest = allOcs.reduce(function (prev, curr) {
-      return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+    return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
   });
 
   for (let i = 0; i < ocArr.length; i++) {
@@ -637,8 +639,8 @@ function shortGammaCal(peOTM, ceOTM) {
             peLS: buyPut.strikePrice - sellPut.strikePrice,
             ceSL: sellCall.strikePrice - buyCall.strikePrice,
 
-            upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
-            downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
+            upPer: parseFloat((uppderBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
+            downPer: parseFloat((lowerBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
           })
         }
       }
@@ -664,9 +666,9 @@ function displayShortGamma() {
     height: window.innerHeight - 2,
     position: 'center',
     head: {
-      view: "toolbar", id:'strategyWinToolbarId', cols: [
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
         { width: 4 },
-        { view: "label", label: "Short Gamma Spread: "+ SelectedScript + '  [' + SelectedExpiryDate + ']' },
+        { view: "label", label: "Short Gamma Spread: " + SelectedScript + '  [' + SelectedExpiryDate + ']' },
         { view: "label", id: 'spotPriceId', label: SelectedScript + " Spot Price (SP): " + Underlying_Value },
         { view: "button", label: 'X', width: 50, align: 'right', click: function () { $$('strategyWinId').close(); } }
       ]
@@ -674,7 +676,7 @@ function displayShortGamma() {
     body: {
       view: "datatable",
       id: "strategyDatatableId",
-      hover:"myhover",css: "rows",
+      hover: "myhover", css: "rows",
       columns: [
         {
           id: "lowerBound", header: ["Lower Bound", { content: "numberFilter" }], width: 120, sort: "int", template: function (obj) {
@@ -690,9 +692,9 @@ function displayShortGamma() {
 
         { id: "peLS", header: ["PE Long-Short", { content: "numberFilter" }], width: 150, sort: "int", },
         { id: "ceSL", header: ["CE Short-Long", { content: "numberFilter" }], width: 150, sort: "int", },
-        { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
-        { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
-        { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
+        { id: "downPer", header: ["<-- %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "upPer", header: ["--> %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace: true },
 
       ],
       select: "row",
@@ -707,7 +709,7 @@ function displayShortGamma() {
             strikePrice: obj.sellPutSt,
             premium: obj.sellPutPre,
             lots: 2
-            }
+          }
 
           let peBuy = {
             buyOrSell: BUY,
@@ -715,7 +717,7 @@ function displayShortGamma() {
             strikePrice: obj.buyPutSt,
             premium: obj.buyPutPre,
             lots: 1
-            }
+          }
 
           let ceSell = {
             buyOrSell: SELL,
@@ -723,7 +725,7 @@ function displayShortGamma() {
             strikePrice: obj.sellCallSt,
             premium: obj.sellCallPre,
             lots: 2
-            }
+          }
 
           let ceBuy = {
             buyOrSell: BUY,
@@ -731,10 +733,10 @@ function displayShortGamma() {
             strikePrice: obj.buyCallSt,
             premium: obj.buyCallPre,
             lots: 1
-            }
+          }
 
           strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peSell, peBuy, ceSell, ceBuy])
-         
+
         }
       }
     }
@@ -748,7 +750,7 @@ function findLowerBoundUpperBound(underlyingVal, data) {
   let lowerBoundPer = 0
   let uppderBoundPer = 0
   let totalIndex = 0
-  if(data.length>0) {
+  if (data.length > 0) {
     totalIndex = Object.keys(data[0]).length - 1
   }
   for (let i = 0; i < data.length - 1; i++) {
@@ -910,28 +912,28 @@ function initEventListeners() {
   let optionChainResId = document.querySelector('#optionChainResId')
   optionChainResId.addEventListener('change', (e) => {
     let tempData = webix.storage.session.get('tempData')
-    let expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
-    if(expiryDates.length > 4) {
+    let expiryDates = Object.keys(tempData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
+    if (expiryDates.length > 4) {
       let near = new Date(expiryDates[0])
       let nearArr = near.toDateString().split(' ')
 
       let next = new Date(expiryDates[0])
-      next.setMonth(next.getMonth()+1)
+      next.setMonth(next.getMonth() + 1)
       let nextArr = next.toDateString().split(' ')
 
       let far = new Date(expiryDates[0])
-      far.setMonth(far.getMonth()+2)
+      far.setMonth(far.getMonth() + 2)
       let farArr = far.toDateString().split(' ')
 
       let dsArr = [nearArr[1] + '-' + nearArr[3], nextArr[1] + '-' + nextArr[3], farArr[1] + '-' + farArr[3],]
-      for(let i=0; i<expiryDates.length; i++) {
-        if(!dsArr.includes(expiryDates[i].substring(3))) {
+      for (let i = 0; i < expiryDates.length; i++) {
+        if (!dsArr.includes(expiryDates[i].substring(3))) {
           delete tempData.data[expiryDates[i]]
         }
       }
     }
-    if(SelectedExpiryDate == '') {
-      expiryDates = Object.keys(tempData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+    if (SelectedExpiryDate == '') {
+      expiryDates = Object.keys(tempData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
       $$('expiryDateId').define('options', expiryDates)
       tempData.SelectedExpiryDate = expiryDates[0].id
       SelectedExpiryDate = tempData.SelectedExpiryDate
@@ -939,13 +941,15 @@ function initEventListeners() {
     } else {
       tempData.SelectedExpiryDate = SelectedExpiryDate
     }
-    
+
     OptionChainData[SelectedScript] = tempData
     webix.storage.local.put('OptionChainData', OptionChainData)
     let sData = OptionChainData[SelectedScript]
     Underlying_Value = sData.underlyingValue
-    $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
-      selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
+    $$('optionChainTemplateId').setValues({
+      data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp,
+      selectedStrike: TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'], peITM: TableFilter['peITM']
+    })
   })
 
   let optionHistoryResId = document.querySelector('#optionHistoryResId')
@@ -953,48 +957,51 @@ function initEventListeners() {
     let optionHistory = webix.storage.session.get('optionHistory')
     let input = webix.storage.session.get('optionHistoryInput')
     let d = []
-    if(!optionHistory || !optionHistory.data) {
+    if (!optionHistory || !optionHistory.data) {
       alert('Something went wrong :-)');
     }
     let t = optionHistory.data
-    for(let i=0; i<t.length-1; i++) {
-      let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE']) / t[i+1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
-      d.push({'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%', 
-      changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i+1]['FH_SETTLE_PRICE'])).toFixed(2),
-      oi: t[i]['FH_OPEN_INT'], changeOI: parseInt(t[i]['FH_CHANGE_IN_OI'])})
+    for (let i = 0; i < t.length - 1; i++) {
+      let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE']) / t[i + 1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
+      d.push({
+        'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%',
+        changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE'])).toFixed(2),
+        oi: t[i]['FH_OPEN_INT'], changeOI: parseInt(t[i]['FH_CHANGE_IN_OI'])
+      })
     }
     webix.ui({
-      view:"window",
-      height:450,
-      width:650,
+      view: "window",
+      height: 450,
+      width: 650,
       move: true,
       modal: true,
       id: 'optionHisWinId',
-      head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
-        { width:4 },
-        { view:"label", label: "Type: " + input.optionType + ", " + input.strikePrice + ", " + input.expiryDate + ", " + input.symbol },
-        { view:"button", label: 'X', width: 50, align: 'left', click:function(){ $$('optionHisWinId').close(); }}
-      ]
+      head: {
+        view: "toolbar", id: 'strategyWinToolbarId', cols: [
+          { width: 4 },
+          { view: "label", label: "Type: " + input.optionType + ", " + input.strikePrice + ", " + input.expiryDate + ", " + input.symbol },
+          { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('optionHisWinId').close(); } }
+        ]
       },
-      position:"center",
-      body:{
-        view:"datatable", hover:"myhover",css: "rows",
-        columns:[{id: 'dateId', header: 'Date'},{id:'priceId', header: 'Price'},
-        {id:'changeId', header: 'Change'}, {id: 'perId', header: '%'},
-        {id: 'oi', header: 'OI'}, {id:'changeOI', header: 'Change In OI', width: 120}],
+      position: "center",
+      body: {
+        view: "datatable", hover: "myhover", css: "rows",
+        columns: [{ id: 'dateId', header: 'Date' }, { id: 'priceId', header: 'Price' },
+        { id: 'changeId', header: 'Change' }, { id: 'perId', header: '%' },
+        { id: 'oi', header: 'OI' }, { id: 'changeOI', header: 'Change In OI', width: 120 }],
         data: d
       }
     }).show();
 
   })
-  
+
   let etDatepickerResId = document.querySelector('#etDatepickerResId')
   etDatepickerResId.addEventListener('change', (e) => {
     let jsonArr = webix.storage.session.get('tempETDatepickerRes')
     $$('etDatatableId').clearAll()
     $$('etDatatableId').parse(jsonArr.searchResult)
   })
-  
+
   let mcResultCalendarResId = document.querySelector('#mcResultCalendarResId')
   mcResultCalendarResId.addEventListener('change', (e) => {
     let html = localStorage.getItem('AllResultCalendar')
@@ -1003,7 +1010,7 @@ function initEventListeners() {
     let rcArr = webix.storage.local.get('AllResultCalendarArr')
     let s = new Set()
     rcArr.forEach(r => {
-        s.add(r[2])
+      s.add(r[2])
     })
 
     let l = $$('resultDateId').getList()
@@ -1030,7 +1037,7 @@ function initEventListeners() {
     $$('nifty50StockDatatableId').clearAll()
     $$('nifty50StockDatatableId').parse(Nifty50Stocks)
   })
-  
+
   let ocGraphResId = document.querySelector('#ocGraphResId')
   ocGraphResId.addEventListener('change', (e) => {
     showOptionChart()
@@ -1042,34 +1049,36 @@ function initEventListeners() {
     let googleGraph = document.querySelector('#googleGraph')
     googleGraph.innerHTML = html
   })
-  
+
   let messageStatusId = document.querySelector('#messageStatusId')
   messageStatusId.addEventListener('change', (e) => {
-    webix.message({ text: e.target.value, type:"info", expire: 500})
+    webix.message({ text: e.target.value, type: "info", expire: 500 })
   })
 
   let ichartSentimentResId = document.querySelector('#ichartSentimentResId')
   ichartSentimentResId.addEventListener('change', (e) => {
     webix.ui({
-      view:"window",
+      view: "window",
       fullscreen: true,
       id: 'ichartSentimentWinId',
-      head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
-        { width:4 },
-        { view:"label", label: "i Chart Sentiment:"},
-        { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
-          $$('ichartSentimentWinId').close(); 
-         }
-        }]
+      head: {
+        view: "toolbar", id: 'strategyWinToolbarId', cols: [
+          { width: 4 },
+          { view: "label", label: "i Chart Sentiment:" },
+          {
+            view: "button", label: 'X', width: 40, align: 'left', click: function () {
+              $$('ichartSentimentWinId').close();
+            }
+          }]
       },
-      position:"center",
-      body:{
+      position: "center",
+      body: {
         rows: [
-          {view: 'template', template: '<div id="iChartSentiment" style="width:100%;height:100%;overflow: auto;"></div>'},
-        {height: 10}]
+          { view: 'template', template: '<div id="iChartSentiment" style="width:100%;height:100%;overflow: auto;"></div>' },
+          { height: 10 }]
       },
       on: {
-        onShow: function() {
+        onShow: function () {
           document.getElementById("iChartSentiment").innerHTML = sessionStorage.getItem('iChartSentiment')
         }
       }
@@ -1086,16 +1095,32 @@ function initEventListeners() {
   let priceApiResId = document.querySelector('#priceApiResId')
   priceApiResId.addEventListener('change', (e) => {
     let id = $$("scriptCalendarId").getValue()
-    if(id) {
+    if (id) {
       CalenderUI = processDataForCalenderUI(id)
       $$('script_calendar').refresh()
     }
   })
 
+  let optionAllHistoryResId = document.querySelector('#optionAllHistoryResId')
+  optionAllHistoryResId.addEventListener('change', async (e) => {
+    let json = webix.storage.session.get('optionAllHistoryTemp')
+    let ed = json['ed']
+    json = json.data
+    if (json) {
+      let od = await getDataSyncOptionHistoryStore(ed)
+      let d = json
+      if (od) {
+        d = {...od, ...json}
+      }
+      let flag = await putDataSyncOptionHistoryStore(d, ed)
+      flag && console.dir('Successfully added response')
+    }
+  })
+
 }
-let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId','etEconomicCalendarViewId', 
-            'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
-          'moneycontroRCViewId', 'cashAndCarryViewId']
+let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'etEconomicCalendarViewId',
+  'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
+  'moneycontroRCViewId', 'cashAndCarryViewId']
 webix.ready(function () {
   initEventListeners()
   var menu_strategies = []
@@ -1106,51 +1131,59 @@ webix.ready(function () {
   }
 
   var menu_data_multi = []
-  menu_data_multi.push({ id: 'optionChain', value: 'Option Chain'})
-  menu_data_multi.push({ id: 'moneycontroRC', value: 'All Result Calendar'})
-  menu_data_multi.push({ id: 'nifty50Stocks', value: 'Nifty 50 Stocks'})
-  menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks'})
-  menu_data_multi.push({ id: 'worldMarket', value: 'World Market'})
-  menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar'})
-  menu_data_multi.push({ id: 'etEconomicCalendar', value: 'Economic Calendar'})
-  menu_data_multi.push({ id: 'watchList', value: 'Watch List'})
-  menu_data_multi.push({ id: 'analytics', value: 'Script Analytics', data: [
-    {id:'calendarWise', value: 'Calendar Wise'},
-    { id: 'continuousWiseId', value: 'Continuous Wise'},
-    { id: 'yearWiseId', value: 'Year Wise'},
-  ]})
-  menu_data_multi.push({ id: 'news', value: 'News', data: [
-    {id:'businesstodayId', value: 'Business Today'},
-    { id: 'moneycontrolId', value: 'Moneycontrol'},
-    { id: 'dalalstreetId', value: 'Dalal Street'},
-  ]})
-  menu_data_multi.push({ id: 'cashAndCarry', value: 'Cash & Carry Arbitrage'})
-  menu_data_multi.push({ id: 'externalLinks', value: 'External Links', data: [
-    {id:'liveTV', value: 'Live TV'},
-    {id:'indianMarket', value:'Indian Market'},
-    {id:'resultCalendar', value:'Result Calendar'},
-    {id:'earningsCalendar', value:'Earnings Calendar'},
-    {id:'trendlyne', value:'Trendlyne'},
-    {id:'niftyMaxPain', value:'Nifty Max Pain'},
-    {id:'niftyTaDesk', value:'Nifty TA Desk'},
-    {id:'tradingView', value:'Trading View'},
-    {id:'icharts', value:'i Charts'},
-    {id:'tickertape', value:'Ticker Tape'},
-    {id:'allStrategyGraph', value:'All Option Strategies'},
-    
-  ]})
+  menu_data_multi.push({ id: 'optionChain', value: 'Option Chain' })
+  menu_data_multi.push({ id: 'moneycontroRC', value: 'All Result Calendar' })
+  menu_data_multi.push({ id: 'nifty50Stocks', value: 'Nifty 50 Stocks' })
+  menu_data_multi.push({ id: 'maxPainStocks', value: 'Max Pain For Stocks' })
+  menu_data_multi.push({ id: 'worldMarket', value: 'World Market' })
+  menu_data_multi.push({ id: 'etResultCalendar', value: 'Result Calendar' })
+  menu_data_multi.push({ id: 'etEconomicCalendar', value: 'Economic Calendar' })
+  menu_data_multi.push({ id: 'watchList', value: 'Watch List' })
+  menu_data_multi.push({
+    id: 'analytics', value: 'Script Analytics', data: [
+      { id: 'calendarWise', value: 'Calendar Wise' },
+      { id: 'continuousWiseId', value: 'Continuous Wise' },
+      { id: 'yearWiseId', value: 'Year Wise' },
+    ]
+  })
+  menu_data_multi.push({
+    id: 'news', value: 'News', data: [
+      { id: 'businesstodayId', value: 'Business Today' },
+      { id: 'moneycontrolId', value: 'Moneycontrol' },
+      { id: 'dalalstreetId', value: 'Dalal Street' },
+    ]
+  })
+  menu_data_multi.push({ id: 'cashAndCarry', value: 'Cash & Carry Arbitrage' })
+  menu_data_multi.push({
+    id: 'externalLinks', value: 'External Links', data: [
+      { id: 'liveTV', value: 'Live TV' },
+      { id: 'indianMarket', value: 'Indian Market' },
+      { id: 'resultCalendar', value: 'Result Calendar' },
+      { id: 'earningsCalendar', value: 'Earnings Calendar' },
+      { id: 'trendlyne', value: 'Trendlyne' },
+      { id: 'niftyMaxPain', value: 'Nifty Max Pain' },
+      { id: 'niftyTaDesk', value: 'Nifty TA Desk' },
+      { id: 'tradingView', value: 'Trading View' },
+      { id: 'icharts', value: 'i Charts' },
+      { id: 'tickertape', value: 'Ticker Tape' },
+      { id: 'allStrategyGraph', value: 'All Option Strategies' },
 
-  menu_data_multi.push({ id: 'usefulWebsites', value: 'Useful Websites', data: [
-    {id:'opstraId', value: 'Opstra Options Analysis'},{id:'neostoxId', value: 'Neostox'},
-    {id:'pasiId', value: 'Pasi Technologies'},{id:'eqsisId', value:'Eqsis'},{id:'niftyIndicesId', value:'Nifty Indices'},
-  ]})
-  
+    ]
+  })
+
+  menu_data_multi.push({
+    id: 'usefulWebsites', value: 'Useful Websites', data: [
+      { id: 'opstraId', value: 'Opstra Options Analysis' }, { id: 'neostoxId', value: 'Neostox' },
+      { id: 'pasiId', value: 'Pasi Technologies' }, { id: 'eqsisId', value: 'Eqsis' }, { id: 'niftyIndicesId', value: 'Nifty Indices' },
+    ]
+  })
+
   //menu_data_multi.push({ id: 'strategies', value: 'Option Strategies', data: menu_strategies })
   webix.ui({
-    id:'mainWinId',
+    id: 'mainWinId',
     rows: [
       {
-        view: "toolbar", padding: 3, id:'mainToolbarId', elements: [
+        view: "toolbar", padding: 3, id: 'mainToolbarId', elements: [
           {
             view: "button", type: "icon", icon: "mdi mdi-menu",
             width: 37,
@@ -1165,46 +1198,55 @@ webix.ready(function () {
             }
           },
           { view: "label", label: "Option Strategies" },
-          {view: "template", id: "tradingViewTempId", width: 50, template: function(obj){
-            return '<div class="webix_tv"><svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg"><path d="M14 22H7V11H0V4h14v18zM28 22h-8l7.5-18h8L28 22z" fill="currentColor"></path><circle cx="20" cy="8" r="4" fill="currentColor"></circle></svg></div>'
-          }, onClick:{
-            "webix_tv":function(ev, id){
+          {
+            view: "template", id: "tradingViewTempId", width: 50, template: function (obj) {
+              return '<div class="webix_tv"><svg width="36" height="28" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg"><path d="M14 22H7V11H0V4h14v18zM28 22h-8l7.5-18h8L28 22z" fill="currentColor"></path><circle cx="20" cy="8" r="4" fill="currentColor"></circle></svg></div>'
+            }, onClick: {
+              "webix_tv": function (ev, id) {
                 let s = $$('scriptId').getValue()
-                if(s=='') {
+                if (s == '') {
                   alert('Please select Script')
-                } else if(s == 'NIFTY') {
+                } else if (s == 'NIFTY') {
                   window.open('https://www.moneycontrol.com/mc/indianindices/chart?indice_id=9')
-                } else if(s == 'BANKNIFTY') {
+                } else if (s == 'BANKNIFTY') {
                   window.open('https://www.moneycontrol.com/mc/indianindices/chart?indice_id=23')
                 } else {
                   window.open('https://www.moneycontrol.com/mc/stock/chart?scId=' + s + '&exchangeId=' + s + '&ex=NSE&theme=dark')
                 }
                 return false;
+              }
             }
-        }},
-          { view:"button", label: "Technical", width: 85, click: function(){ showStreakAnalytics() }},
-          { view: "button", label: "Open Strategy", width: 120, click: function(){ strategyCal() } },
-          {view: "button", type: "icon", icon: "mdi mdi-history", id:"scriptHistoryId", width: 30, align: "left", click: function() {
-            if(SelectedScript) {
-              openScriptDailyDetails(SelectedScript)
-            } else {
-              alert('Please select script')
-            }
-          }
-        },
-          {view: "button", type: "icon", icon: "mdi mdi-eye-settings", id:"ichartSentimentId", width: 30, align: "left", click: function() {
-            if(SelectedScript) {
-              dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
-              //dispatchChangeEvent('#priceApiReqId', SelectedScript)
-              //dispatchChangeEvent('#businesstodayReqId')
-            } else {
-              alert('Please select script')
-            }
+          },
+          { view: "button", label: "Technical", width: 85, click: function () { showStreakAnalytics() } },
+          { view: "button", label: "Open Strategy", width: 120, click: function () { strategyCal() } },
+          {
+            view: "button", type: "icon", icon: "mdi mdi-history", id: "scriptHistoryId", width: 30, align: "left", click: function () {
+              if (SelectedScript) {
+                openScriptDailyDetails(SelectedScript)
+              } else {
+                alert('Please select script')
+              }
             }
           },
           {
-            view: 'template', id:'scriptAnalyticsId', css:'webix-control', width: 650, template: function(obj) {
-              if(webix.isArray(obj)) {
+            view: "button", type: "image", image:"/images/ag-grid.png", id: "optionAllHistoryButtonId", width: 30, align: "left", click: function () {
+              displayOptionAllHistoryData()
+            }
+          },
+          {
+            view: "button", type: "icon", icon: "mdi mdi-eye-settings", id: "ichartSentimentId", width: 30, align: "left", click: function () {
+              if (SelectedScript) {
+                dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
+                //dispatchChangeEvent('#priceApiReqId', SelectedScript)
+                //dispatchChangeEvent('#businesstodayReqId')
+              } else {
+                alert('Please select script')
+              }
+            }
+          },
+          {
+            view: 'template', id: 'scriptAnalyticsId', css: 'webix-control', width: 650, template: function (obj) {
+              if (webix.isArray(obj)) {
                 let d1 = obj[3] > 0 ? `<span class="green">${obj[3]}%</span>` : `<span class="red">${obj[3]}%</span>`
                 let w1 = obj[4] > 0 ? `<span class="green">${obj[4]}%</span>` : `<span class="red">${obj[4]}%</span>`
                 let m1 = obj[5] > 0 ? `<span class="green">${obj[5]}%</span>` : `<span class="red">${obj[5]}%</span>`
@@ -1213,7 +1255,7 @@ webix.ready(function () {
                 let yearWise = yearWisePercentageCal(SelectedScript)[0]
                 let yearW = yearWise['below52WksPer'] > 0 ? `<span class="green">${yearWise['below52WksPer']}%</span>` : `<span class="red">${yearWise['below52WksPer']}%</span>`
                 let h = `1D: ${d1}  1W: ${w1}  1M: ${m1}  3M: ${m3}  1Y: ${y1} Below 1Y: ${yearW} On Date: ${obj[44]}`
-                return h 
+                return h
               } else {
                 return ''
               }
@@ -1227,66 +1269,68 @@ webix.ready(function () {
             view: "sidebar", id: "sidebarId", width: 155, scroll: "auto",
             data: menu_data_multi, on: {
               onAfterSelect: function (id) {
-                if(id === 'optionChain') {showViewId('optionChainViewId')}
-                 else if(id == 'worldMarket') {
+                if (id === 'optionChain') { showViewId('optionChainViewId') }
+                else if (id == 'worldMarket') {
                   showViewId('worldMarketViewId')
                   dispatchChangeEvent('#worldMarketId')
-                } else if(id === 'liveTV') {window.open('https://www.cnbctv18.com/live-tv/')}
-                else if(id === 'indianMarket') {window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf?t=' + new Date().getTime())}
-                else if(id === 'resultCalendar') {window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/')}
-                else if(id === 'earningsCalendar') {window.open('https://www.moneycontrol.com/earnings-calendar')}
-                else if(id === 'trendlyne') {window.open('https://trendlyne.com/my-trendlyne/recommended/')}
-                else if(id === 'calendarWise') { showViewId('calendarWiseViewId')}
-                else if(id == 'niftyMaxPain') {window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty')}
-                else if(id == 'niftyTaDesk') {window.open('https://stockezee.com/nifty-ta-desk')}
-                else if(id == 'opstraId') { window.open('https://opstra.definedge.com/')}
-                else if(id == 'neostoxId') {window.open('https://neostox.com/')}
-                else if(id == 'pasiId') {window.open('http://www.pasitechnologies.com/')}
-                else if(id == 'eqsisId') {window.open('https://www.eqsis.com/nse-max-pain-analysis/')}
-                else if(id == 'niftyIndicesId') {
+                } else if (id === 'liveTV') { window.open('https://www.cnbctv18.com/live-tv/') }
+                else if (id === 'indianMarket') { window.open('https://content.indiainfoline.com/_media/iifl/img/research_reports/pdf/morning-note.pdf?t=' + new Date().getTime()) }
+                else if (id === 'resultCalendar') { window.open('https://www.moneycontrol.com/markets/earnings/results-calendar/') }
+                else if (id === 'earningsCalendar') { window.open('https://www.moneycontrol.com/earnings-calendar') }
+                else if (id === 'trendlyne') { window.open('https://trendlyne.com/my-trendlyne/recommended/') }
+                else if (id === 'calendarWise') { showViewId('calendarWiseViewId') }
+                else if (id == 'niftyMaxPain') { window.open('https://www.niftytrader.in/options-max-pain-chart-live/nifty') }
+                else if (id == 'niftyTaDesk') { window.open('https://stockezee.com/nifty-ta-desk') }
+                else if (id == 'opstraId') { window.open('https://opstra.definedge.com/') }
+                else if (id == 'neostoxId') { window.open('https://neostox.com/') }
+                else if (id == 'pasiId') { window.open('http://www.pasitechnologies.com/') }
+                else if (id == 'eqsisId') { window.open('https://www.eqsis.com/nse-max-pain-analysis/') }
+                else if (id == 'niftyIndicesId') {
                   window.open('https://www.niftyindices.com/market-data/live-index-watch')
                 }
-                else if(id == 'businesstodayId') {
+                else if (id == 'businesstodayId') {
                   window.open('https://www.businesstoday.in/markets');
-                 window.open('https://www.businesstoday.in/latest/corporate')}
-                else if(id == 'moneycontrolId') {
-                    window.open('https://www.moneycontrol.com/news/business/markets/')}
-                else if(id == 'dalalstreetId') {
-                    window.open('https://www.dsij.in/insight/trending-news/mindshare');
-                    window.open('https://www.dsij.in/markets/reports/market-reports');
-                    window.open('https://www.dsij.in/markets/reports/broker-reports');
-                    }
-                else if(id == 'etResultCalendar') {showViewId('etResultCalendarViewId')}
-                else if(id == 'etEconomicCalendar') {window.open('https://www.moneycontrol.com/economic-calendar');}
-                else if(id == 'moneycontroRC') {showViewId('moneycontroRCViewId')}
-                else if(id == 'cashAndCarry') {showViewId('cashAndCarryViewId')}
-                else if(id == 'maxPainStocks') {
+                  window.open('https://www.businesstoday.in/latest/corporate')
+                }
+                else if (id == 'moneycontrolId') {
+                  window.open('https://www.moneycontrol.com/news/business/markets/')
+                }
+                else if (id == 'dalalstreetId') {
+                  window.open('https://www.dsij.in/insight/trending-news/mindshare');
+                  window.open('https://www.dsij.in/markets/reports/market-reports');
+                  window.open('https://www.dsij.in/markets/reports/broker-reports');
+                }
+                else if (id == 'etResultCalendar') { showViewId('etResultCalendarViewId') }
+                else if (id == 'etEconomicCalendar') { window.open('https://www.moneycontrol.com/economic-calendar'); }
+                else if (id == 'moneycontroRC') { showViewId('moneycontroRCViewId') }
+                else if (id == 'cashAndCarry') { showViewId('cashAndCarryViewId') }
+                else if (id == 'maxPainStocks') {
                   showViewId('maxPainForAllViewId')
                   //dispatchChangeEvent('#maxPainStocksReqId')
-              }
-                else if(id == 'nifty50Stocks') {
+                }
+                else if (id == 'nifty50Stocks') {
                   showViewId('nifty50StockViewId')
                 }
-                else if(id == 'watchList') {
+                else if (id == 'watchList') {
                   showViewId('watchListViewId')
                   watchListCal()
                   $$('watchListDatatableId').clearAll()
                   $$('watchListDatatableId').parse(WatchList)
                 }
-                else if(id == 'tradingView') {window.open('https://www.tradingview.com/chart/uFSqmfFr/')}
-                else if(id == 'allStrategyGraph') {window.open('charts.png')}
-                else if(id == 'icharts') {window.open('https://main.icharts.in/hcharts-v4.html')}
-                else if(id == 'tickertape') {window.open('https://www.tickertape.in/stocks')}
-                else if(id == 'continuousWiseId') {
+                else if (id == 'tradingView') { window.open('https://www.tradingview.com/chart/uFSqmfFr/') }
+                else if (id == 'allStrategyGraph') { window.open('charts.png') }
+                else if (id == 'icharts') { window.open('https://main.icharts.in/hcharts-v4.html') }
+                else if (id == 'tickertape') { window.open('https://www.tickertape.in/stocks') }
+                else if (id == 'continuousWiseId') {
                   showViewId('continuousWiseViewId')
                   continuousWiseAllCal()
                   displayContinuousData()
-              } else if(id == 'yearWiseId') {
-                showViewId('yearWiseViewId')
-                let sArr = yearWisePercentageCal()
-                $$('yearWiseDatatableId').clearAll()
-                $$('yearWiseDatatableId').parse(sArr)
-              }
+                } else if (id == 'yearWiseId') {
+                  showViewId('yearWiseViewId')
+                  let sArr = yearWisePercentageCal()
+                  $$('yearWiseDatatableId').clearAll()
+                  $$('yearWiseDatatableId').parse(sArr)
+                }
                 else {
                   $$('strategyViewId').show()
                   showViewId('strategyViewId')
@@ -1338,18 +1382,18 @@ webix.ready(function () {
                 body: {
                   rows: [
                     {
-                      view: "toolbar", padding: 3, id:'optionChainToolbarId', elements: [
+                      view: "toolbar", padding: 3, id: 'optionChainToolbarId', elements: [
                         //{ view: "label", width:100, label: "Option Chain" },
-                        {view: "button", type: "icon", width: 37, align: "left", icon: "mdi mdi-table-settings", id:"tableSettingsId", popup:"table_pop"},
+                        { view: "button", type: "icon", width: 37, align: "left", icon: "mdi mdi-table-settings", id: "tableSettingsId", popup: "table_pop" },
                         {
-                          view:"combo", width:130, id:"scriptId",
-                          placeholder:"Select Script",
-                          options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
-                          on:{
-                            onChange: function(id){
+                          view: "combo", width: 130, id: "scriptId",
+                          placeholder: "Select Script",
+                          options: ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
+                          on: {
+                            onChange: function (id) {
                               SelectedScript = id
                               $$('maxPainLabelId').setHTML('')
-                              if(id == '') {
+                              if (id == '') {
                                 $$('algoStrategyId').setValue('')
                                 $$('underlyingValId').setHTML('')
                                 $$('expiryDateId').define('options', [])
@@ -1360,52 +1404,52 @@ webix.ready(function () {
                                 webix.storage.local.put('DownloadTime', DownloadTime)
                                 TableFilter = {}
                                 let sData = OptionChainData[SelectedScript]
-                                if(!sData) {
+                                if (!sData) {
                                   $$('expiryDateId').define('options', [])
                                   $$('expiryDateId').setValue('')
                                   SelectedExpiryDate = ''
                                 }
-                                if(SelectedScript && sData) {
+                                if (SelectedScript && sData) {
                                   let sData = OptionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
 
-                                  let expiryDates = Object.keys(sData.data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+                                  let expiryDates = Object.keys(sData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
                                   $$('expiryDateId').define('options', expiryDates)
-                                  
-                                  if(sData.SelectedExpiryDate){
+
+                                  if (sData.SelectedExpiryDate) {
                                     SelectedExpiryDate = sData.SelectedExpiryDate
                                   } else {
                                     SelectedExpiryDate = expiryDates[0].id
                                   }
 
                                   $$('expiryDateId').setValue(SelectedExpiryDate)
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  $$('optionChainTemplateId').setValues({ data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp })
                                 } else {
                                   $$('expiryDateId').define('options', [])
-                                  webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
+                                  webix.delay(() => document.getElementById("indices-body").innerHTML = selectScriptRow)
                                 }
                                 MaxPainList = webix.storage.local.get('MaxPainList')
                                 MaxPainList.forEach(v => {
-                                  if(v.symbol_name == SelectedScript) {
+                                  if (v.symbol_name == SelectedScript) {
                                     $$('maxPainLabelId').setHTML('Max Pain: <b>' + v.max_pain + '</b>')
                                   }
                                 })
                                 $$('scriptAnalyticsId').setValues(webix.storage.local.get('iChartScreener')[id])
                               }
                             },
-                            onAfterRender: function() {
+                            onAfterRender: function () {
                               $$('scriptId').setValue(DownloadTime['lastViewedScript'] || 'NIFTY')
                             }
                           }
                         },
                         {
-                          view:"combo", width:210, labelWidth:85, id:"expiryDateId",
-                          label: 'Expiry Date:',  placeholder:"Select Date",
-                          options:[],on:{
-                            onChange: function(id){
+                          view: "combo", width: 210, labelWidth: 85, id: "expiryDateId",
+                          label: 'Expiry Date:', placeholder: "Select Date",
+                          options: [], on: {
+                            onChange: function (id) {
                               //console.dir(id)
-                              if(id != '') {
-                                if(SelectedExpiryDate != id) {
+                              if (id != '') {
+                                if (SelectedExpiryDate != id) {
                                   SelectedExpiryDate = id
                                   let sData = OptionChainData[SelectedScript]
                                   Underlying_Value = sData.underlyingValue
@@ -1413,33 +1457,35 @@ webix.ready(function () {
                                   $$('strikePriceId').hide()
                                   $$('algoStrategyId').show()
                                   $$('algoStrategyButtonId').show()
-                                  TableFilter={}
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
+                                  TableFilter = {}
+                                  $$('optionChainTemplateId').setValues({ data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp })
                                 }
                               }
                             }
                           }
                         },
                         {
-                          view: "button", type: "icon", icon: "mdi mdi-download", id:"scriptDownloadId",
+                          view: "button", type: "icon", icon: "mdi mdi-download", id: "scriptDownloadId",
                           width: 37, align: "left",
                           click: function () {
                             $$("sidebarId").hide();
                             let s = $$('scriptId').getValue();
-                            if(s == "") {
-                              webix.message({ text: "Please select script :-)", type:"info "})
+                            if (s == "") {
+                              webix.message({ text: "Please select script :-)", type: "info " })
                             } else {
                               let sData = OptionChainData[SelectedScript]
-                              if(sData) {
+                              if (sData) {
                                 let d = new Date(sData.fetchTime)
                                 let now = new Date()
-                                if(now.getTime() > (d.getTime() + twoMinutes)) {
+                                if (now.getTime() > (d.getTime() + twoMinutes)) {
                                   dispatchChangeEvent('#optionChainReqId', s)
                                 } else {
                                   Underlying_Value = sData.underlyingValue
                                   //$$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp})
-                                  $$('optionChainTemplateId').setValues({data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, 
-                                    selectedStrike:TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'],  peITM:TableFilter['peITM']})
+                                  $$('optionChainTemplateId').setValues({
+                                    data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp,
+                                    selectedStrike: TableFilter['selectedStrike'], expiryDate: TableFilter['expiryDate'], ceITM: TableFilter['ceITM'], peITM: TableFilter['peITM']
+                                  })
                                 }
                               } else {
                                 dispatchChangeEvent('#optionChainReqId', s)
@@ -1447,42 +1493,42 @@ webix.ready(function () {
                             }
                           }
                         },
-                        {view: 'label', width: 350, id:'strikePriceId', hidden: true},
+                        { view: 'label', width: 350, id: 'strikePriceId', hidden: true },
                         {
-                          view:"combo", width:250, labelWidth:100, id:'algoStrategyId',
-                          label: 'Algo Strategy:', placeholder:"Select Strategy", popupWidth: 600,
-                          options:[
-                            { id:1, value:"Short Gamma Spread" },
-                            { id:2, value:"Short Strangle" }, 
-                            { id:3, value:"Iron Condor Spread" }
+                          view: "combo", width: 250, labelWidth: 100, id: 'algoStrategyId',
+                          label: 'Algo Strategy:', placeholder: "Select Strategy", popupWidth: 600,
+                          options: [
+                            { id: 1, value: "Short Gamma Spread" },
+                            { id: 2, value: "Short Strangle" },
+                            { id: 3, value: "Iron Condor Spread" }
                           ]
                         },
                         {
-                          view: "button", type: "icon", icon: "mdi mdi-google-analytics", id:'algoStrategyButtonId',
+                          view: "button", type: "icon", icon: "mdi mdi-google-analytics", id: 'algoStrategyButtonId',
                           width: 37, align: "left",
                           click: function () {
 
                             $$("sidebarId").hide();
                             let s = $$('scriptId').getValue();
-                            if(s == "") {
-                              webix.message({ text: "Please select script :-)", type:"info "})
+                            if (s == "") {
+                              webix.message({ text: "Please select script :-)", type: "info " })
                             } else {
                               let algoSel = $$('algoStrategyId').getValue()
-                              if(algoSel == '') {
-                                webix.message({ text: "Please select also strategy :-)", type:"info "})
+                              if (algoSel == '') {
+                                webix.message({ text: "Please select also strategy :-)", type: "info " })
                               } else {
-                                switch(algoSel) {
-                                  case '1': 
+                                switch (algoSel) {
+                                  case '1':
                                     $$('mainWinId').showProgress();
-                                    webix.delay(() => { displayShortGamma(); $$('mainWinId').hideProgress()})
+                                    webix.delay(() => { displayShortGamma(); $$('mainWinId').hideProgress() })
                                     break
                                   case '2':
                                     $$('mainWinId').showProgress();
-                                    webix.delay(() => { displayShortStrangle(); $$('mainWinId').hideProgress()})
+                                    webix.delay(() => { displayShortStrangle(); $$('mainWinId').hideProgress() })
                                     break
                                   case '3':
                                     $$('mainWinId').showProgress();
-                                    webix.delay(() => { displayIronConderStrangle(); $$('mainWinId').hideProgress()})
+                                    webix.delay(() => { displayIronConderStrangle(); $$('mainWinId').hideProgress() })
                                     break
                                 }
                               }
@@ -1490,24 +1536,29 @@ webix.ready(function () {
                           }
                         },
                         {},
-                        {view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless:true},
-                        {view:'template', width:200, template: '', id:'underlyingValId', borderless:true},
-                        {view: "button", type: "icon", width:35, id:'upArrowId', icon: "mdi mdi-arrow-up", click: function() {
-                          $$('downArrowId').show()
-                          $$('mainToolbarId').hide()
-                          $$('upArrowId').hide()
-                        }},
-                        {view: "button", type: "icon", width:35, id:'downArrowId', icon: "mdi mdi-arrow-down", hidden:true, click: function() {
-                          $$('upArrowId').show()
-                          $$('mainToolbarId').show()
-                          $$('downArrowId').hide()
-                        }},
+                        { view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless: true },
+                        { view: 'template', width: 200, template: '', id: 'underlyingValId', borderless: true },
+                        {
+                          view: "button", type: "icon", width: 35, id: 'upArrowId', icon: "mdi mdi-arrow-up", click: function () {
+                            $$('downArrowId').show()
+                            $$('mainToolbarId').hide()
+                            $$('upArrowId').hide()
+                          }
+                        },
+                        {
+                          view: "button", type: "icon", width: 35, id: 'downArrowId', icon: "mdi mdi-arrow-down", hidden: true, click: function () {
+                            $$('upArrowId').show()
+                            $$('mainToolbarId').show()
+                            $$('downArrowId').hide()
+                          }
+                        },
                       ]
                     },
-                    { view: 'template', id: 'optionChainTemplateId', template: function(obj) {
-                      //console.dir(obj)
+                    {
+                      view: 'template', id: 'optionChainTemplateId', template: function (obj) {
+                        //console.dir(obj)
 
-                      let start = `<div class="optionChainApp1" style="overflow:auto;width:100%;height:100%;"><div class="customTable-width optionChainTable wordBreak borderTD">
+                        let start = `<div class="optionChainApp1" style="overflow:auto;width:100%;height:100%;"><div class="customTable-width optionChainTable wordBreak borderTD">
                       <table id="optionChainTable-indices" class="common_table w-100">
                         <thead>
                         <tr>
@@ -1542,17 +1593,17 @@ webix.ready(function () {
                         </thead>
                         <tbody id="indices-body">`
 
-                        if(obj.selectedStrike) {
-                          let expiryDates = Object.keys(OptionChainData[SelectedScript].data).sort((a,b) => {if(new Date(a) > new Date(b)) {return 1} else {return -1}})
+                        if (obj.selectedStrike) {
+                          let expiryDates = Object.keys(OptionChainData[SelectedScript].data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
 
-                          for(let i=0; i<expiryDates.length; i++) {
+                          for (let i = 0; i < expiryDates.length; i++) {
                             let strikeSelect = undefined
                             OptionChainData[SelectedScript].data[expiryDates[i]].forEach(e => {
-                              if(e[obj.selectedStrike]) {
+                              if (e[obj.selectedStrike]) {
                                 strikeSelect = e[obj.selectedStrike]
                               }
                             })
-                            if(strikeSelect == undefined) {
+                            if (strikeSelect == undefined) {
                               continue;
                             }
                             let st = obj.selectedStrike
@@ -1579,8 +1630,8 @@ webix.ready(function () {
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askPrice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askQty, true)}</td>`
 
-                            + stRow +
-                            `
+                              + stRow +
+                              `
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidQty, true)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidprice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
@@ -1595,16 +1646,16 @@ webix.ready(function () {
                             </tr>`
                             start = start + r
                           }
-                        } else if(Object.keys(obj).length > 0) {
+                        } else if (Object.keys(obj).length > 0) {
                           prepareStrikeWithPremium()
                           let [S1, S2, R1, R2] = findSupportResistence()
                           let [PEV1, PEV2, CEV1, CEV2] = findSupportResistence()
                           let arr = obj.data
 
-                          let fivePerLower = Underlying_Value - (Underlying_Value * 5 /100)
-                          let fivePerHigher = Underlying_Value + (Underlying_Value * 5 /100)
+                          let fivePerLower = Underlying_Value - (Underlying_Value * 5 / 100)
+                          let fivePerHigher = Underlying_Value + (Underlying_Value * 5 / 100)
 
-                          let pePerLower = Underlying_Value - (Underlying_Value * 10 /100)
+                          let pePerLower = Underlying_Value - (Underlying_Value * 10 / 100)
 
                           let sData = OptionChainData[SelectedScript]
                           let ocArr = sData.data[SelectedExpiryDate]
@@ -1613,41 +1664,41 @@ webix.ready(function () {
                             allOcs.push(Object.keys(ocArr[i])[0])
                           }
                           let closest = allOcs.reduce(function (prev, curr) {
-                              return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+                            return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
                           })
 
-                          for(let i=0; i<arr.length; i++) {
+                          for (let i = 0; i < arr.length; i++) {
                             let row = arr[i]
                             let st = Object.keys(row)[0]
                             let ce = row[st]['CE'] || {}
                             let pe = row[st]['PE'] || {}
-                            if(fetchTableConfig('optimize') == 'active') {
-                              if(ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0) {
+                            if (fetchTableConfig('optimize') == 'active') {
+                              if (ce.totalTradedVolume == 0 && pe.totalTradedVolume == 0) {
                                 continue;
                               }
-                              if(Underlying_Value > st && !pe.bidPrice && !pe.askPrice) {
+                              if (Underlying_Value > st && !pe.bidPrice && !pe.askPrice) {
                                 continue;
-                              } else if(Underlying_Value < st && !ce.bidPrice && !ce.askPrice) {
+                              } else if (Underlying_Value < st && !ce.bidPrice && !ce.askPrice) {
                                 continue;
                               }
                             }
-                            
+
 
                             let ceIdentifier = ce.identifier
                             let peIdentifier = pe.identifier
-                            let ceClass = st<=closest ? 'bg-yellow' : ''
-                            let peClass = st>closest ? 'bg-yellow' : ''
+                            let ceClass = st <= closest ? 'bg-yellow' : ''
+                            let peClass = st > closest ? 'bg-yellow' : ''
                             let stPer = DecimalFixed(((st - Underlying_Value) / Underlying_Value * 100)) + '%&#010;(' + DecimalFixed(st - Underlying_Value) + ')'
                             let stRow = `<td width="6.34%"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
-                            if(parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
+                            if (parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
                               stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             }
                             let ceChangeTx = ' redTxt'
-                            if(ce.change > 0) {
+                            if (ce.change > 0) {
                               ceChangeTx = ' greenTxt'
                             }
                             let peChangeTx = ' redTxt'
-                            if(pe.change > 0) {
+                            if (pe.change > 0) {
                               peChangeTx = ' greenTxt'
                             }
 
@@ -1655,38 +1706,38 @@ webix.ready(function () {
                             let peHis = `<span onclick="fetchOptionHistory('PE', '${DecimalFixed(st).replaceAll(',', '')}', '${SelectedExpiryDate}', '${SelectedScript}')" class="webix_icon_btn mdi mdi-history" style="color: #2f79e0;cursor:pointer;"></span>`
 
                             let ceVol1 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == CEV1) {
+                            if (DecimalFixed(st).replaceAll(',', '') == CEV1) {
                               ceVol1 = 'green1'
                             }
                             let ceVol2 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == CEV2) {
+                            if (DecimalFixed(st).replaceAll(',', '') == CEV2) {
                               ceVol2 = 'green2'
                             }
 
                             let peVol1 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == PEV1) {
+                            if (DecimalFixed(st).replaceAll(',', '') == PEV1) {
                               peVol1 = 'green1'
                             }
                             let peVol2 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == PEV2) {
+                            if (DecimalFixed(st).replaceAll(',', '') == PEV2) {
                               peVol2 = 'green2'
                             }
 
                             let ceOI1 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == R1) {
+                            if (DecimalFixed(st).replaceAll(',', '') == R1) {
                               ceOI1 = 'green1'
                             }
                             let ceOI2 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == R2) {
+                            if (DecimalFixed(st).replaceAll(',', '') == R2) {
                               ceOI2 = 'green2'
                             }
 
                             let peOI1 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == S1) {
+                            if (DecimalFixed(st).replaceAll(',', '') == S1) {
                               peOI1 = 'green1'
                             }
                             let peOI2 = ''
-                            if(DecimalFixed(st).replaceAll(',', '') == S2) {
+                            if (DecimalFixed(st).replaceAll(',', '') == S2) {
                               peOI2 = 'green2'
                             }
 
@@ -1694,20 +1745,20 @@ webix.ready(function () {
                             let ceBuildUpTip = ''
                             let peBuildUp = ''
                             let peBuildUpTip = ''
-                            if(fetchTableConfig('buildup') == 'active') {
-                              if(ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0 || ce.changeinOpenInterest == 0) {
+                            if (fetchTableConfig('buildup') == 'active') {
+                              if (ce.changeinOpenInterest == ce.openInterest || ce.totalTradedVolume == 0 || ce.changeinOpenInterest == 0) {
                                 ceBuildUp = ''
                                 ceBuildUpTip = 'Unchanged'
-                              } else if(ce.changeinOpenInterest>0) {
-                                if(ce.change>0) {
+                              } else if (ce.changeinOpenInterest > 0) {
+                                if (ce.change > 0) {
                                   ceBuildUp = 'background-color: rgb(0, 128, 0)'
                                   ceBuildUpTip = 'Long Buildup'
-                                }else {
+                                } else {
                                   ceBuildUp = 'background-color: rgb(255, 0, 0)'
                                   ceBuildUpTip = 'Short Buildup'
                                 }
                               } else {
-                                if(ce.change>0) {
+                                if (ce.change > 0) {
                                   ceBuildUp = 'background-color: rgb(144, 238, 144)'
                                   ceBuildUpTip = 'Short Covering'
                                 } else {
@@ -1715,20 +1766,20 @@ webix.ready(function () {
                                   ceBuildUpTip = 'Long Unwinding'
                                 }
                               }
-                                
-                              if(pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0 || pe.changeinOpenInterest == 0) {
+
+                              if (pe.changeinOpenInterest == pe.openInterest || pe.totalTradedVolume == 0 || pe.changeinOpenInterest == 0) {
                                 peBuildUp = ''
                                 peBuildUpTip = 'Unchanged'
-                              } else if(pe.changeinOpenInterest>0) {
-                                if(pe.change>0) {
+                              } else if (pe.changeinOpenInterest > 0) {
+                                if (pe.change > 0) {
                                   peBuildUp = 'background-color: rgb(0, 128, 0)'
                                   peBuildUpTip = 'Long Buildup'
-                                }else {
+                                } else {
                                   peBuildUp = 'background-color: rgb(255, 0, 0)'
                                   peBuildUpTip = 'Short Buildup'
                                 }
                               } else {
-                                if(pe.change>0) {
+                                if (pe.change > 0) {
                                   peBuildUp = 'background-color: rgb(144, 238, 144)'
                                   peBuildUpTip = 'Short Covering'
                                 } else {
@@ -1738,7 +1789,7 @@ webix.ready(function () {
                               }
                             }
                             let peSellClass = ''
-                            if(parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
+                            if (parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
                               peSellClass = 'bg-purple'
                             }
 
@@ -1756,8 +1807,8 @@ webix.ready(function () {
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askPrice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askQty, true)}</td>`
 
-                            + stRow +
-                            `
+                              + stRow +
+                              `
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidQty, true)}</td>
                             <td width="4.34%" class="${peClass} ${peSellClass}">${DecimalFixed(pe.bidprice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
@@ -1775,51 +1826,51 @@ webix.ready(function () {
 
                           let currVal = '<b>' + Underlying_Value + '</b> ' + '<br>' + obj.timestamp
                           try {
-                            let dStr = obj.timestamp.substr(0,11)
+                            let dStr = obj.timestamp.substr(0, 11)
                             let preClose = '0'
-                            if(dStr == ScriptHistoryData[SelectedScript][0][0]) {
+                            if (dStr == ScriptHistoryData[SelectedScript][0][0]) {
                               preClose = ScriptHistoryData[SelectedScript][1][4]
                             } else {
                               preClose = ScriptHistoryData[SelectedScript][0][4]
                             }
-                            
-                            let per = toFixed((Underlying_Value - preClose) / Underlying_Value * 100, 2)+ '%'
+
+                            let per = toFixed((Underlying_Value - preClose) / Underlying_Value * 100, 2) + '%'
                             let diff = toFixed(Underlying_Value - preClose, 2)
 
                             let detailsLink = ''
-                            if(SelectedScript == 'NIFTY' || SelectedScript == 'BANKNIFTY') {
+                            if (SelectedScript == 'NIFTY' || SelectedScript == 'BANKNIFTY') {
                               detailsLink = Underlying_Value
                             } else {
-                              if(parseFloat(per)<0) {
-                                detailsLink = '<a style="color:#fd505c;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">'+Underlying_Value+'</a>'
+                              if (parseFloat(per) < 0) {
+                                detailsLink = '<a style="color:#fd505c;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">' + Underlying_Value + '</a>'
                               } else {
-                                detailsLink = '<a style="color:#02a68a;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">'+Underlying_Value+'</a>'
+                                detailsLink = '<a style="color:#02a68a;text-decoration: underline;" target="_blank" href="https://nseindia.com/companytracker/cmtracker.jsp?symbol=' + SelectedScript + '&cName=cmtracker_nsedef.css">' + Underlying_Value + '</a>'
                               }
                             }
-                            if(parseFloat(per)<0) {
-                              currVal = '<span style="color:#fd505c">'+ '<b>' + detailsLink + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                            if (parseFloat(per) < 0) {
+                              currVal = '<span style="color:#fd505c">' + '<b>' + detailsLink + '</b> ' + per + '(' + diff + ')</span>' + '<br>' + obj.timestamp
                             } else {
-                              currVal = '<span style="color:#02a68a">'+ '<b>' + detailsLink + '</b> ' + per + '('+ diff + ')</span>' +'<br>' + obj.timestamp
+                              currVal = '<span style="color:#02a68a">' + '<b>' + detailsLink + '</b> ' + per + '(' + diff + ')</span>' + '<br>' + obj.timestamp
                             }
-                          } catch(e){}
+                          } catch (e) { }
 
-                          $$('underlyingValId').setHTML( currVal )
-                      } else {
-                        $$('underlyingValId').setHTML('')
-                        webix.delay(()=>document.getElementById("indices-body").innerHTML = selectScriptRow)
-                      }
-                      let end = `  </tbody>
+                          $$('underlyingValId').setHTML(currVal)
+                        } else {
+                          $$('underlyingValId').setHTML('')
+                          webix.delay(() => document.getElementById("indices-body").innerHTML = selectScriptRow)
+                        }
+                        let end = `  </tbody>
                       </table></div></div>`
-                      //webix.delay(()=> attachBuySellButtons(), 100);
-                      return start + end
-                    } 
+                        //webix.delay(()=> attachBuySellButtons(), 100);
+                        return start + end
+                      }
                     },
-                    {view:'template', template:'<div style="background-color: blue"></div>', height:10}
+                    { view: 'template', template: '<div style="background-color: blue"></div>', height: 10 }
                   ]
                 }
               },
               {
-                id:'strategyViewId',
+                id: 'strategyViewId',
                 hidden: true,
                 cols: [
                   {
@@ -1864,18 +1915,20 @@ webix.ready(function () {
                 hidden: true,
                 body: {
                   rows: [
-                    {view: "button", type: "icon", icon: "mdi mdi-refresh", height:35, width: 37, align: "center",
-                    click: function () {
-                      $('#worldMarket').empty();
-                      $('#worldMarket').append('Loading ...');
-                      $('#sgxNifty').empty();
-                      $('#sgxNifty').append('Loading ...');
-                      dispatchChangeEvent('#worldMarketId')
-                    }},
                     {
-                      cols:[
-                        {view:'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="worldMarket">Loading ...</div</div>'},
-                        {view:'template', width:400, template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="sgxNifty">Loading ...</div</div>'},
+                      view: "button", type: "icon", icon: "mdi mdi-refresh", height: 35, width: 37, align: "center",
+                      click: function () {
+                        $('#worldMarket').empty();
+                        $('#worldMarket').append('Loading ...');
+                        $('#sgxNifty').empty();
+                        $('#sgxNifty').append('Loading ...');
+                        dispatchChangeEvent('#worldMarketId')
+                      }
+                    },
+                    {
+                      cols: [
+                        { view: 'template', template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="worldMarket">Loading ...</div</div>' },
+                        { view: 'template', width: 400, template: '<div style="overflow:auto;width:100%;height:98%;font-size: large;"><div id="sgxNifty">Loading ...</div</div>' },
                       ]
                     }
                   ]
@@ -1889,153 +1942,156 @@ webix.ready(function () {
                 body: {
                   rows: [
                     {
-                      cols:[
-                        {view:"combo", width:180, labelWidth:50, id:"scriptCalendarId",
-                        label: 'Script:',  placeholder:"Please Select",
-                        options: ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
-                        on:{
-                          onChange: function(id){
-                            CalenderUI = processDataForCalenderUI(id)
-                            $$('script_calendar').refresh()
-                          },
-                          onAfterRender: function() {
-                            $$("scriptCalendarId").setValue(DownloadTime['lastViewedScript'])
+                      cols: [
+                        {
+                          view: "combo", width: 180, labelWidth: 50, id: "scriptCalendarId",
+                          label: 'Script:', placeholder: "Please Select",
+                          options: ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
+                          on: {
+                            onChange: function (id) {
+                              CalenderUI = processDataForCalenderUI(id)
+                              $$('script_calendar').refresh()
+                            },
+                            onAfterRender: function () {
+                              $$("scriptCalendarId").setValue(DownloadTime['lastViewedScript'])
+                            }
                           }
-                        }
                         },
                         {
                           view: "button", type: "icon", icon: "mdi mdi-download",
                           width: 37, align: "left",
                           click: function () {
                             let id = $$('scriptCalendarId').getValue()
-                            if(id != '') {
+                            if (id != '') {
                               //dispatchChangeEvent('#scriptHistoryId', id)
                               dispatchChangeEvent('#priceApiReqId', id)
                             } else {
 
                             }
                           }
-                        },{},
+                        }, {},
                         {
-                          view: "button", type: "icon", icon: "mdi mdi-download",label: 'i Chart',
+                          view: "button", type: "icon", icon: "mdi mdi-download", label: 'i Chart',
                           width: 130, align: "left",
                           click: function () {
-                            if(window.confirm('Are you sure to download all sripts')) {
+                            if (window.confirm('Are you sure to download all sripts')) {
                               dispatchChangeEvent('#ichartScreenerReqId')
+                              //dispatchChangeEvent('#economicCalendarReqId')
+                              //fetchOptionAllHistory()
                             }
                           }
                         },
                         {
-                          view: "button", type: "icon", icon: "mdi mdi-download",label: 'Download All',
+                          view: "button", type: "icon", icon: "mdi mdi-download", label: 'Download All',
                           width: 130, align: "left",
                           click: function () {
-                            if(window.confirm('Are you sure to download all sripts')) {
+                            if (window.confirm('Are you sure to download all sripts')) {
                               //dispatchChangeEvent('#scriptHistoryId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString() )
                               dispatchChangeEvent('#priceApiReqId', ['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()].toString())
                             }
                           }
-                        },{width: 15}
-                    ]
-                  },
-                  {
-                    view:"calendar",
-                    id:"script_calendar",
-                    calendarHeader: "%F, %Y",
-                    weekHeader:true,
-                    skipEmptyWeeks: true,
-                    cellHeight: 70,
-                    events:webix.Date.isHoliday,
-                    align: 'center',
-                    dayTemplate: function(date){
+                        }, { width: 15 }
+                      ]
+                    },
+                    {
+                      view: "calendar",
+                      id: "script_calendar",
+                      calendarHeader: "%F, %Y",
+                      weekHeader: true,
+                      skipEmptyWeeks: true,
+                      cellHeight: 70,
+                      events: webix.Date.isHoliday,
+                      align: 'center',
+                      dayTemplate: function (date) {
                         let dArr = date.toDateString().split(' ')
                         let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
 
-                        var html = "<div class='day'>"+date.getDate()+"</div>";
-                        if(CalenderUI[dStr]) {
-                            let per = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0]) / CalenderUI[dStr][0] * 100).toFixed(2)
-                            let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
-                            
-                            if(pol > 0) {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
-                            } else {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>"+CalenderUI[dStr][1]+"</span></div>"
-                            }
-                        } else if(dArr[0] == 'Sat') {
+                        var html = "<div class='day'>" + date.getDate() + "</div>";
+                        if (CalenderUI[dStr]) {
+                          let per = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0]) / CalenderUI[dStr][0] * 100).toFixed(2)
+                          let pol = parseFloat((CalenderUI[dStr][1] - CalenderUI[dStr][0])).toFixed(2)
+
+                          if (pol > 0) {
+                            html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>" + CalenderUI[dStr][1] + "</span></div>"
+                          } else {
+                            html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'><b>" + per + "%</b> (" + pol + ")<br><span style='font-size: small;color: black;''>" + CalenderUI[dStr][1] + "</span></div>"
+                          }
+                        } else if (dArr[0] == 'Sat') {
                           let sat = new Date(dStr)
                           sat.setDate(sat.getDate() - 5)
                           dArr = sat.toDateString().split(' ')
                           dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
                           let sDate = ''
                           let eDate = ''
-                          for(let i=0; i<5; i++) {
-                            if(sDate == '' && CalenderUI[dStr]) {
+                          for (let i = 0; i < 5; i++) {
+                            if (sDate == '' && CalenderUI[dStr]) {
                               sDate = dStr
-                            } else if(sDate != '' && CalenderUI[dStr]) {
+                            } else if (sDate != '' && CalenderUI[dStr]) {
                               eDate = dStr
                             }
                             sat.setDate(sat.getDate() + 1)
                             dArr = sat.toDateString().split(' ')
                             dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
                           }
-                          if(sDate != '' && eDate != '') {
+                          if (sDate != '' && eDate != '') {
                             let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
                             let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
-                            
-                            if(pol > 0) {
-                                html = "<div class='day' title='" + date.getDate() + "' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;background-color: lightblue;'><b>" + per + "%</b> <br/>" + pol + "</div>";
+
+                            if (pol > 0) {
+                              html = "<div class='day' title='" + date.getDate() + "' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;background-color: lightblue;'><b>" + per + "%</b> <br/>" + pol + "</div>";
                             } else {
-                                html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;background-color: lightblue;'> <b>" + per + "%</b> <br/>" + pol + "</div>";
+                              html = "<div class='day' title='" + date.getDate() + "'style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;background-color: lightblue;'> <b>" + per + "%</b> <br/>" + pol + "</div>";
                             }
                           }
                         }
                         return html;
-                    },
-                    on : {
-                      onAfterMonthChange: function(prev_date, next_date) {
-                        displayMonthWisePer(prev_date)
                       },
-                      onAfterZoom: function() {
-                        let months = $('.webix_cal_body>.webix_cal_block span')
-                        if(months.length>0) {
-                          let year = $('.webix_cal_month span').get(0).innerHTML
-                          for(let i=0; i<months.length; i++) {
-                            let my = months.get(i).innerHTML + '-' + year
-                            let cArr = Object.keys(CalenderUI)
-                            let sDate = ''
-                            let eDate = ''
-                            for(let i=0; i<cArr.length-1; i++) {
-                              let d = cArr[i]
-                              if(eDate == '' && my == d.substr(3)) {
-                                sDate = d
-                                eDate = d
-                              } else if(eDate != '' && my == d.substr(3)) {
-                                sDate = d
+                      on: {
+                        onAfterMonthChange: function (prev_date, next_date) {
+                          displayMonthWisePer(prev_date)
+                        },
+                        onAfterZoom: function () {
+                          let months = $('.webix_cal_body>.webix_cal_block span')
+                          if (months.length > 0) {
+                            let year = $('.webix_cal_month span').get(0).innerHTML
+                            for (let i = 0; i < months.length; i++) {
+                              let my = months.get(i).innerHTML + '-' + year
+                              let cArr = Object.keys(CalenderUI)
+                              let sDate = ''
+                              let eDate = ''
+                              for (let i = 0; i < cArr.length - 1; i++) {
+                                let d = cArr[i]
+                                if (eDate == '' && my == d.substr(3)) {
+                                  sDate = d
+                                  eDate = d
+                                } else if (eDate != '' && my == d.substr(3)) {
+                                  sDate = d
+                                }
                               }
-                            }
-                            if(sDate != '' && eDate != '') {
-                              let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
-                              let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
-                              if(pol > 0) {
+                              if (sDate != '' && eDate != '') {
+                                let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
+                                let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
+                                if (pol > 0) {
                                   html = "<span style='color:#1d922a;'><b>" + per + "%</b> (" + pol + ")</span>";
-                              } else {
+                                } else {
                                   html = "<span style='color:#d21616;'> <b>" + per + "%</b> (" + pol + ")</span>";
+                                }
+                                months.get(i).innerHTML = months.get(i).innerHTML + ' ' + html
                               }
-                              months.get(i).innerHTML = months.get(i).innerHTML + ' ' + html
                             }
+                            $('.webix_cal_block.webix_selected').removeClass('webix_selected')
                           }
-                          $('.webix_cal_block.webix_selected').removeClass('webix_selected')
-                        }
-                      },
-                      onAfterRender: function() {
-                        let mHeader = $('[view_id="script_calendar"]>.webix_cal_month>.webix_cal_month_name>.day').length
-                        if(mHeader == 0 && $$('scriptCalendarId').getValue() != '') {
-                          displayMonthWisePer($$('script_calendar').config.date)
-                          console.dir('onAfterRender')
-                        }
-                      },
-                    }
-                },
-                {height:10},
+                        },
+                        onAfterRender: function () {
+                          let mHeader = $('[view_id="script_calendar"]>.webix_cal_month>.webix_cal_month_name>.day').length
+                          if (mHeader == 0 && $$('scriptCalendarId').getValue() != '') {
+                            displayMonthWisePer($$('script_calendar').config.date)
+                            console.dir('onAfterRender')
+                          }
+                        },
+                      }
+                    },
+                    { height: 10 },
                   ]
                 }
               },
@@ -2046,31 +2102,40 @@ webix.ready(function () {
                 hidden: true,
                 body: {
                   rows: [
-                    { height: 40,
-                      cols:[{},
-                        { view:"datepicker", id:'etDatepickerId', value: new Date(),stringResult:true, width: 200 },
-                        {view: "button", type: "icon", icon: "mdi mdi-download", height:35, width: 37, align: "center",
-                      click: function () {
-                        let sDate = $$('etDatepickerId').getValue().substr(0,10)
-                        dispatchChangeEvent('#etDatepickerReqId', sDate)
-                      }},{view: "button", value:'7 Days', height:35, width: 45, align: "center",
-                      click: function () {
-                        dispatchChangeEvent('#etDatepickerReqId', 7)
-                      }},{}
-                     ]
-                  },
                     {
-                      view:"align", align:"middle,center",
-                      body:{ view:'datatable', hover:"myhover",css: "rows", id:'etDatatableId', height: 500, width: 900, 
-                      data: [{name: 'Hint :-)', event:'Please select date and click download'}], 
-                      columns: [
-                        {id:'name', header: 'Company Name', width: 200, template: function(obj) {
-                          return obj.companyId != undefined ? `<a target="_blank" href="https://economictimes.indiatimes.com/${obj.seoName}/stocks/companyid-${obj.companyId}.cms">${obj.name}</a>` : obj.name;
-                        }},
-                      
-                      {id:'event', header: 'Event', width: 450, fillspace:true}]   }
+                      height: 40,
+                      cols: [{},
+                      { view: "datepicker", id: 'etDatepickerId', value: new Date(), stringResult: true, width: 200 },
+                      {
+                        view: "button", type: "icon", icon: "mdi mdi-download", height: 35, width: 37, align: "center",
+                        click: function () {
+                          let sDate = $$('etDatepickerId').getValue().substr(0, 10)
+                          dispatchChangeEvent('#etDatepickerReqId', sDate)
+                        }
+                      }, {
+                        view: "button", value: '7 Days', height: 35, width: 45, align: "center",
+                        click: function () {
+                          dispatchChangeEvent('#etDatepickerReqId', 7)
+                        }
+                      }, {}
+                      ]
                     },
-                    {height: 30}
+                    {
+                      view: "align", align: "middle,center",
+                      body: {
+                        view: 'datatable', hover: "myhover", css: "rows", id: 'etDatatableId', height: 500, width: 900,
+                        data: [{ name: 'Hint :-)', event: 'Please select date and click download' }],
+                        columns: [
+                          {
+                            id: 'name', header: 'Company Name', width: 200, template: function (obj) {
+                              return obj.companyId != undefined ? `<a target="_blank" href="https://economictimes.indiatimes.com/${obj.seoName}/stocks/companyid-${obj.companyId}.cms">${obj.name}</a>` : obj.name;
+                            }
+                          },
+
+                          { id: 'event', header: 'Event', width: 450, fillspace: true }]
+                      }
+                    },
+                    { height: 30 }
                   ]
                 }
               },
@@ -2081,37 +2146,44 @@ webix.ready(function () {
                 hidden: true,
                 body: {
                   rows: [
-                    { height:35,
+                    {
+                      height: 35,
                       cols: [
                         {
-                          view:"combo", width:150, id:"resultDateId",
-                          placeholder:"Select Date",
-                          options:['All'],
-                          on:{
-                            onChange: function(id){
-                              if(id === 'All') {
+                          view: "combo", width: 150, id: "resultDateId",
+                          placeholder: "Select Date",
+                          options: ['All'],
+                          on: {
+                            onChange: function (id) {
+                              if (id === 'All') {
 
                               } else {
-                                
+
                               }
                             }
                           }
                         },
-                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
-                      click: function () {
-                        dispatchChangeEvent('#mcResultCalendarReqId')
-                      }},
-                      {view: "template", id: "allResultCalendarTempId", template: function(obj){
-                          return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['AllResultCalendarArr']
-                      }},
-                    {}
-                    ]
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
+                          click: function () {
+                            dispatchChangeEvent('#mcResultCalendarReqId')
+                          }
+                        },
+                        {
+                          view: "template", id: "allResultCalendarTempId", template: function (obj) {
+                            return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['AllResultCalendarArr']
+                          }
+                        },
+                        {}
+                      ]
                     },
-                    
-                  {view: 'template', width: 100, template: function(obj){
-                    return localStorage.getItem('AllResultCalendar')
-                  }, id: 'allResultCalendarId', scroll: "auto"},
-                    {height: 30}
+
+                    {
+                      view: 'template', width: 100, template: function (obj) {
+                        return localStorage.getItem('AllResultCalendar')
+                      }, id: 'allResultCalendarId', scroll: "auto"
+                    },
+                    { height: 30 }
                   ]
                 }
               },
@@ -2122,55 +2194,60 @@ webix.ready(function () {
                 hidden: true,
                 body: {
                   rows: [
-                    { height:35,
+                    {
+                      height: 35,
                       cols: [
-                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
-                      click: function () {
-                        dispatchChangeEvent('#cashAndCarryReqId')
-                      }},
-                      {view: "template", id: "cashAndCarryTempId", template: function(obj){
-                          return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['CashAndCarry']
-                      }},]
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-refresh", width: 37, align: "center",
+                          click: function () {
+                            dispatchChangeEvent('#cashAndCarryReqId')
+                          }
+                        },
+                        {
+                          view: "template", id: "cashAndCarryTempId", template: function (obj) {
+                            return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['CashAndCarry']
+                          }
+                        },]
                     },
                     {
                       cols: [
                         {
-                          rows: [{view: 'template', template: function(){ return '<center><b>Buy cash and Sell future</b></center>'}, height: 30},
+                          rows: [{ view: 'template', template: function () { return '<center><b>Buy cash and Sell future</b></center>' }, height: 30 },
                           {
-                            view:'datatable', id:'cashAndCarryDatatableId', 
+                            view: 'datatable', id: 'cashAndCarryDatatableId',
                             data: prepareCashAndCarryData()[0],
                             columns: [
-                              {id:'company', header: ['Company', {content: 'textFilter'}], width: 140, sort: 'string'}, 
-                              {id:'future', header: 'Future'}, 
-                              {id:'spot', header: 'Spot'}, 
-                              {id:'basis', header: 'Basis'}, 
-                              {id:'basisPer', header: 'Basis Per', sort: 'int'}, 
-                              {id:'preBasis', header: 'Pre Basis'}, 
-                              {id:'change', header: 'Change', sort: 'int'}, 
-                              {id:'lotSize', header: 'Lot Size'}, 
-                            ]   
+                              { id: 'company', header: ['Company', { content: 'textFilter' }], width: 140, sort: 'string' },
+                              { id: 'future', header: 'Future' },
+                              { id: 'spot', header: 'Spot' },
+                              { id: 'basis', header: 'Basis' },
+                              { id: 'basisPer', header: 'Basis Per', sort: 'int' },
+                              { id: 'preBasis', header: 'Pre Basis' },
+                              { id: 'change', header: 'Change', sort: 'int' },
+                              { id: 'lotSize', header: 'Lot Size' },
+                            ]
                           },]
                         },
                         {
-                          rows: [{view: 'template', template:function(){ return '<center><b>Sell cash and Buy future</b></center>'} , height: 30},
+                          rows: [{ view: 'template', template: function () { return '<center><b>Sell cash and Buy future</b></center>' }, height: 30 },
                           {
-                            view:'datatable', id:'revCashAndCarryDatatableId', 
+                            view: 'datatable', id: 'revCashAndCarryDatatableId',
                             data: prepareCashAndCarryData()[1],
                             columns: [
-                              {id:'company', header: ['Company', {content: 'textFilter'}], width: 140, sort: 'string'}, 
-                              {id:'future', header: 'Future'}, 
-                              {id:'spot', header: 'Spot'}, 
-                              {id:'basis', header: 'Basis'}, 
-                              {id:'basisPer', header: 'Basis Per', sort: 'int'}, 
-                              {id:'preBasis', header: 'Pre Basis'}, 
-                              {id:'change', header: 'Change', sort: 'int'}, 
-                              {id:'lotSize', header: 'Lot Size'}, 
-                            ]   
+                              { id: 'company', header: ['Company', { content: 'textFilter' }], width: 140, sort: 'string' },
+                              { id: 'future', header: 'Future' },
+                              { id: 'spot', header: 'Spot' },
+                              { id: 'basis', header: 'Basis' },
+                              { id: 'basisPer', header: 'Basis Per', sort: 'int' },
+                              { id: 'preBasis', header: 'Pre Basis' },
+                              { id: 'change', header: 'Change', sort: 'int' },
+                              { id: 'lotSize', header: 'Lot Size' },
+                            ]
                           },]
                         },
                       ]
                     },
-                    {height: 30}
+                    { height: 30 }
                   ]
                 }
               },
@@ -2183,37 +2260,37 @@ webix.ready(function () {
                   rows: [
                     {
                       body: {
-                          id: "scriptDetailsContinuousId",
-                          cols: [
-                              {
-                                  header: "Continuous Loss",
-                                  css:'red-background',
-                                  body: {
-                                      id: "continuousLossId",
-                                      view: "tabview",
-                                      tabbar: {
-                                          id: "continuousLossTabbarId"
-                                      },
-                                      cells: generateContinuousCells('Loss'),
-                                      data: []
-                                  }
+                        id: "scriptDetailsContinuousId",
+                        cols: [
+                          {
+                            header: "Continuous Loss",
+                            css: 'red-background',
+                            body: {
+                              id: "continuousLossId",
+                              view: "tabview",
+                              tabbar: {
+                                id: "continuousLossTabbarId"
                               },
-                              {
-                                header: "Continuous Profit",
-                                css:'green-background',
-                                body: {
-                                    view: "tabview",
-                                    id: "continuousProfitId",
-                                    tabbar: {
-                                        id: "continuousProfitTabbarId"
-                                    },
-                                    cells: generateContinuousCells('Profit'),
-                                    data: []
-                                }
-                              }
-                          ]
+                              cells: generateContinuousCells('Loss'),
+                              data: []
+                            }
+                          },
+                          {
+                            header: "Continuous Profit",
+                            css: 'green-background',
+                            body: {
+                              view: "tabview",
+                              id: "continuousProfitId",
+                              tabbar: {
+                                id: "continuousProfitTabbarId"
+                              },
+                              cells: generateContinuousCells('Profit'),
+                              data: []
+                            }
+                          }
+                        ]
                       }
-                  },
+                    },
                   ]
                 }
               },
@@ -2225,26 +2302,31 @@ webix.ready(function () {
                 body: {
                   rows: [
                     {
-                      view:"align", align:"middle,center",
-                      body:{
-                        view:'datatable', hover:"myhover",css: "rows", id:'yearWiseDatatableId', height: 500, width: 900, rowHeight: 70,
-                        data: [], 
+                      view: "align", align: "middle,center",
+                      body: {
+                        view: 'datatable', hover: "myhover", css: "rows", id: 'yearWiseDatatableId', height: 500, width: 900, rowHeight: 70,
+                        data: [],
                         columns: [
-                          {id:'name', header: ['Script Name', { content: "textFilter" }] , width: 200, sort: 'string'},
-                          {id:'52Wks', header: 'High/Low', width: 220, template: function(obj){
-                            return obj.highPrice + ' / ' + obj.lowPrice + '<br>[' + obj.highPriceDate + ' / ' + obj.lowPriceDate + ']'
-                          }},
-                          {id:'per', header: '52 Wks %', width: 200, sort: 'int',template: function(obj) {
-                            return obj['per'] + '%' + "(" +  obj['pol'] + ")"
-                          }}, 
-                          {id:'below52WksPer', header: 'Below 52 Wks', width: 150, sort: 'int', fillspace:true, template: function(obj) {
-                            return obj['below52WksPer'] + '%' + "(" +  obj['below52Wks'] + ")"
+                          { id: 'name', header: ['Script Name', { content: "textFilter" }], width: 200, sort: 'string' },
+                          {
+                            id: '52Wks', header: 'High/Low', width: 220, template: function (obj) {
+                              return obj.highPrice + ' / ' + obj.lowPrice + '<br>[' + obj.highPriceDate + ' / ' + obj.lowPriceDate + ']'
+                            }
+                          },
+                          {
+                            id: 'per', header: '52 Wks %', width: 200, sort: 'int', template: function (obj) {
+                              return obj['per'] + '%' + "(" + obj['pol'] + ")"
+                            }
+                          },
+                          {
+                            id: 'below52WksPer', header: 'Below 52 Wks', width: 150, sort: 'int', fillspace: true, template: function (obj) {
+                              return obj['below52WksPer'] + '%' + "(" + obj['below52Wks'] + ")"
+                            }
                           }
-                          }
-                        ]   
+                        ]
                       }
                     },
-                    {height: 30}
+                    { height: 30 }
                   ]
                 }
               },
@@ -2256,19 +2338,22 @@ webix.ready(function () {
                 body: {
                   rows: [
                     {
-                      view:'datatable', hover:"myhover",css: "rows", id:'watchListDatatableId', 
+                      view: 'datatable', hover: "myhover", css: "rows", id: 'watchListDatatableId',
                       data: [],
                       rowHeight: 180,
                       columns: [
-                        {id:'script', header: ['Script Details', {content: 'textFilter'}], width: 150, sort: 'text'}, 
-                        {id:'pol', header: ['Profit / Loss'], width: 400, sort: 'int', fillspace:true, template: function(obj) {
-                          return displayStrategyLatestDetails(obj)
-                        }
+                        { id: 'script', header: ['Script Details', { content: 'textFilter' }], width: 150, sort: 'text' },
+                        {
+                          id: 'pol', header: ['Profit / Loss'], width: 400, sort: 'int', fillspace: true, template: function (obj) {
+                            return displayStrategyLatestDetails(obj)
+                          }
                         },
-                        {id:'action', header: 'Action', width: 100, template: function(obj) {
-                          return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\''+ obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
-                        }},
-                      ]   
+                        {
+                          id: 'action', header: 'Action', width: 100, template: function (obj) {
+                            return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
+                          }
+                        },
+                      ]
                     }
                   ]
                 }
@@ -2277,25 +2362,31 @@ webix.ready(function () {
                 id: 'maxPainForAllViewId',
                 hidden: true,
                 body: {
-                  rows: [{height:35, cols: [
-                        {},
-                        {view: "button", type: "icon", icon: "mdi mdi-refresh", width:50, align: "center",
+                  rows: [{
+                    height: 35, cols: [
+                      {},
+                      {
+                        view: "button", type: "icon", icon: "mdi mdi-refresh", width: 50, align: "center",
                         click: function () {
                           dispatchChangeEvent('#maxPainStocksReqId')
-                        }},{view: "template", id: "maxPainTempId", template: function(obj){
+                        }
+                      }, {
+                        view: "template", id: "maxPainTempId", template: function (obj) {
                           return 'Last Downloaded: ' + webix.storage.local.get('DownloadTime')['MaxPainList']
-                      }},{}
-                      ]},
-                    {
-                      view:'datatable', hover:"myhover",css: "rows", id:'maxPainForAllDatatableId', 
-                      data: webix.storage.local.get('MaxPainList'),
-                      columns: [
-                        {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
-                        {id:'max_pain', header: 'Max Pain', width: 200,}, 
-                        {id:'today_close', header: 'Todays Close', width: 200},
-                        {id:'prev_close', header: 'Previous Close', width: 200, fillspace:true},
-                      ]   
-                    }
+                        }
+                      }, {}
+                    ]
+                  },
+                  {
+                    view: 'datatable', hover: "myhover", css: "rows", id: 'maxPainForAllDatatableId',
+                    data: webix.storage.local.get('MaxPainList'),
+                    columns: [
+                      { id: 'symbol_name', header: ['Symbol Name', { content: 'textFilter' }], width: 200, sort: 'string' },
+                      { id: 'max_pain', header: 'Max Pain', width: 200, },
+                      { id: 'today_close', header: 'Todays Close', width: 200 },
+                      { id: 'prev_close', header: 'Previous Close', width: 200, fillspace: true },
+                    ]
+                  }
                   ]
                 }
               },
@@ -2304,23 +2395,27 @@ webix.ready(function () {
                 hidden: true,
                 body: {
                   rows: [
-                    {height:35, cols: [
-                      {},
-                      {view: "button", type: "icon", icon: "mdi mdi-refresh", width:50, align: "center",
-                      click: function () {
-                        dispatchChangeEvent('#nifty50StocksReqId')
-                      }},{}
-                    ]},
                     {
-                      view:'datatable', hover:"myhover",css: "rows", id:'nifty50StockDatatableId',
+                      height: 35, cols: [
+                        {},
+                        {
+                          view: "button", type: "icon", icon: "mdi mdi-refresh", width: 50, align: "center",
+                          click: function () {
+                            dispatchChangeEvent('#nifty50StocksReqId')
+                          }
+                        }, {}
+                      ]
+                    },
+                    {
+                      view: 'datatable', hover: "myhover", css: "rows", id: 'nifty50StockDatatableId',
                       data: [],
                       columns: [
-                        {id:'symbol_name', header: ['Symbol Name', {content: 'textFilter'}], width: 200, sort: 'string'}, 
-                        {id:'last_trade_price', header: 'LTP', width: 200,}, 
-                        {id:'change', header: 'Change', width: 200,}, 
-                        {id:'change_per', header: ['Percentage (%)', {content: 'numberFilter'}], width: 200, sort: 'int'},
-                        {id:'dummy', header: '', fillspace:true},
-                      ]   
+                        { id: 'symbol_name', header: ['Symbol Name', { content: 'textFilter' }], width: 200, sort: 'string' },
+                        { id: 'last_trade_price', header: 'LTP', width: 200, },
+                        { id: 'change', header: 'Change', width: 200, },
+                        { id: 'change_per', header: ['Percentage (%)', { content: 'numberFilter' }], width: 200, sort: 'int' },
+                        { id: 'dummy', header: '', fillspace: true },
+                      ]
                     }
                   ]
                 }
@@ -2331,19 +2426,21 @@ webix.ready(function () {
       }
     ]
   })
-  webix.delay(()=> webix.extend($$("mainWinId"), webix.ProgressBar))
+  webix.delay(() => webix.extend($$("mainWinId"), webix.ProgressBar))
   webix.ui({
-    view:"popup",
-    id:"table_pop",
+    view: "popup",
+    id: "table_pop",
     width: 220,
-    body:{
+    body: {
       rows: [
-        { height: 30,
-          cols: [{view: 'template', template: 'Optimize Table', borderless: true},
-            {view: 'template', borderless: true, width: 50, template: function() {
-                return `<div class="tgl_vid_aud ${fetchTableConfig('optimize')}" data-action="optimize"><span class="tgic"></span></div>`
-              }
+        {
+          height: 30,
+          cols: [{ view: 'template', template: 'Optimize Table', borderless: true },
+          {
+            view: 'template', borderless: true, width: 50, template: function () {
+              return `<div class="tgl_vid_aud ${fetchTableConfig('optimize')}" data-action="optimize"><span class="tgic"></span></div>`
             }
+          }
           ]
         },
         /*{ height: 30,
@@ -2353,25 +2450,33 @@ webix.ready(function () {
             `}
           ]
         },*/
-        {height: 30,
-          cols: [{view: 'template', template: 'Buildup', borderless: true},
-            {view: 'template', borderless: true, width: 50, template: `
+        {
+          height: 30,
+          cols: [{ view: 'template', template: 'Buildup', borderless: true },
+          {
+            view: 'template', borderless: true, width: 50, template: `
             <div class="tgl_vid_aud ${fetchTableConfig('buildup')}" data-action="buildup"><span class="tgic"></span></div>
             `}
           ]
         },
-        {height: 30,
-          cols: [{view: 'template', template: 'Volatility Skew', borderless: true},
-            {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
+        {
+          height: 30,
+          cols: [{ view: 'template', template: 'Volatility Skew', borderless: true },
+          {
+            view: 'button', type: 'icon', width: 30, icon: "mdi mdi-open-in-new", click: function () {
               showVolatilitySmileChart()
-            }}
+            }
+          }
           ]
         },
-        {height: 30,
-          cols: [{view: 'template', template: 'Int-Ext', borderless: true},
-            {view: 'button', type: 'icon', width: 30, icon:"mdi mdi-open-in-new", click: function() {
+        {
+          height: 30,
+          cols: [{ view: 'template', template: 'Int-Ext', borderless: true },
+          {
+            view: 'button', type: 'icon', width: 30, icon: "mdi mdi-open-in-new", click: function () {
               showIntExtChart()
-            }}
+            }
+          }
           ]
         },
       ]
@@ -2383,45 +2488,45 @@ function shortStrangleCal(peOTM, ceOTM) {
   ceOTM = ceOTM.filter(obj => obj[1] > 10 && obj[0] > (Underlying_Value + 300))
 
   let resultArr = []
-  for(let i=0;i<peOTM.length; i++) {
-    if(peOTM[i][5]<2 || peOTM[i][3]<100) {
+  for (let i = 0; i < peOTM.length; i++) {
+    if (peOTM[i][5] < 2 || peOTM[i][3] < 100) {
       continue;
     }
-      let sellPut = {
-          strikePrice: peOTM[i][0],
-          premium: peOTM[i][1],
-          lotSize: 1
+    let sellPut = {
+      strikePrice: peOTM[i][0],
+      premium: peOTM[i][1],
+      lotSize: 1
+    }
+    for (let j = 0; j < ceOTM.length; j++) {
+      if (ceOTM[j][5] < 2 || ceOTM[j][3] < 100) {
+        continue;
       }
-      for(let j=0;j<ceOTM.length; j++) {
-        if(ceOTM[j][5]<2|| ceOTM[j][3]<100) {
-          continue;
-        }
-          let sellCall = {
-              strikePrice: ceOTM[j][0],
-              premium: ceOTM[j][1],
-              lotSize: 1
-          }
+      let sellCall = {
+        strikePrice: ceOTM[j][0],
+        premium: ceOTM[j][1],
+        lotSize: 1
+      }
 
-          let d = optionChainPayoffCal([], [sellCall], [], [sellPut], [], [])
-          let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
-          resultArr.push({
-              data: d,
-              lowerBound: lowerBound,
-              lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
-              uppderBound: uppderBound,
-              uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
-              premiumRec: parseFloat(sellPut.premium + sellCall.premium).toFixed(2),
-              range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
-              ceSt: sellCall.strikePrice,
-              cePre: sellCall.premium,
-              ceiv: ceOTM[j][5],
-              peSt: sellPut.strikePrice,
-              pePre: sellPut.premium,
-              peiv: peOTM[i][5],
-              upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
-              downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
-          })
-      }
+      let d = optionChainPayoffCal([], [sellCall], [], [sellPut], [], [])
+      let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
+      resultArr.push({
+        data: d,
+        lowerBound: lowerBound,
+        lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value - lowerBound) + ")",
+        uppderBound: uppderBound,
+        uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
+        premiumRec: parseFloat(sellPut.premium + sellCall.premium).toFixed(2),
+        range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
+        ceSt: sellCall.strikePrice,
+        cePre: sellCall.premium,
+        ceiv: ceOTM[j][5],
+        peSt: sellPut.strikePrice,
+        pePre: sellPut.premium,
+        peiv: peOTM[i][5],
+        upPer: parseFloat((uppderBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
+        downPer: parseFloat((lowerBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
+      })
+    }
   }
   //console.dir(resultArr)
   return resultArr;
@@ -2430,79 +2535,84 @@ function displayShortStrangle() {
   prepareStrikeWithPremium()
   let d = shortStrangleCal(PE_OTM, CE_OTM)
   webix.ui({
-      view:"window", 
-      id: 'strategyWinId',
-      width: window.innerWidth - 2,
-      height: window.innerHeight - 2,
-      position: 'center',
-      head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
-            { width:4 },
-            { view:"label", label: "Short Strangle: " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-            { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
-            { view:"button", label: 'X', width: 50, align: 'left', click:function(){ $$('strategyWinId').close(); }}
-          ]
-        },
-      body:{
-        view:"datatable",hover:"myhover",css: "rows",
-        columns:[
-          { id:"range",	header:["Strike Price"], width:150,},
-          { id:"lowerBound",	header: ["Lower Bound", { content: "numberFilter" }], width:120, sort:"int", template: function(obj) {
-              return obj.lowerBoundDiff
-          }},
-          { id:"uppderBound",	header: ["Upper Bound", { content: "numberFilter" }],width:120, sort:"int", template: function(obj) {
-              return obj.uppderBoundDiff
-          }},
-          { id:"pePre", header: ["PE Premium", { content: "numberFilter" }], width:150, sort:"int", },
-          { id:"cePre",	header: ["CE Premium", { content: "numberFilter" }], width:150, sort:"int",},
-          { id:"premiumRec",	header:["Premium Received", { content: "numberFilter" }] , width:160,	sort:"int"},
-          { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
-          { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
-          { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
-        ],
-        select:"row",
-        data:d,
-        onClick: {
-          details_button: function (ev, id) {
-  
-            let obj = this.data.pull[id.row]
-            let sellPutSt = obj.peSt
-            let sellPutPre = obj.pePre
-
-            let sellCallSt = obj.ceSt
-            let sellCallPre = obj.cePre
-            let premiumRec = obj.premiumRec
-
-            let ceSell = {
-              buyOrSell: SELL,
-              type: CE_TYPE,
-              strikePrice: obj.ceSt,
-              premium: obj.cePre,
-              lots: 1
-              }
-            let peSell = {
-              buyOrSell: SELL,
-              type: PE_TYPE,
-              strikePrice: obj.peSt,
-              premium: obj.pePre,
-              lots: 1
-              }
-
-              strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [ceSell, peSell])
+    view: "window",
+    id: 'strategyWinId',
+    width: window.innerWidth - 2,
+    height: window.innerHeight - 2,
+    position: 'center',
+    head: {
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Short Strangle: " + SelectedScript + '  [' + SelectedExpiryDate + ']' },
+        { view: "label", id: 'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
+        { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('strategyWinId').close(); } }
+      ]
+    },
+    body: {
+      view: "datatable", hover: "myhover", css: "rows",
+      columns: [
+        { id: "range", header: ["Strike Price"], width: 150, },
+        {
+          id: "lowerBound", header: ["Lower Bound", { content: "numberFilter" }], width: 120, sort: "int", template: function (obj) {
+            return obj.lowerBoundDiff
           }
+        },
+        {
+          id: "uppderBound", header: ["Upper Bound", { content: "numberFilter" }], width: 120, sort: "int", template: function (obj) {
+            return obj.uppderBoundDiff
+          }
+        },
+        { id: "pePre", header: ["PE Premium", { content: "numberFilter" }], width: 150, sort: "int", },
+        { id: "cePre", header: ["CE Premium", { content: "numberFilter" }], width: 150, sort: "int", },
+        { id: "premiumRec", header: ["Premium Received", { content: "numberFilter" }], width: 160, sort: "int" },
+        { id: "downPer", header: ["<-- %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "upPer", header: ["--> %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace: true },
+      ],
+      select: "row",
+      data: d,
+      onClick: {
+        details_button: function (ev, id) {
+
+          let obj = this.data.pull[id.row]
+          let sellPutSt = obj.peSt
+          let sellPutPre = obj.pePre
+
+          let sellCallSt = obj.ceSt
+          let sellCallPre = obj.cePre
+          let premiumRec = obj.premiumRec
+
+          let ceSell = {
+            buyOrSell: SELL,
+            type: CE_TYPE,
+            strikePrice: obj.ceSt,
+            premium: obj.cePre,
+            lots: 1
+          }
+          let peSell = {
+            buyOrSell: SELL,
+            type: PE_TYPE,
+            strikePrice: obj.peSt,
+            premium: obj.pePre,
+            lots: 1
+          }
+
+          strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [ceSell, peSell])
         }
-      },
-    }).show()
+      }
+    },
+  }).show()
 }
 function ironConderCal(peOTM, ceOTM) {
 
   let config = fetchScriptConfig()
-  peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - config.ironConderRange) )
+  peOTM = peOTM.filter(obj => obj[1] > 10 && obj[0] < (Underlying_Value - config.ironConderRange))
   ceOTM = ceOTM.filter(obj => obj[1] > 10 && obj[0] > (Underlying_Value + config.ironConderRange))
 
   let resultArr = []
-  for(let bp=0; bp<peOTM.length-1; bp++) { // bp = Buy Put, sp = Sell Put
-    for(let sp=bp+1; sp<peOTM.length; sp++) {
-      let peCreditAmt = peOTM[sp][1]  - peOTM[bp][2]
+  for (let bp = 0; bp < peOTM.length - 1; bp++) { // bp = Buy Put, sp = Sell Put
+    for (let sp = bp + 1; sp < peOTM.length; sp++) {
+      let peCreditAmt = peOTM[sp][1] - peOTM[bp][2]
 
       if (peOTM[sp][3] < 100 || peOTM[bp][3] < 100) {
         //if ((peOTM[bp][0] - peOTM[sp][0]) > rangeDiff) {
@@ -2511,9 +2621,9 @@ function ironConderCal(peOTM, ceOTM) {
         continue;
       }
 
-      for(let sc=0; sc<ceOTM.length-1; sc++) { // sc = Sell Call, bc = Buy Call
-        for(let bc=sc+1; bc<ceOTM.length; bc++) {
-          let ceCreditAmt = ceOTM[sc][1]  - ceOTM[bc][2]
+      for (let sc = 0; sc < ceOTM.length - 1; sc++) { // sc = Sell Call, bc = Buy Call
+        for (let bc = sc + 1; bc < ceOTM.length; bc++) {
+          let ceCreditAmt = ceOTM[sc][1] - ceOTM[bc][2]
 
           if (ceOTM[sc][3] < 100 || ceOTM[bc][3] < 100) {
             //if ((peOTM[bp][0] - peOTM[sp][0]) > rangeDiff) {
@@ -2522,7 +2632,7 @@ function ironConderCal(peOTM, ceOTM) {
             continue;
           }
 
-          if ((peOTM[sp][0] - peOTM[bp][0])  != (ceOTM[bc][0] - ceOTM[sc][0])) {
+          if ((peOTM[sp][0] - peOTM[bp][0]) != (ceOTM[bc][0] - ceOTM[sc][0])) {
             continue;
           }
 
@@ -2534,7 +2644,7 @@ function ironConderCal(peOTM, ceOTM) {
             premium: peOTM[bp][2],
             lotSize: 1
           }
-    
+
           let sellPut = {
             strikePrice: peOTM[sp][0],
             premium: peOTM[sp][1],
@@ -2554,33 +2664,33 @@ function ironConderCal(peOTM, ceOTM) {
           let d = optionChainPayoffCal([buyCall], [sellCall], [buyPut], [sellPut], [], [])
           let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
           resultArr.push({
-              data: d,
-              lowerBound: lowerBound,
-              lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
-              uppderBound: uppderBound,
-              uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
-              premiumRec: parseFloat(ceCreditAmt + peCreditAmt).toFixed(2),
-              maxLoss: parseFloat(sellPut.strikePrice - buyPut.strikePrice - (ceCreditAmt + peCreditAmt)).toFixed(2),
-              buyPutSt: buyPut.strikePrice,
-              buyPutPre: buyPut.premium,
-              sellPutSt: sellPut.strikePrice,
-              sellPutPre: sellPut.premium,
-              buyCallSt: buyCall.strikePrice,
-              buyCallPre: buyCall.premium,
-              sellCallSt: sellCall.strikePrice,
-              sellCallPre: sellCall.premium,
+            data: d,
+            lowerBound: lowerBound,
+            lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value - lowerBound) + ")",
+            uppderBound: uppderBound,
+            uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
+            premiumRec: parseFloat(ceCreditAmt + peCreditAmt).toFixed(2),
+            maxLoss: parseFloat(sellPut.strikePrice - buyPut.strikePrice - (ceCreditAmt + peCreditAmt)).toFixed(2),
+            buyPutSt: buyPut.strikePrice,
+            buyPutPre: buyPut.premium,
+            sellPutSt: sellPut.strikePrice,
+            sellPutPre: sellPut.premium,
+            buyCallSt: buyCall.strikePrice,
+            buyCallPre: buyCall.premium,
+            sellCallSt: sellCall.strikePrice,
+            sellCallPre: sellCall.premium,
 
-              range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
-              ceSt: sellCall.strikePrice,
-              cePre: sellCall.premium,
-              peSt: sellPut.strikePrice,
-              pePre: sellPut.premium,
-              sellPutIV: peOTM[sp][5],
-              buyPutIV: peOTM[bp][5],
-              sellCallIV: ceOTM[sc][5],
-              buyCallIV: ceOTM[bc][5],
-              upPer: parseFloat((uppderBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
-              downPer: parseFloat((lowerBound - Underlying_Value)/Underlying_Value * 100).toFixed(2),
+            range: sellPut.strikePrice + ' - ' + sellCall.strikePrice,
+            ceSt: sellCall.strikePrice,
+            cePre: sellCall.premium,
+            peSt: sellPut.strikePrice,
+            pePre: sellPut.premium,
+            sellPutIV: peOTM[sp][5],
+            buyPutIV: peOTM[bp][5],
+            sellCallIV: ceOTM[sc][5],
+            buyCallIV: ceOTM[bc][5],
+            upPer: parseFloat((uppderBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
+            downPer: parseFloat((lowerBound - Underlying_Value) / Underlying_Value * 100).toFixed(2),
           })
         }
       }
@@ -2593,78 +2703,83 @@ function displayIronConderStrangle() {
   prepareStrikeWithPremium()
   let d = ironConderCal(PE_OTM, CE_OTM)
   webix.ui({
-      view:"window", 
-      id: 'strategyWinId',
-      width: window.innerWidth - 2,
-      height: window.innerHeight - 2,
-      position: 'center',
-      zIndex:9999,
-      head:{view:"toolbar", id:'strategyWinToolbarId',cols:[
-            { width:4 },
-            { view:"label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-            { view:"label", id:'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
-            { view:"button", label: 'X', width: 30, align: 'left', click:function(){ $$('strategyWinId').close(); }}
-          ]
-        },
-      body:{
-        view:"datatable",hover:"myhover",css: "rows",
-        columns:[
-          { id:"range",	header:["Strike Price"], width:150,},
-          { id:"lowerBound",	header: ["Lower Bound", { content: "numberFilter" }], width:120, sort:"int", template: function(obj) {
-              return obj.lowerBoundDiff
-          }},
-          { id:"uppderBound",	header: ["Upper Bound", { content: "numberFilter" }],width:120, sort:"int", template: function(obj) {
-              return obj.uppderBoundDiff
-          }},
-
-          { id:"premiumRec",	header:["Premium Received", { content: "numberFilter" }] , width:160,	sort:"int"},
-          { id:"maxLoss",	header:"Max Loss", width:100,	sort:"int"},
-          { id:"downPer",	header:["<-- %", { content: "numberFilter" }] , width:100,	sort:"int"},
-          { id:"upPer",	header:["--> %", { content: "numberFilter" }] , width:100,	sort:"int"},
-          { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace:true },
-        ],
-        select:"row",
-        data:d,
-        onClick: {
-          details_button: function (ev, id) {
-  
-            let obj = this.data.pull[id.row]
-            let peBuy = {
-              buyOrSell: BUY,
-              type: PE_TYPE,
-              strikePrice: obj.buyPutSt,
-              premium: obj.buyPutPre,
-              lots: 1
-              }
-            
-            let peSell = {
-              buyOrSell: SELL,
-              type: PE_TYPE,
-              strikePrice: obj.sellPutSt,
-              premium: obj.sellPutPre,
-              lots: 1
-              }
-
-              let ceBuy = {
-                buyOrSell: BUY,
-                type: CE_TYPE,
-                strikePrice: obj.buyCallSt,
-                premium: obj.buyCallPre,
-                lots: 1
-                }
-                let ceSell = {
-                  buyOrSell: SELL,
-                  type: CE_TYPE,
-                  strikePrice: obj.sellCallSt,
-                  premium: obj.sellCallPre,
-                  lots: 1
-                  }
-
-              strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peBuy, peSell, ceBuy, ceSell])
+    view: "window",
+    id: 'strategyWinId',
+    width: window.innerWidth - 2,
+    height: window.innerHeight - 2,
+    position: 'center',
+    zIndex: 9999,
+    head: {
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Iron Condor Spread : " + SelectedScript + '  [' + SelectedExpiryDate + ']' },
+        { view: "label", id: 'spotPriceId', label: "Spot Price (SP): " + Underlying_Value },
+        { view: "button", label: 'X', width: 30, align: 'left', click: function () { $$('strategyWinId').close(); } }
+      ]
+    },
+    body: {
+      view: "datatable", hover: "myhover", css: "rows",
+      columns: [
+        { id: "range", header: ["Strike Price"], width: 150, },
+        {
+          id: "lowerBound", header: ["Lower Bound", { content: "numberFilter" }], width: 120, sort: "int", template: function (obj) {
+            return obj.lowerBoundDiff
           }
+        },
+        {
+          id: "uppderBound", header: ["Upper Bound", { content: "numberFilter" }], width: 120, sort: "int", template: function (obj) {
+            return obj.uppderBoundDiff
+          }
+        },
+
+        { id: "premiumRec", header: ["Premium Received", { content: "numberFilter" }], width: 160, sort: "int" },
+        { id: "maxLoss", header: "Max Loss", width: 100, sort: "int" },
+        { id: "downPer", header: ["<-- %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "upPer", header: ["--> %", { content: "numberFilter" }], width: 100, sort: "int" },
+        { id: "chartData", header: "Chart", width: 200, template: "<input type='button' value='Details' class='details_button'>", fillspace: true },
+      ],
+      select: "row",
+      data: d,
+      onClick: {
+        details_button: function (ev, id) {
+
+          let obj = this.data.pull[id.row]
+          let peBuy = {
+            buyOrSell: BUY,
+            type: PE_TYPE,
+            strikePrice: obj.buyPutSt,
+            premium: obj.buyPutPre,
+            lots: 1
+          }
+
+          let peSell = {
+            buyOrSell: SELL,
+            type: PE_TYPE,
+            strikePrice: obj.sellPutSt,
+            premium: obj.sellPutPre,
+            lots: 1
+          }
+
+          let ceBuy = {
+            buyOrSell: BUY,
+            type: CE_TYPE,
+            strikePrice: obj.buyCallSt,
+            premium: obj.buyCallPre,
+            lots: 1
+          }
+          let ceSell = {
+            buyOrSell: SELL,
+            type: CE_TYPE,
+            strikePrice: obj.sellCallSt,
+            premium: obj.sellCallPre,
+            lots: 1
+          }
+
+          strategyCal(Underlying_Value, SelectedScript, SelectedExpiryDate, [peBuy, peSell, ceBuy, ceSell])
         }
-      },
-    }).show()
+      }
+    },
+  }).show()
 }
 function DecimalFixed(val) {
   var noDecimal = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
@@ -2675,34 +2790,34 @@ function DecimalFixed(val) {
   // A more complex example:
   val = parseFloat(val) || 0;
   var num = val === 0 && !escapeHypen ? '-' : val.toLocaleString("en-IN", {
-      // minimumFractionDigits: val % 1 === 0 ? 0 : 2,
-      minimumFractionDigits: noDecimal ? 0 : 2,
-      maximumFractionDigits: noDecimal ? 0 : 2
+    // minimumFractionDigits: val % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: noDecimal ? 0 : 2,
+    maximumFractionDigits: noDecimal ? 0 : 2
   });
   return num;
 }
 function fetchOptionHistory(optionType, strikePrice, expiryDate, symbol) {
-  webix.storage.session.put('optionHistoryInput', {optionType, strikePrice, expiryDate, symbol})
+  webix.storage.session.put('optionHistoryInput', { optionType, strikePrice, expiryDate, symbol })
   dispatchChangeEvent('#optionHistoryId')
 }
-let GlobalMarketHeader = [{id: 'country', header:'Country'}, {id: 'exchange', header: 'Stock Exchange'},
-{id:'index', header: 'Index'}, {id:'openTime', header: 'Opening Time (India Time)'}, {id:'closeTime', header: 'Closing Time (India Time)'}]
+let GlobalMarketHeader = [{ id: 'country', header: 'Country' }, { id: 'exchange', header: 'Stock Exchange' },
+{ id: 'index', header: 'Index' }, { id: 'openTime', header: 'Opening Time (India Time)' }, { id: 'closeTime', header: 'Closing Time (India Time)' }]
 let GlobalMarketTimings = [
-  {country: 'Japan', exchange: 'Japan Exchange Group', index: 'Nikkei', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
-  {country: 'Australia', exchange: 'Australian Securities Exchange', index: 'S&P ASX', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
-  {country: 'South Korea', exchange: 'KRX Korean Exchange', index: 'Kospi', openTime:'5 : 30 AM', closeTime: '11 : 30 AM'},
-  {country: 'Hong Kong', exchange: 'HKEX Hong Kong Exchange', index: 'Hang Seng', openTime:'6 : 45 AM', closeTime: '1 : 30 PM'},
-  {country: 'China', exchange: 'Shanghai Stock Exchange & Shenzen stock Exchange', index: 'SSE', openTime:'7 : 00 AM', closeTime: '12 : 30 PM'},
-  {country: 'India', exchange: 'NSE & BSE ', index: 'Nifty & Sensex', openTime:'9 : 15 AM', closeTime: '3 : 30 PM'},
-  {country: 'Germany', exchange: 'Deutsche Börse AG', index: 'DAX', openTime:'12 : 30 PM', closeTime: '2 : 30 AM'},
-  {country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime:'1 : 30 PM', closeTime: '10 : 00 PM'},
-  {country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime:'7 : 00 PM', closeTime: '1 : 30 AM'}
+  { country: 'Japan', exchange: 'Japan Exchange Group', index: 'Nikkei', openTime: '5 : 30 AM', closeTime: '11 : 30 AM' },
+  { country: 'Australia', exchange: 'Australian Securities Exchange', index: 'S&P ASX', openTime: '5 : 30 AM', closeTime: '11 : 30 AM' },
+  { country: 'South Korea', exchange: 'KRX Korean Exchange', index: 'Kospi', openTime: '5 : 30 AM', closeTime: '11 : 30 AM' },
+  { country: 'Hong Kong', exchange: 'HKEX Hong Kong Exchange', index: 'Hang Seng', openTime: '6 : 45 AM', closeTime: '1 : 30 PM' },
+  { country: 'China', exchange: 'Shanghai Stock Exchange & Shenzen stock Exchange', index: 'SSE', openTime: '7 : 00 AM', closeTime: '12 : 30 PM' },
+  { country: 'India', exchange: 'NSE & BSE ', index: 'Nifty & Sensex', openTime: '9 : 15 AM', closeTime: '3 : 30 PM' },
+  { country: 'Germany', exchange: 'Deutsche Börse AG', index: 'DAX', openTime: '12 : 30 PM', closeTime: '2 : 30 AM' },
+  { country: 'UK', exchange: 'London Stock Exchange', index: 'FTSE', openTime: '1 : 30 PM', closeTime: '10 : 00 PM' },
+  { country: 'USA', exchange: 'NYSE, NASDAQ', index: 'Dow, NASDAQ, S&P 500', openTime: '7 : 00 PM', closeTime: '1 : 30 AM' }
 ]
 
 function dispatchChangeEvent(elementId, eleVal) {
   let e = new Event("change")
   let element = document.querySelector(elementId)
-  if(eleVal) {
+  if (eleVal) {
     element.value = eleVal
   }
   element.dispatchEvent(e)
@@ -2711,16 +2826,16 @@ function processDataForCalenderUI(id) {
   let ScriptHistoryData = webix.storage.local.get('ScriptHistoryData')
   let data = ScriptHistoryData[id]
   let cData = {}
-  data.forEach(function(currentValue, index, arr){
-      if(data[index + 1]) {
-          cData[currentValue[0]] = [data[index + 1][4], currentValue[4]]
-      }
+  data.forEach(function (currentValue, index, arr) {
+    if (data[index + 1]) {
+      cData[currentValue[0]] = [data[index + 1][4], currentValue[4]]
+    }
   })
   return cData;
 }
 function showViewId(id) {
   ViewIds.forEach(v => {
-    if(v == id) {
+    if (v == id) {
       $$(v) && $$(v).show()
     } else {
       $$(v) && $$(v).hide()
@@ -2729,60 +2844,66 @@ function showViewId(id) {
 }
 function generateContinuousCells(type) {
   let cells = [];
-  for(let i=10; i>0; i--) {
-      cells.push({
-          id: i + 'd' + (type === 'Loss' ? 'l' : 'p'),
-          header: i + "D",
-          body: {
-              id: i + "d" + type + "Id",
-              view:"datatable",
-              columns:[
-                  {id:'id', header:'Script', width: 150},
-                  {id:'per', header:'% (Rs)', width: 310, template: function (obj) {
-                      return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
-                  }, sort: 'int', fillspace: true},
-              ],
-              data: [],
-              on:{
-                  onAfterLoad:function(){
-                  this.sort("per", "desc");
-                  this.markSorting("per", "desc");
-                }
-              }
+  for (let i = 10; i > 0; i--) {
+    cells.push({
+      id: i + 'd' + (type === 'Loss' ? 'l' : 'p'),
+      header: i + "D",
+      body: {
+        id: i + "d" + type + "Id",
+        view: "datatable",
+        columns: [
+          { id: 'id', header: 'Script', width: 150 },
+          {
+            id: 'per', header: '% (Rs)', width: 310, template: function (obj) {
+              return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
+            }, sort: 'int', fillspace: true
+          },
+        ],
+        data: [],
+        on: {
+          onAfterLoad: function () {
+            this.sort("per", "desc");
+            this.markSorting("per", "desc");
           }
-      })
+        }
+      }
+    })
   }
   cells.push({
-      id: 'Alld' + (type === 'Loss' ? 'l' : 'p'),
-      header: "All",
-      body: {
-          id: "Alld" + type + "Id",
-          view:"datatable",
-          columns:[
-              {id:'id', header:'Script', width: 150},
-              {id:'per', header:'% (Rs)', width: 310, template: function (obj) {
-                  return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
-              }, sort: 'int'},
-              {id:'days', header:'(?)D', width: 310, template: function (obj) {
-                  return obj['days']
-              }, sort: 'int', fillspace: true},
-          ],
-          data: [],
-          on:{
-              onAfterLoad:function(){
-              this.sort("per", "desc");
-              this.markSorting("per", "desc");
-            }
-          }
+    id: 'Alld' + (type === 'Loss' ? 'l' : 'p'),
+    header: "All",
+    body: {
+      id: "Alld" + type + "Id",
+      view: "datatable",
+      columns: [
+        { id: 'id', header: 'Script', width: 150 },
+        {
+          id: 'per', header: '% (Rs)', width: 310, template: function (obj) {
+            return getTemplateForContinues(obj['per'], obj['pol'], obj['closePrice'], obj['prevClose']);
+          }, sort: 'int'
+        },
+        {
+          id: 'days', header: '(?)D', width: 310, template: function (obj) {
+            return obj['days']
+          }, sort: 'int', fillspace: true
+        },
+      ],
+      data: [],
+      on: {
+        onAfterLoad: function () {
+          this.sort("per", "desc");
+          this.markSorting("per", "desc");
+        }
       }
+    }
   })
   return cells;
 }
 function getTemplateForContinues(per, pol, closePrice, pClose) {
   return per < 0 ? ("<span style='color:#fd505c'>" + per + "% (" + pol + ")</span>" +
-                      " <span style='color:#fd505c'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
-                  : ("<span style='color:#02a68a'>" + per + "% (" + pol + ")</span> " +
-                      " <span style='color:#02a68a'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
+    " <span style='color:#fd505c'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
+    : ("<span style='color:#02a68a'>" + per + "% (" + pol + ")</span> " +
+      " <span style='color:#02a68a'>[CP: " + closePrice + " , PC: " + pClose + "]</span>")
 }
 function continuousWiseAllCal() {
   let dd = webix.storage.local.get('ScriptHistoryData')
@@ -2791,47 +2912,47 @@ function continuousWiseAllCal() {
 function continuousWiseCal(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let data = dd[scriptName]
-  if(!data) {
-      console.dir(scriptName);
-      return;
+  if (!data) {
+    console.dir(scriptName);
+    return;
   }
   let calculatedData = {
-      id: scriptName,
-      conWise: {
-          pos: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
-          neg: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
-      },
+    id: scriptName,
+    conWise: {
+      pos: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+      neg: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+    },
   }
 
   for (let i = 10; i > 0; i--) {
-      let v = data.slice(0, i+1).filter(function (val, index, array) {
-          return array[index+1] && parseFloat((val[4] - array[index+1][4]).toFixed(2)) > 0
-      }).map(function (val) {
-          return val;
-      })
-      if (v.length === i) {
-          calculatedData.conWise.pos[i - 1] = {
-              pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
-              per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))) ,
-              closePrice: v[0][4],
-              prevClose: data[i][4]
-          }
-          break;
+    let v = data.slice(0, i + 1).filter(function (val, index, array) {
+      return array[index + 1] && parseFloat((val[4] - array[index + 1][4]).toFixed(2)) > 0
+    }).map(function (val) {
+      return val;
+    })
+    if (v.length === i) {
+      calculatedData.conWise.pos[i - 1] = {
+        pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
+        per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))),
+        closePrice: v[0][4],
+        prevClose: data[i][4]
       }
-      v = data.slice(0, i+1).filter(function (val, index, array) {
-          return array[index+1] && parseFloat((val[4] - array[index+1][4]).toFixed(2)) < 0
-      }).map(function (val) {
-          return val;
-      })
-      if (v.length === i) {
-          calculatedData.conWise.neg[i - 1] = {
-              pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
-              per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))) ,
-              closePrice: v[0][4],
-              prevClose: data[i][4]
-          }
-          break;
+      break;
+    }
+    v = data.slice(0, i + 1).filter(function (val, index, array) {
+      return array[index + 1] && parseFloat((val[4] - array[index + 1][4]).toFixed(2)) < 0
+    }).map(function (val) {
+      return val;
+    })
+    if (v.length === i) {
+      calculatedData.conWise.neg[i - 1] = {
+        pol: parseFloat((v[0][4] - data[i][4]).toFixed(2)),
+        per: (parseFloat(((v[0][4] - data[i][4]) * 100 / data[i][4]).toFixed(2))),
+        closePrice: v[0][4],
+        prevClose: data[i][4]
       }
+      break;
+    }
   }
 
   ContinuousWiseData[scriptName] = calculatedData
@@ -2840,65 +2961,65 @@ function continuousWiseCal(scriptName) {
 function displayContinuousData() {
   let dd = webix.storage.local.get('ContinuousWiseData')
   let posArr = {
-      '0': [],'1': [],'2': [],'3': [],'4': [],'5': [],'6': [],'7': [],'8': [],'9': []
+    '0': [], '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], '8': [], '9': []
   }
   let negArr = {
-      '0': [],'1': [],'2': [],'3': [],'4': [],'5': [],'6': [],'7': [],'8': [],'9': []
+    '0': [], '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], '8': [], '9': []
   }
   Object.keys(dd)
   Object.keys(dd).forEach(k => {
-      let s = dd[k]
-      let obj = {id: s.id}
-      for(let i=9; i>=0; i--) {
-          if(Object.keys(s.conWise.pos[i]).length > 0) {
-              obj['pol'] = s.conWise.pos[i]['pol']
-              obj['per'] = s.conWise.pos[i]['per']
-              obj['prevClose'] = s.conWise.pos[i]['prevClose']
-              obj['closePrice'] = s.conWise.pos[i]['closePrice']
-              obj['days'] = i+1
-              posArr[i].push(obj)
-              break;
-          }
+    let s = dd[k]
+    let obj = { id: s.id }
+    for (let i = 9; i >= 0; i--) {
+      if (Object.keys(s.conWise.pos[i]).length > 0) {
+        obj['pol'] = s.conWise.pos[i]['pol']
+        obj['per'] = s.conWise.pos[i]['per']
+        obj['prevClose'] = s.conWise.pos[i]['prevClose']
+        obj['closePrice'] = s.conWise.pos[i]['closePrice']
+        obj['days'] = i + 1
+        posArr[i].push(obj)
+        break;
       }
-      for(let i=9; i>=0; i--) {
-          if(Object.keys(s.conWise.neg[i]).length > 0) {
-              obj['pol'] = s.conWise.neg[i]['pol']
-              obj['per'] = s.conWise.neg[i]['per']
-              obj['prevClose'] = s.conWise.neg[i]['prevClose']
-              obj['closePrice'] = s.conWise.neg[i]['closePrice']
-              obj['days'] = i+1
-              negArr[i].push(obj)
-              break;
-          }
+    }
+    for (let i = 9; i >= 0; i--) {
+      if (Object.keys(s.conWise.neg[i]).length > 0) {
+        obj['pol'] = s.conWise.neg[i]['pol']
+        obj['per'] = s.conWise.neg[i]['per']
+        obj['prevClose'] = s.conWise.neg[i]['prevClose']
+        obj['closePrice'] = s.conWise.neg[i]['closePrice']
+        obj['days'] = i + 1
+        negArr[i].push(obj)
+        break;
       }
+    }
   })
   let posAll = []
   Object.keys(posArr).forEach(k => {
-      let kInt = parseInt(k)
-      let id = (kInt+1) +'dProfitId'
-      $$(id).parse(posArr[k])
-      posAll = posAll.concat(posArr[k])
-      $$('continuousProfitId').getTabbar().config.options[(9-kInt)].value = (kInt+1) + 'D (' + posArr[k].length + ')'
-      if(posArr[k].length === 0) {
-          $$('continuousProfitTabbarId').hideOption(id)
-      } else {
-          $$('continuousProfitTabbarId').showOption(id)
-      }
+    let kInt = parseInt(k)
+    let id = (kInt + 1) + 'dProfitId'
+    $$(id).parse(posArr[k])
+    posAll = posAll.concat(posArr[k])
+    $$('continuousProfitId').getTabbar().config.options[(9 - kInt)].value = (kInt + 1) + 'D (' + posArr[k].length + ')'
+    if (posArr[k].length === 0) {
+      $$('continuousProfitTabbarId').hideOption(id)
+    } else {
+      $$('continuousProfitTabbarId').showOption(id)
+    }
   })
   $$('AlldProfitId').parse(posAll)
   $$('continuousProfitId').getTabbar().render()
   let negAll = []
   Object.keys(negArr).forEach(k => {
-      let kInt = parseInt(k)
-      let id = (kInt+1) +'dLossId'
-      $$(id).parse(negArr[k])
-      negAll = negAll.concat(negArr[k])
-      $$('continuousLossId').getTabbar().config.options[(9-kInt)].value = (kInt+1) + 'D (' + negArr[k].length + ')'
-      if(negArr[k].length === 0) {
-          $$('continuousLossTabbarId').hideOption(id)
-      } else {
-          $$('continuousLossTabbarId').showOption(id)
-      }
+    let kInt = parseInt(k)
+    let id = (kInt + 1) + 'dLossId'
+    $$(id).parse(negArr[k])
+    negAll = negAll.concat(negArr[k])
+    $$('continuousLossId').getTabbar().config.options[(9 - kInt)].value = (kInt + 1) + 'D (' + negArr[k].length + ')'
+    if (negArr[k].length === 0) {
+      $$('continuousLossTabbarId').hideOption(id)
+    } else {
+      $$('continuousLossTabbarId').showOption(id)
+    }
   })
   $$('AlldLossId').parse(negAll)
   $$('continuousLossId').getTabbar().render()
@@ -2906,11 +3027,11 @@ function displayContinuousData() {
 function yearWisePercentageCal(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let sArr = []
-  if(scriptName) {
+  if (scriptName) {
     let temp = {}
     temp[scriptName] = dd[scriptName]
     dd = temp
-    if(!temp[scriptName]) {
+    if (!temp[scriptName]) {
       return {}
     }
   }
@@ -2926,13 +3047,13 @@ function yearWisePercentageCal(scriptName) {
     let lowPriceDate = d[0][0]
     let highPriceDate = d[0][0]
     d.forEach(a => {
-      if(new Date(a[0]) >= oneYearDate) {
+      if (new Date(a[0]) >= oneYearDate) {
         oneYearClose = a[4]
-        if(lowPrice>a[3]) {
+        if (lowPrice > a[3]) {
           lowPrice = a[3]
           lowPriceDate = a[0]
         }
-        if(highPrice<a[2]) {
+        if (highPrice < a[2]) {
           highPrice = a[2]
           highPriceDate = a[0]
         }
@@ -2946,7 +3067,7 @@ function yearWisePercentageCal(scriptName) {
       lowPriceDate: lowPriceDate,
       highPrice: highPrice,
       highPriceDate: highPriceDate,
-      below52WksPer: parseFloat((cClose - highPrice)/highPrice * 100).toFixed(2),
+      below52WksPer: parseFloat((cClose - highPrice) / highPrice * 100).toFixed(2),
       below52Wks: parseFloat(cClose - highPrice).toFixed(2)
     })
   })
@@ -2956,38 +3077,38 @@ function yearWisePercentageCal(scriptName) {
 function watchListCal() {
   let OptionData = webix.storage.local.get('OptionChainData')
   WatchList = webix.storage.local.get('WatchList')
-  for(let i=0;i<WatchList.length;i++) {
+  for (let i = 0; i < WatchList.length; i++) {
     let strategy = WatchList[i]
     strategy.pol = 0
     let lotSize = 0;
-    if(strategy.script == 'NIFTY') {
+    if (strategy.script == 'NIFTY') {
       lotSize = 50
-    } else if(strategy.script == 'BANKNIFTY') {
+    } else if (strategy.script == 'BANKNIFTY') {
       lotSize = 25
     } else {
       lotSize = ScriptNames[strategy.script].lotSize
     }
     let optionDataArr = OptionData[strategy.script]['data'][strategy.expiryDate]
-    if(optionDataArr) {
+    if (optionDataArr) {
       let dArr = strategy.list
-      for(let i=0; i<dArr.length; i++) {
+      for (let i = 0; i < dArr.length; i++) {
         let json = dArr[i]
-        if(json.type == '') {
-            json.latestPremium = OptionData[strategy.script]['underlyingValue']
-            if(json.buyOrSell == 1) {
-              json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
-            } else {
-              json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
-            }
-            strategy.pol += json.pl
+        if (json.type == '') {
+          json.latestPremium = OptionData[strategy.script]['underlyingValue']
+          if (json.buyOrSell == 1) {
+            json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
+          } else {
+            json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
+          }
+          strategy.pol += json.pl
         } else {
-          for(let k=0; k<optionDataArr.length; k++) {
+          for (let k = 0; k < optionDataArr.length; k++) {
             let st = Object.keys(optionDataArr[k])[0]
-            if(st == json.strikePrice) {
+            if (st == json.strikePrice) {
               let ceOrpe = optionDataArr[k][st][json.type == 1 ? 'CE' : 'PE']
-              if(ceOrpe) {
+              if (ceOrpe) {
                 json.latestPremium = json.buyOrSell == 1 ? ceOrpe.bidprice : ceOrpe.askPrice
-                if(json.buyOrSell == 1) {
+                if (json.buyOrSell == 1) {
                   json.pl = lotSize * (json.latestPremium - json.premium) * json.lots
                 } else {
                   json.pl = lotSize * (json.premium - json.latestPremium) * json.lots
@@ -3005,15 +3126,15 @@ function watchListCal() {
   webix.storage.local.put('WatchList', WatchList)
 }
 
-function displayStrategyLatestDetails(obj){
+function displayStrategyLatestDetails(obj) {
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
   let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
   let remainingDays = parseInt((new Date(obj.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
   let html = `<div style="width:100%;height:100%;overflow:auto;">Expiry Date: <b>${obj.expiryDate}</b>, Purchased Underlying @ <b>${obj.UV}</b>, `
   html += `DTE: <b>${remainingDays}</b>, Created Date: ${obj.createDate} <br>`
   let opStArr = obj.list
-  for(let i=0; i<opStArr.length;i++) {
-    if(opStArr[i].type == '') {
+  for (let i = 0; i < opStArr.length; i++) {
+    if (opStArr[i].type == '') {
       html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) Futures ₹ <b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
     } else {
       html = html + `${opStArr[i].buyOrSell == 1 ? 'Buy ' : 'Sell '} ${opStArr[i].lots} Lot(s) <b>${opStArr[i].strikePrice}</b> ${opStArr[i].type == 1 ? 'CE' : 'PE'}  @  ₹ <b>${opStArr[i].premium}</b> [${opStArr[i].latestPremium}]`
@@ -3024,53 +3145,55 @@ function displayStrategyLatestDetails(obj){
   return html
 }
 function deleteWatchList(key) {
-  if(confirm('Are you sure to delete the strategy?')) {
+  if (confirm('Are you sure to delete the strategy?')) {
     WatchList = webix.storage.local.get('WatchList')
     let tempList = []
     let flag = false
-    for(let i=0; i<WatchList.length; i++) {
-      if(WatchList[i].key != key) {
+    for (let i = 0; i < WatchList.length; i++) {
+      if (WatchList[i].key != key) {
         tempList.push(WatchList[i])
       } else {
         flag = true
       }
     }
-    flag && webix.delay(()=> {
-      webix.message({text: "Deleted the strategy item", type:"success"})
+    flag && webix.delay(() => {
+      webix.message({ text: "Deleted the strategy item", type: "success" })
       $$('watchListDatatableId').clearAll()
       $$('watchListDatatableId').parse(tempList)
     })
     WatchList = tempList
     webix.storage.local.put('WatchList', WatchList)
   }
-  
+
 }
 function showOptionGraph(ce, pe, st, ed) {
   webix.ui({
-    view:"window",
-    height:500,
-    width:590,
+    view: "window",
+    height: 500,
+    width: 590,
     move: true,
     modal: true,
     id: 'optionChartWinId',
-    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
-      { width:4 },
-      { view:"label", label: "Chart: Strike Price: " + st + ", Expiry Date: " + ed},
-      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
-        $$('optionChartWinId').close(); 
-        OCChart && OCChart.destroy();
-       }
-      }]
+    head: {
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Chart: Strike Price: " + st + ", Expiry Date: " + ed },
+        {
+          view: "button", label: 'X', width: 40, align: 'left', click: function () {
+            $$('optionChartWinId').close();
+            OCChart && OCChart.destroy();
+          }
+        }]
     },
-    position:"center",
-    body:{
+    position: "center",
+    body: {
       rows: [
-        {view: 'template', template: '<div id="optionChainGraph" style="width:100%;height:100%;"></div>'}]
+        { view: 'template', template: '<div id="optionChainGraph" style="width:100%;height:100%;"></div>' }]
     },
     on: {
-      onShow: function() {
+      onShow: function () {
         document.getElementById("optionChainGraph").innerHTML = loader
-        dispatchChangeEvent('#ocGraphReqId', ce+","+pe)
+        dispatchChangeEvent('#ocGraphReqId', ce + "," + pe)
       }
     }
   }).show();
@@ -3080,71 +3203,73 @@ function showOptionChart() {
   let seriesOptions = webix.storage.session.get('OptionChainGraph')
   try {
     OCChart = Highcharts.stockChart('optionChainGraph', {
-        rangeSelector: {
-            enabled: false,
-            selected: 2,
-            inputEnabled: false
-        },
-        credits: {
-            enabled: false
-        },
-        navigator: {
-            enabled: false
-        },
-        scrollbar: {
-            enabled: false
-        },
-        yAxis: {
-            opposite: false,
-            plotLines: [{
-                value: 0,
-                width: 2,
-                color: 'silver'
-            }]
-        },
-        plotOptions: {
-            series: {
-                compare: 'percent',
-                showInNavigator: true
-            }
-        },
-        tooltip: {
-            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
-            valueDecimals: 2,
-            split: true
-        },
-        series: seriesOptions
+      rangeSelector: {
+        enabled: false,
+        selected: 2,
+        inputEnabled: false
+      },
+      credits: {
+        enabled: false
+      },
+      navigator: {
+        enabled: false
+      },
+      scrollbar: {
+        enabled: false
+      },
+      yAxis: {
+        opposite: false,
+        plotLines: [{
+          value: 0,
+          width: 2,
+          color: 'silver'
+        }]
+      },
+      plotOptions: {
+        series: {
+          compare: 'percent',
+          showInNavigator: true
+        }
+      },
+      tooltip: {
+        pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+        valueDecimals: 2,
+        split: true
+      },
+      series: seriesOptions
     });
   } catch (err) {
-      console.log('err', err);
+    console.log('err', err);
   }
 }
 function showVolatilitySmileChart() {
 
-  !SelectedScript && webix.message({text: "Please select script", type:"error", expire: 500})
+  !SelectedScript && webix.message({ text: "Please select script", type: "error", expire: 500 })
   SelectedScript && webix.ui({
-    view:"window",
-    height:500,
-    width:590,
+    view: "window",
+    height: 500,
+    width: 590,
     move: true,
     modal: true,
     id: 'volatilityWinId',
-    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
-      { width:4 },
-      { view:"label", label: "Volatility Skew of " + SelectedScript},
-      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
-        $$('volatilityWinId').close(); 
-        OCChart && OCChart.destroy();
-       }
-      }]
+    head: {
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Volatility Skew of " + SelectedScript },
+        {
+          view: "button", label: 'X', width: 40, align: 'left', click: function () {
+            $$('volatilityWinId').close();
+            OCChart && OCChart.destroy();
+          }
+        }]
     },
-    position:"center",
-    body:{
+    position: "center",
+    body: {
       rows: [
-        {view: 'template', template: '<div id="volatilityGraph" style="width:100%;height:100%;"></div>'}]
+        { view: 'template', template: '<div id="volatilityGraph" style="width:100%;height:100%;"></div>' }]
     },
     on: {
-      onShow: function() {
+      onShow: function () {
         prepareStrikeWithPremium()
         let vs = []
         CE_OTM.reverse().filter(v => v[5] > 0).forEach(v => vs.push(v[5]))
@@ -3153,51 +3278,55 @@ function showVolatilitySmileChart() {
           OCChart = Highcharts.chart('volatilityGraph', {
             title: { text: '' },
             yAxis: {
-                title: { text: '' }
+              title: { text: '' }
             },
-            
+
             series: [{
-                name: 'Volatility Smile',
-                data: vs
-            }, ],
-        });
-        }catch(e) {
+              name: 'Volatility Smile',
+              data: vs
+            },],
+          });
+        } catch (e) {
         }
       }
     }
   }).show();
 }
 function showIntExtChart() {
-  !SelectedScript && webix.message({text: "Please select script", type:"error", expire: 500})
+  !SelectedScript && webix.message({ text: "Please select script", type: "error", expire: 500 })
   SelectedScript && webix.ui({
-    view:"window",
-    height:500,
-    width:630,
+    view: "window",
+    height: 500,
+    width: 630,
     move: true,
     modal: true,
     id: 'intExtWinId',
-    head:{ view:"toolbar", id:'IntExtWinToolbarId',cols:[
-      { width:4 },
-      { view:"label", label: "Intrinsic & Extrinsic of " + SelectedScript},
-      { view: "switch", onLabel: "CE", width: 70, offLabel:"PE", value: 1, on:{
-        onChange: function(newValue, oldValue, config){
-          OCChart && OCChart.destroy();
-          prepareDataForIntExt(newValue == 1 ? 'CE' : 'PE')
-        }
-      }},
-      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
-        $$('intExtWinId').close(); 
-        OCChart && OCChart.destroy();
-       }
-      }]
+    head: {
+      view: "toolbar", id: 'IntExtWinToolbarId', cols: [
+        { width: 4 },
+        { view: "label", label: "Intrinsic & Extrinsic of " + SelectedScript },
+        {
+          view: "switch", onLabel: "CE", width: 70, offLabel: "PE", value: 1, on: {
+            onChange: function (newValue, oldValue, config) {
+              OCChart && OCChart.destroy();
+              prepareDataForIntExt(newValue == 1 ? 'CE' : 'PE')
+            }
+          }
+        },
+        {
+          view: "button", label: 'X', width: 40, align: 'left', click: function () {
+            $$('intExtWinId').close();
+            OCChart && OCChart.destroy();
+          }
+        }]
     },
-    position:"center",
-    body:{
+    position: "center",
+    body: {
       rows: [
-        {view: 'template', template: '<div id="intExtGraph" style="width:100%;height:100%;"></div>'}]
+        { view: 'template', template: '<div id="intExtGraph" style="width:100%;height:100%;"></div>' }]
     },
     on: {
-      onShow: function() {
+      onShow: function () {
         prepareDataForIntExt('CE')
       }
     }
@@ -3211,21 +3340,21 @@ function prepareDataForIntExt(type) {
     allOcs.push(Object.keys(ocArr[i])[0])
   }
   let closest = allOcs.reduce(function (prev, curr) {
-      return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+    return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
   });
 
-  let tenPer = Underlying_Value * 5 /100
+  let tenPer = Underlying_Value * 5 / 100
   let upper = Underlying_Value + tenPer
   let lower = Underlying_Value - tenPer
 
   let intExt = []
   for (let i = 0; i < ocArr.length; i++) {
     let stPrice = Object.keys(ocArr[i])[0]
-    if(type =='CE') {
+    if (type == 'CE') {
       let ce = ocArr[i][stPrice]['CE']
       if (ce) {
-        if(ce.strikePrice > lower && ce.strikePrice < upper) {
-          if(ce.strikePrice < Underlying_Value) {
+        if (ce.strikePrice > lower && ce.strikePrice < upper) {
+          if (ce.strikePrice < Underlying_Value) {
             let int = Underlying_Value - ce.strikePrice
             intExt.push([ce.strikePrice, parseInt(int), parseInt(ce.lastPrice - int)])
           } else {
@@ -3236,8 +3365,8 @@ function prepareDataForIntExt(type) {
     } else {
       let pe = ocArr[i][stPrice]['PE']
       if (pe) {
-        if(pe.strikePrice > lower && pe.strikePrice < upper) {
-          if(pe.strikePrice > Underlying_Value) {
+        if (pe.strikePrice > lower && pe.strikePrice < upper) {
+          if (pe.strikePrice > Underlying_Value) {
             let int = pe.strikePrice - Underlying_Value
             intExt.push([pe.strikePrice, parseInt(int), parseInt(pe.lastPrice - int)])
           } else {
@@ -3251,63 +3380,63 @@ function prepareDataForIntExt(type) {
   try {
     OCChart = Highcharts.chart('intExtGraph', {
       chart: {
-          type: 'column'
+        type: 'column'
       },
       title: {
-          text: 'Intrinsic & Extrinsic'
+        text: 'Intrinsic & Extrinsic'
       },
       xAxis: {
-          categories: intExt.map(s => s[0])
+        categories: intExt.map(s => s[0])
       },
       yAxis: {
-          min: 0,
-          title: {
-              text: ''
-          },
-          stackLabels: {
-            enabled: true,
-            style: {
-              fontWeight: 'bold',
-              color: ( // theme
-                  Highcharts.defaultOptions.title.style &&
-                  Highcharts.defaultOptions.title.style.color
-              ) || 'gray'
-            }
+        min: 0,
+        title: {
+          text: ''
+        },
+        stackLabels: {
+          enabled: true,
+          style: {
+            fontWeight: 'bold',
+            color: ( // theme
+              Highcharts.defaultOptions.title.style &&
+              Highcharts.defaultOptions.title.style.color
+            ) || 'gray'
           }
+        }
       },
       legend: {
-          align: 'right',
-          x: -30,
-          verticalAlign: 'top',
-          y: 25,
-          floating: true,
-          backgroundColor:
-              Highcharts.defaultOptions.legend.backgroundColor || 'white',
-          borderColor: '#CCC',
-          borderWidth: 1,
-          shadow: false
+        align: 'right',
+        x: -30,
+        verticalAlign: 'top',
+        y: 25,
+        floating: true,
+        backgroundColor:
+          Highcharts.defaultOptions.legend.backgroundColor || 'white',
+        borderColor: '#CCC',
+        borderWidth: 1,
+        shadow: false
       },
       tooltip: {
-          headerFormat: '<b>{point.x}</b><br/>',
-          pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        headerFormat: '<b>{point.x}</b><br/>',
+        pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
       },
       plotOptions: {
-          column: {
-              stacking: 'normal',
-              dataLabels: {
-                  enabled: true
-              }
+        column: {
+          stacking: 'normal',
+          dataLabels: {
+            enabled: true
           }
+        }
       },
       series: [{
-          name: 'Extrinsic',
-          data: intExt.map(s => s[2])
+        name: 'Extrinsic',
+        data: intExt.map(s => s[2])
       }, {
-          name: 'Intrinsic',
-          data: intExt.map(s => s[1])
+        name: 'Intrinsic',
+        data: intExt.map(s => s[1])
       }]
-  });
-  }catch(e) {
+    });
+  } catch (e) {
   }
 }
 function toFixed(num, fixed) {
@@ -3316,42 +3445,42 @@ function toFixed(num, fixed) {
 }
 function displayMonthWisePer(prev_date) {
 
-  if($('.webix_cal_month_name .day').length == 0) {
+  if ($('.webix_cal_month_name .day').length == 0) {
     let date = prev_date
     let dArr = date.toDateString().split(' ')
     let dStr = dArr[2] + '-' + dArr[1] + '-' + dArr[3]
     let ds = dStr.substr(3)
-  
+
     let sDate = ''
     let eDate = ''
     let cArr = Object.keys(CalenderUI)
-    for(let i=0; i<cArr.length-1; i++) {
+    for (let i = 0; i < cArr.length - 1; i++) {
       let d = cArr[i]
-      if(eDate == '' && ds == d.substr(3)) {
+      if (eDate == '' && ds == d.substr(3)) {
         sDate = d
         eDate = d
-      } else if(eDate != '' && ds == d.substr(3)) {
+      } else if (eDate != '' && ds == d.substr(3)) {
         sDate = d
       }
     }
-  
-    if(sDate != '' && eDate != '') {
+
+    if (sDate != '' && eDate != '') {
       let per = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0]) / CalenderUI[sDate][0] * 100).toFixed(2)
       let pol = parseFloat((CalenderUI[eDate][1] - CalenderUI[sDate][0])).toFixed(2)
-      
-      if(pol > 0) {
-          html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")</span>";
+
+      if (pol > 0) {
+        html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#1d922a;font-size: medium;'><b>" + per + "%</b> (" + pol + ")</span>";
       } else {
-          html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> (" + pol + ")</span>";
+        html = "<span class='day' style='width:100%;height:100%;line-height: normal;color:#d21616;font-size: medium;'> <b>" + per + "%</b> (" + pol + ")</span>";
       }
       $('.webix_cal_month_name').html($('.webix_cal_month_name').text() + ' ' + html)
     }
   }
- 
+
 }
 function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
   let sData = OptionChainData[SelectedScript]
-  if(expiryDate) {
+  if (expiryDate) {
     SelectedExpiryDate = expiryDate
     $$('expiryDateId').setValue(SelectedExpiryDate)
     $$('algoStrategyId').show()
@@ -3359,8 +3488,8 @@ function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
     $$('strikePriceId').hide()
     $$('strikePriceId').setValue('')
   }
-  let d = {data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, ceITM, peITM}
-  if(selectedStrike) {
+  let d = { data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp, ceITM, peITM }
+  if (selectedStrike) {
     d['selectedStrike'] = selectedStrike
     $$('algoStrategyId').hide()
     $$('algoStrategyButtonId').hide()
@@ -3368,7 +3497,7 @@ function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
     let stPer = DecimalFixed(((selectedStrike - Underlying_Value) / Underlying_Value * 100)) + '% (' + DecimalFixed(selectedStrike - Underlying_Value) + ')'
     $$('strikePriceId').setValue('Selected Strike : ' + DecimalFixed(selectedStrike) + ' ' + stPer)
   }
-  
+
   $$('optionChainTemplateId').setValues(d)
   TableFilter['selectedStrike'] = selectedStrike
   TableFilter['expiryDate'] = expiryDate
@@ -3378,26 +3507,28 @@ function showAllPriceOfStrike(selectedStrike, expiryDate, ceITM, peITM) {
 }
 function showGoogleGraph() {
   webix.ui({
-    view:"window",
+    view: "window",
     width: window.innerWidth - 2,
     height: window.innerHeight - 2,
     position: 'center',
     move: true,
     modal: true,
     id: 'googleChartWinId',
-    head:{ view:"toolbar", id:'strategyWinToolbarId',cols:[
-      { view:"button", label: 'X', width: 40, align: 'left', click:function(){ 
-        $$('googleChartWinId').close(); 
-       }
-      }]
+    head: {
+      view: "toolbar", id: 'strategyWinToolbarId', cols: [
+        {
+          view: "button", label: 'X', width: 40, align: 'left', click: function () {
+            $$('googleChartWinId').close();
+          }
+        }]
     },
-    position:"center",
-    body:{
+    position: "center",
+    body: {
       rows: [
-        {view: 'template', template: '<div id="googleGraph" style="width:100%;height:100%;"></div>'}]
+        { view: 'template', template: '<div id="googleGraph" style="width:100%;height:100%;"></div>' }]
     },
     on: {
-      onShow: function() {
+      onShow: function () {
         document.getElementById("googleGraph").innerHTML = loader
         dispatchChangeEvent('#googleGraphReqId', '')
       }
@@ -3409,7 +3540,7 @@ function attachBuySellButtons() {
   $('#indices-body>tr>td:nth-child(14)').mouseleave((e) => {
     $('.peSell').remove()
   })
-  
+
   $('#indices-body>tr>td:nth-child(14)').mouseenter((e) => {
     let peSell = e.target.innerText
     let st = $(e.target).parent().find('td:nth-child(12)').get(0).innerText.trim().replaceAll(',', '')
@@ -3440,12 +3571,12 @@ function displayPESell(strikePrice, peSell) {
   let [lowerBound, lowerBoundPer, uppderBound, uppderBoundPer] = findLowerBoundUpperBound(Underlying_Value, d)
   let resultArr = []
   resultArr.push({
-      data: d,
-      lowerBound: lowerBound,
-      lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value-lowerBound) + ")",
-      uppderBound: uppderBound,
-      uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
-      premiumRec: 0,
+    data: d,
+    lowerBound: lowerBound,
+    lowerBoundDiff: lowerBound + " (-" + parseInt(Underlying_Value - lowerBound) + ")",
+    uppderBound: uppderBound,
+    uppderBoundDiff: uppderBound + " (+" + parseInt(uppderBound - Underlying_Value) + ")",
+    premiumRec: 0,
   })
 
   webix.ui({
@@ -3457,29 +3588,33 @@ function displayPESell(strikePrice, peSell) {
     head: {
       view: "toolbar", id: 'strategyChartToolbarId', cols: [
         { width: 4 },
-        { view: "label", label: "Sell Put : " + SelectedScript + '  [' + SelectedExpiryDate + ']'},
-        { view:"button", type: 'icon', width: 30, icon:"mdi mdi-information", click: function() { 
-          if ($$("inputInfoId").isVisible()) {
-            $$("inputInfoId").hide();
-          } else {
-            $$("inputInfoId").show();
+        { view: "label", label: "Sell Put : " + SelectedScript + '  [' + SelectedExpiryDate + ']' },
+        {
+          view: "button", type: 'icon', width: 30, icon: "mdi mdi-information", click: function () {
+            if ($$("inputInfoId").isVisible()) {
+              $$("inputInfoId").hide();
+            } else {
+              $$("inputInfoId").show();
+            }
           }
-        }},
+        },
         { view: "button", label: 'X', width: 50, align: 'left', click: function () { $$('chartWinId').close(); } }
       ]
     },
     body: {
-      rows:[
-        { id: 'inputInfoId', height: 70, cols: [
-          
-          {
-            rows: [
-              {view:'template', template: ''},
-              {view: 'template', borderless:true, template: '<div style="text-align: center;">Premium Received: ₹<b>'+0+'</b></div>'},
-            ]
-          },
-        ]},
-        {view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>'},
+      rows: [
+        {
+          id: 'inputInfoId', height: 70, cols: [
+
+            {
+              rows: [
+                { view: 'template', template: '' },
+                { view: 'template', borderless: true, template: '<div style="text-align: center;">Premium Received: ₹<b>' + 0 + '</b></div>' },
+              ]
+            },
+          ]
+        },
+        { view: 'template', template: '<div id="strategyChartId" style="width: 100%;height: 100%;background-color: aliceblue;"></div>' },
       ]
     }
   }).show();
@@ -3524,142 +3659,142 @@ function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr
 function openScriptDailyDetails(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let sData = dd[scriptName].slice(0);
-  for(var i=0; i<sData.length - 1; i++) {
+  for (var i = 0; i < sData.length - 1; i++) {
     let s = sData[i]
-    s.push(parseFloat(sData[i][4] - sData[i+1][4]).toFixed(2))
-    s.push(parseFloat( (sData[i][4] - sData[i+1][4]) / sData[i+1][4] * 100).toFixed(2))
+    s.push(parseFloat(sData[i][4] - sData[i + 1][4]).toFixed(2))
+    s.push(parseFloat((sData[i][4] - sData[i + 1][4]) / sData[i + 1][4] * 100).toFixed(2))
     s.push(parseFloat(sData[i][2] - sData[i][3]).toFixed(2))
   }
 
   webix.ui({
-      view: "window",
-      id: "scriptWindowId",
-      fullscreen: true,
-      /*modal: true,
-      position: "center",
-      minHeight: 400,
-      scroll: "xy",
-      resize: true,
-      minWidth: 955,*/
-      head: {
-          rows: [
-              {
-                  view: "toolbar", cols: [
-                      {
-                          view: "label", label: scriptName, align: 'center', template: "<a target='_blank' href='https://nseindia.com/companytracker/cmtracker.jsp?symbol="
-                              + scriptName + "&cName=cmtracker_nsedef.css'> " + scriptName + " </a>"
-                      },
-                      { view: "button", label: 'X', width: 30, align: 'right', click: "  $$('scriptWindowDataTableId').config.profitDaysChart.destroy();$$('scriptWindowDataTableId').config.lossDaysChart.destroy();$$('scriptWindowId').destructor();" }
-                  ]
-              },
-              {
-                  cols: [
-                      {
-                          view: "select", id: "scriptSelectionId", width: 100,
-                          options: [{ id: 0, value: "1 week" }, { id: 1, value: "2 weeks" }, { id: 2, value: "3 weeks" }, { id: 3, value: "1 month" },
-                          { id: 4, value: "3 months" }, { id: 5, value: "1 year" }],
-                          on: {
-                              onChange: function (selectedVal) {
-                                  $$('scriptWindowDataTableId').clearAll()
-                                  let dataWeek = weeksData.weeksWise[parseInt(selectedVal)]
-                                  let index = (parseInt(selectedVal) + 1)
-                                  if (selectedVal === '4') {
-                                      index = 12
-                                  } else if (selectedVal === '5') {
-                                      index = 52
-                                  }
-                                  let endDate = dataWeek[index + 'weeks-date'].substr(14)
-                                  let endDataIndex = dd.scriptData[scriptName].findIndex(function (val) { return val[DateStr] === endDate })
-                                  let sData = dd.scriptData[scriptName].slice(0, endDataIndex + 1);
-                                  $$('scriptWindowDataTableId').parse(sData)
-                                  $$('scriptWindowDataTableId').config.total = sData.length;
-
-                                  let summaryLabel = "Date: " + dataWeek[index + 'weeks-date'] + " PL: " + fetchBGColor(dataWeek[index + 'weeks-pol'])
-                                      + " %: " + fetchBGColor(dataWeek[index + 'weeks-per']) + " High: <span style='color:green;'> " + dataWeek[index + 'weeks-high'] + "</span>"
-                                      + "( " + dataWeek[index + 'weeks-highDate'] + ")"
-                                      + " Low: " + + dataWeek[index + 'weeks-low'] + "( " + dataWeek[index + 'weeks-lowDate'] + ")"
-
-                                  $$('summaryId').setHTML(summaryLabel)
-                                  drawCharts(sData)
-                              }
-                          }
-                      },
-                      {
-                          view: "label", id: "summaryId", label: "Date: " + '1weeks-date' + " PL: " + fetchBGColor(10)
-                              + " %: " + fetchBGColor(1) + " High: " + '1weeks-high' + "( " + 1 + ")"
-                              + " Low: " + + 1 + "( " + 1 + ")"
-                      },
-                  ]
-              }
+    view: "window",
+    id: "scriptWindowId",
+    fullscreen: true,
+    /*modal: true,
+    position: "center",
+    minHeight: 400,
+    scroll: "xy",
+    resize: true,
+    minWidth: 955,*/
+    head: {
+      rows: [
+        {
+          view: "toolbar", cols: [
+            {
+              view: "label", label: scriptName, align: 'center', template: "<a target='_blank' href='https://nseindia.com/companytracker/cmtracker.jsp?symbol="
+                + scriptName + "&cName=cmtracker_nsedef.css'> " + scriptName + " </a>"
+            },
+            { view: "button", label: 'X', width: 30, align: 'right', click: "  $$('scriptWindowDataTableId').config.profitDaysChart.destroy();$$('scriptWindowDataTableId').config.lossDaysChart.destroy();$$('scriptWindowId').destructor();" }
           ]
-      }
-      ,
-      body: {
+        },
+        {
           cols: [
-              {
-                  id: "scriptWindowDataTableId",
-                  view: "datatable",
-                  scroll: "xy",
-                  select: "row",
-                  columns: [
-                      {
-                          id: 0, header: "Date", template: function (obj) {
-                              return obj[0]
-                          }
-                      },
-                      {
-                          id: 4, header: "Close", template: function (obj) {
-                              return obj[4]
-                          }
-                      },
-                      {
-                          id: 5, header: ["PL", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
-                              return fetchBGColor(obj[5])
-                          }
-                      },
-                      {
-                          id: 6, header: ["%", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
-                              return fetchBGColor(obj[6])
-                          }
-                      },
-                      {
-                          id: 1, header: "Open", width: 70
-                      },
-                      {
-                          id: 3, header: "Low", width: 70
-                      },
-                      {
-                          id: 2, header: "High", width: 70
-                      },
-                      {
-                          id: 7, header: ["H-L", { content: "numberFilter" }], sort: "int", width: 70
-                      }
-                  ],
-                  data: sData,
-                  total: sData.length,
-                  on: {
-                      onAfterFilter: function () {
-                          webix.message("No.of records: " + this.count() + ' of ' + $$('scriptWindowDataTableId').config.total);
-                      }
+            {
+              view: "select", id: "scriptSelectionId", width: 100,
+              options: [{ id: 0, value: "1 week" }, { id: 1, value: "2 weeks" }, { id: 2, value: "3 weeks" }, { id: 3, value: "1 month" },
+              { id: 4, value: "3 months" }, { id: 5, value: "1 year" }],
+              on: {
+                onChange: function (selectedVal) {
+                  $$('scriptWindowDataTableId').clearAll()
+                  let dataWeek = weeksData.weeksWise[parseInt(selectedVal)]
+                  let index = (parseInt(selectedVal) + 1)
+                  if (selectedVal === '4') {
+                    index = 12
+                  } else if (selectedVal === '5') {
+                    index = 52
                   }
-              },
-              { view: "resizer" },
-              {
-                  rows: [
-                      {
-                          view: 'template', id: 'profitId', template: '<div style="width:100%;height:100%;" id="profitDaysId"></div>'
-                      },
-                      {
-                          view: 'template', id: 'lossId', template: '<div style="width:100%;height:100%;" id="lossDaysId"></div>'
-                      },
-                  ]
-              }]
-      },
-      on: {
-          onShow: function () {
-              drawCharts(sData)
+                  let endDate = dataWeek[index + 'weeks-date'].substr(14)
+                  let endDataIndex = dd.scriptData[scriptName].findIndex(function (val) { return val[DateStr] === endDate })
+                  let sData = dd.scriptData[scriptName].slice(0, endDataIndex + 1);
+                  $$('scriptWindowDataTableId').parse(sData)
+                  $$('scriptWindowDataTableId').config.total = sData.length;
+
+                  let summaryLabel = "Date: " + dataWeek[index + 'weeks-date'] + " PL: " + fetchBGColor(dataWeek[index + 'weeks-pol'])
+                    + " %: " + fetchBGColor(dataWeek[index + 'weeks-per']) + " High: <span style='color:green;'> " + dataWeek[index + 'weeks-high'] + "</span>"
+                    + "( " + dataWeek[index + 'weeks-highDate'] + ")"
+                    + " Low: " + + dataWeek[index + 'weeks-low'] + "( " + dataWeek[index + 'weeks-lowDate'] + ")"
+
+                  $$('summaryId').setHTML(summaryLabel)
+                  drawCharts(sData)
+                }
+              }
+            },
+            {
+              view: "label", id: "summaryId", label: "Date: " + '1weeks-date' + " PL: " + fetchBGColor(10)
+                + " %: " + fetchBGColor(1) + " High: " + '1weeks-high' + "( " + 1 + ")"
+                + " Low: " + + 1 + "( " + 1 + ")"
+            },
+          ]
+        }
+      ]
+    }
+    ,
+    body: {
+      cols: [
+        {
+          id: "scriptWindowDataTableId",
+          view: "datatable",
+          scroll: "xy",
+          select: "row",
+          columns: [
+            {
+              id: 0, header: "Date", template: function (obj) {
+                return obj[0]
+              }
+            },
+            {
+              id: 4, header: "Close", template: function (obj) {
+                return obj[4]
+              }
+            },
+            {
+              id: 5, header: ["PL", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
+                return fetchBGColor(obj[5])
+              }
+            },
+            {
+              id: 6, header: ["%", { content: "numberFilter" }], width: 70, sort: "int", template: function (obj) {
+                return fetchBGColor(obj[6])
+              }
+            },
+            {
+              id: 1, header: "Open", width: 70
+            },
+            {
+              id: 3, header: "Low", width: 70
+            },
+            {
+              id: 2, header: "High", width: 70
+            },
+            {
+              id: 7, header: ["H-L", { content: "numberFilter" }], sort: "int", width: 70
+            }
+          ],
+          data: sData,
+          total: sData.length,
+          on: {
+            onAfterFilter: function () {
+              webix.message("No.of records: " + this.count() + ' of ' + $$('scriptWindowDataTableId').config.total);
+            }
           }
+        },
+        { view: "resizer" },
+        {
+          rows: [
+            {
+              view: 'template', id: 'profitId', template: '<div style="width:100%;height:100%;" id="profitDaysId"></div>'
+            },
+            {
+              view: 'template', id: 'lossId', template: '<div style="width:100%;height:100%;" id="lossDaysId"></div>'
+            },
+          ]
+        }]
+    },
+    on: {
+      onShow: function () {
+        drawCharts(sData)
       }
+    }
   }).show();
 }
 function fetchBGColor(val) {
@@ -3668,142 +3803,142 @@ function fetchBGColor(val) {
 }
 function drawCharts(sData) {
   let commonChart = {
-      chart: {
-          renderTo: '',
-          type: 'pie',
-          margin: [0, 200, 0, 0],
-          spacingTop: 0,
-          spacingBottom: 0,
-          spacingLeft: 0,
-          spacingRight: 0
-      },
+    chart: {
+      renderTo: '',
+      type: 'pie',
+      margin: [0, 200, 0, 0],
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingLeft: 0,
+      spacingRight: 0
+    },
+    title: {
+      //verticalAlign: 'middle',
+      floating: true,
+      text: '',
+    },
+    yAxis: {
       title: {
-          //verticalAlign: 'middle',
-          floating: true,
-          text: '',
-      },
-      yAxis: {
-          title: {
-              text: ''
-          }
-      },
-      plotOptions: {
-          pie: {
-              allowPointSelect: true,
-              cursor: 'pointer',
-              colors: [],
-              dataLabels: {
-                  enabled: true,
-                  color: '#000000',
-                  connectorColor: '#000000',
-                  formatter: function () {
-                      return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
-                  }
-              }
-          }
-      },
-      tooltip: {
-          formatter: function () {
-              return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
-          }
-      },
-      legend: {
+        text: ''
+      }
+    },
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: 'pointer',
+        colors: [],
+        dataLabels: {
           enabled: true,
-          floating: true,
-          verticalAlign: 'xbottom',
-          align: 'right',
-          layout: 'vertical',
-          y: 5,
-          labelFormatter: function () {
-              return this.name + '-->' + '<span style=\"color:' + this.color + '\">' + this.y + ' days</span>';
+          color: '#000000',
+          connectorColor: '#000000',
+          formatter: function () {
+            return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
           }
-      },
-      credits: { enabled: false },
-      series: [{
-          name: 'Profit Days',
-          data: [],
-          innerSize: '55%',
-          showInLegend: true,
-          dataLabels: {
-              enabled: true
-          }
-      }]
+        }
+      }
+    },
+    tooltip: {
+      formatter: function () {
+        return '<b>' + this.point.name + '</b>: ' + this.y + ' days';
+      }
+    },
+    legend: {
+      enabled: true,
+      floating: true,
+      verticalAlign: 'xbottom',
+      align: 'right',
+      layout: 'vertical',
+      y: 5,
+      labelFormatter: function () {
+        return this.name + '-->' + '<span style=\"color:' + this.color + '\">' + this.y + ' days</span>';
+      }
+    },
+    credits: { enabled: false },
+    series: [{
+      name: 'Profit Days',
+      data: [],
+      innerSize: '55%',
+      showInLegend: true,
+      dataLabels: {
+        enabled: true
+      }
+    }]
   }
 
   commonChart.chart.renderTo = 'profitDaysId'
   commonChart.series[0].name = 'Profit Days',
-      commonChart.series[0].data = [["(0<1)%", 0], ["(1<2)%", 0], ["(2<3)%", 0], ["(3<4)%", 0], ["(4<5)%", 0], ["(5<6)%", 0], ["(6<7)%", 0], ["(7<8%)", 0], ["(8<9)%", 0], ["(>9)%", 0]]
+    commonChart.series[0].data = [["(0<1)%", 0], ["(1<2)%", 0], ["(2<3)%", 0], ["(3<4)%", 0], ["(4<5)%", 0], ["(5<6)%", 0], ["(6<7)%", 0], ["(7<8%)", 0], ["(8<9)%", 0], ["(>9)%", 0]]
 
   for (let d of sData) {
-      if (d[6] >= 0 && d[6] < 1) {
-          commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
-      } else if (d[6] >= 1 && d[6] < 2) {
-          commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
-      } else if (d[6] >= 2 && d[6] < 3) {
-          commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
-      } else if (d[6] >= 3 && d[6] < 4) {
-          commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
-      } else if (d[6] >= 4 && d[6] < 5) {
-          commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
-      } else if (d[6] >= 5 && d[6] < 6) {
-          commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
-      } else if (d[6] >= 6 && d[6] < 7) {
-          commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
-      } else if (d[6] >= 7 && d[6] < 8) {
-          commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
-      } else if (d[6] >= 8 && d[6] < 9) {
-          commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
-      } else if (d[6] >= 9) {
-          commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
-      }
+    if (d[6] >= 0 && d[6] < 1) {
+      commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
+    } else if (d[6] >= 1 && d[6] < 2) {
+      commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
+    } else if (d[6] >= 2 && d[6] < 3) {
+      commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
+    } else if (d[6] >= 3 && d[6] < 4) {
+      commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
+    } else if (d[6] >= 4 && d[6] < 5) {
+      commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
+    } else if (d[6] >= 5 && d[6] < 6) {
+      commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
+    } else if (d[6] >= 6 && d[6] < 7) {
+      commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
+    } else if (d[6] >= 7 && d[6] < 8) {
+      commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
+    } else if (d[6] >= 8 && d[6] < 9) {
+      commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
+    } else if (d[6] >= 9) {
+      commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
+    }
   }
   let pdata = []
   for (let i = 0; i < 10; i++) {
-      if (commonChart.series[0].data[i][1] != 0) {
-          pdata.push(commonChart.series[0].data[i])
-      }
+    if (commonChart.series[0].data[i][1] != 0) {
+      pdata.push(commonChart.series[0].data[i])
+    }
   }
   commonChart.series[0].data = pdata
   if ($$('scriptWindowDataTableId').config.profitDaysChart) {
-      $$('scriptWindowDataTableId').config.profitDaysChart.destroy()
+    $$('scriptWindowDataTableId').config.profitDaysChart.destroy()
   }
   commonChart.plotOptions.pie.colors = ['#98FB98', '#90EE90', '#3CB371', '#20B2AA', '#ADFF2F', '#00FF7F', '#00FA9A', '#008000', '#00FF00', '#2E8B57',]
   $$('scriptWindowDataTableId').config.profitDaysChart = new Highcharts.Chart(commonChart);
   commonChart.chart.renderTo = 'lossDaysId'
   commonChart.series[0].name = 'Loss Days',
-      commonChart.series[0].data = [["<-1%", 0], ["<-2%", 0], ["<-3%", 0], ["<-4%", 0], ["<-5%", 0], ["<-6%", 0], ["<-7%", 0], ["<-8%", 0], ["<-9%", 0], [">-9%", 0]]
+    commonChart.series[0].data = [["<-1%", 0], ["<-2%", 0], ["<-3%", 0], ["<-4%", 0], ["<-5%", 0], ["<-6%", 0], ["<-7%", 0], ["<-8%", 0], ["<-9%", 0], [">-9%", 0]]
   for (let d of sData) {
-      if (d[6] < 0 && d[6] >= -1) {
-          commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
-      } else if (d[6] < -1 && d[6] >= -2) {
-          commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
-      } else if (d[6] < -2 && d[6] >= -3) {
-          commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
-      } else if (d[6] < -3 && d[6] >= -4) {
-          commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
-      } else if (d[6] < -4 && d[6] >= -5) {
-          commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
-      } else if (d[6] < -5 && d[6] >= -6) {
-          commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
-      } else if (d[6] < -6 && d[6] >= -7) {
-          commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
-      } else if (d[6] < -7 && d[6] >= -8) {
-          commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
-      } else if (d[6] < -8 && d[6] >= -9) {
-          commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
-      } else if (d[6] < -9) {
-          commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
-      }
+    if (d[6] < 0 && d[6] >= -1) {
+      commonChart.series[0].data[0][1] = commonChart.series[0].data[0][1] + 1
+    } else if (d[6] < -1 && d[6] >= -2) {
+      commonChart.series[0].data[1][1] = commonChart.series[0].data[1][1] + 1
+    } else if (d[6] < -2 && d[6] >= -3) {
+      commonChart.series[0].data[2][1] = commonChart.series[0].data[2][1] + 1
+    } else if (d[6] < -3 && d[6] >= -4) {
+      commonChart.series[0].data[3][1] = commonChart.series[0].data[3][1] + 1
+    } else if (d[6] < -4 && d[6] >= -5) {
+      commonChart.series[0].data[4][1] = commonChart.series[0].data[4][1] + 1
+    } else if (d[6] < -5 && d[6] >= -6) {
+      commonChart.series[0].data[5][1] = commonChart.series[0].data[5][1] + 1
+    } else if (d[6] < -6 && d[6] >= -7) {
+      commonChart.series[0].data[6][1] = commonChart.series[0].data[6][1] + 1
+    } else if (d[6] < -7 && d[6] >= -8) {
+      commonChart.series[0].data[7][1] = commonChart.series[0].data[7][1] + 1
+    } else if (d[6] < -8 && d[6] >= -9) {
+      commonChart.series[0].data[8][1] = commonChart.series[0].data[8][1] + 1
+    } else if (d[6] < -9) {
+      commonChart.series[0].data[9][1] = commonChart.series[0].data[9][1] + 1
+    }
   }
   let ldata = []
   for (let i = 0; i < 10; i++) {
-      if (commonChart.series[0].data[i][1] != 0) {
-          ldata.push(commonChart.series[0].data[i])
-      }
+    if (commonChart.series[0].data[i][1] != 0) {
+      ldata.push(commonChart.series[0].data[i])
+    }
   }
   commonChart.series[0].data = ldata
   if ($$('scriptWindowDataTableId').config.lossDaysChart) {
-      $$('scriptWindowDataTableId').config.lossDaysChart.destroy()
+    $$('scriptWindowDataTableId').config.lossDaysChart.destroy()
   }
 
   commonChart.plotOptions.pie.colors = ['#FFA07A', '#FA8072', '#CD5C5C', '#DC143C', '#FF4500', '#E9967A', '#CD5C5C', '#FF6347', '#FF0000', '#8B0000',]
@@ -3823,7 +3958,7 @@ function prepareCashAndCarryData() {
       change: a[6],
       lotSize: a[7],
     }
-    if(parseFloat(a[2].replaceAll(',', '')) < parseFloat(a[1].replaceAll(',', ''))) {
+    if (parseFloat(a[2].replaceAll(',', '')) < parseFloat(a[1].replaceAll(',', ''))) {
       buyCash.push(obj)
     } else {
       sellCash.push(obj)
@@ -3831,4 +3966,401 @@ function prepareCashAndCarryData() {
 
   })
   return [buyCash, sellCash]
+}
+
+function fetchOptionAllHistory() {
+  let ed = '30-Jun-2022'
+  dispatchChangeEvent('#optionAllHistoryReqId', ed + '=' + spArr.join(','))
+}
+
+//let spArr = ["16000.00"]//, "16100.00"]
+let spArr = ["10000.00", "10500.00", "10900.00",
+  "11000.00", "11100.00", "11200.00", "11300.00", "11400.00", "11500.00", "11600.00", "11700.00", "11800.00", "11900.00",
+  "12000.00", "12100.00", "12200.00", "12300.00", "12500.00", "12600.00", "12700.00", "12800.00", "12900.00",
+  "13000.00", "13100.00", "13200.00", "13300.00", "13400.00", "13500.00", "13800.00", "13850.00", "13900.00", "13950.00",
+
+  "14000.00", "14050.00", "14100.00", "14150.00", "14200.00", "14250.00", "14300.00", "14350.00", "14400.00", "14450.00",
+  "14500.00", "14550.00", "14600.00", "14650.00", "14700.00", "14750.00", "14800.00", "14850.00", "14900.00", "14950.00",
+
+  "15000.00", "15050.00", "15100.00", "15150.00", "15200.00", "15250.00", "15300.00", "15350.00", "15400.00", "15450.00",
+  "15500.00", "15550.00", "15600.00", "15650.00", "15700.00", "15750.00", "15800.00", "15850.00", "15900.00", "15950.00",
+
+  "16000.00", "16050.00", "16100.00", "16150.00", "16200.00", "16250.00", "16300.00", "16350.00", "16400.00",
+  "16450.00", "16500.00", "16550.00", "16600.00", "16650.00", "16700.00", "16750.00", "16800.00", "16850.00", "16900.00", "16950.00",
+
+  "17000.00", "17050.00", "17100.00", "17150.00", "17200.00", "17250.00", "17300.00", "17350.00", "17400.00", "17450.00",
+  "17500.00", "17550.00", "17600.00", "17650.00", "17700.00", "17750.00", "17800.00", "17850.00", "17900.00", "17950.00",
+
+  "18000.00", "18050.00", "18100.00", "18150.00", "18200.00", "18250.00", "18300.00", "18350.00", "18400.00", "18450.00",
+  "18500.00", "18550.00", "18600.00", "18650.00", "18700.00", "18750.00", "18800.00", "18850.00", "18900.00", "18950.00",
+
+  "19000.00", "19050.00", "19100.00", "19150.00", "19200.00", "19250.00", "19300.00", "19350.00", "19400.00", "19450.00", "19500.00", "19550.00",
+  "19600.00", "19650.00", "19700.00", "19750.00", "19800.00", "19850.00", "19900.00", "19950.00",
+
+  "20000.00"]
+
+
+function generateExpiryDates() {
+  let expiryDates = []
+  let from = new Date('01-Jan-2021')
+  from.setMonth(from.getMonth() + 1)
+  from.setDate(from.getDate()-1)
+  
+  let to = new Date()
+  to.setMonth(to.getMonth() + 3)
+  
+  while(from.getTime() < to.getTime()) {
+      if(from.toDateString().indexOf('Thu')>-1) {
+          //console.dir(from)
+          let tempD = new Date(from)
+          tempD = tempD.toDateString().split(' ')
+          tempD = (tempD[2].length == 1 ? '0' + tempD[2] : tempD[2]) + '-' + tempD[1] + '-' + tempD[3]
+      
+          expiryDates.push(tempD)
+          from.setDate(1)
+          from.setMonth(from.getMonth() + 2)
+          from.setDate(from.getDate()-1)
+      } else {
+          from.setDate(from.getDate()-1)    
+      }
+  }
+  return expiryDates
+}
+
+function displayOptionAllHistoryData() {
+
+  webix.ui({
+    view: "window",
+    id: "allOptionHistoryWindowId",
+    fullscreen: true,
+    head: {
+      rows: [
+        {
+          view: "toolbar", cols: [
+            {
+              view: "combo", width: 210, labelWidth: 85, id: "expiryDateHistoryId",
+              label: 'Expiry Date:', placeholder: "Select Date",
+              options: generateExpiryDates().reverse(), on: {
+                onChange: function (id) {
+                  //console.dir(id)
+                }
+              }
+            },
+            {
+              view: "combo", width: 210, labelWidth: 85, id: "strikePriceHistoryId",
+              label: 'Strike Price:', placeholder: "Select Date",
+              options: ['All', ...spArr], on: {
+                onChange: function (id) {
+                  //console.dir(id)
+                }
+              }
+            },
+            {
+              view: "button", type: "icon", icon: "mdi mdi-download", id: "optionDownloadId",
+              width: 37, align: "left",
+              click: function () {
+                let ed = $$('expiryDateHistoryId').getValue()
+                let sp = $$('strikePriceHistoryId').getValue()
+                if(ed != '' && sp != '') {
+                  if(sp == 'All') {
+                    dispatchChangeEvent('#optionAllHistoryReqId', ed + '=' + spArr.join(','))
+                  } else {
+                    dispatchChangeEvent('#optionAllHistoryReqId', ed + '=' + sp)
+                  }
+                  allData = undefined
+                  niftyObj = undefined
+                  nifty = []
+                }
+              }
+            },
+            {},
+            { view: "button", label: 'X', width: 30, align: 'right', click: "$$('allOptionHistoryWindowId').destructor();" }
+          ]
+        },
+        {
+          cols: [
+            { 
+              view:"text", value:"10", label:"Enter % : "  , width: 150, format:"1.00", id: 'optionAllPercentageId' 
+           },{
+            view:"button", id:"btn1", label:'Go', width: 50, click:function(id,event){
+              calculateOptionAllHistory($$('optionAllPercentageId').getValue())
+            }
+          },
+          { view:'template', id: 'optionAllHisTotalId', template: ''},
+          {
+            view: "button", type: "icon", icon: "mdi mdi-refresh", height: 35, width: 37, align: "center",
+            click: function () {
+              gridOptions.api.setFilterModel(null);
+            }
+          },
+          ]
+        }
+      ]
+    }
+    ,
+    body: {
+      cols: [
+        {
+          view: 'template', id: 'optionAllHistoryId', template: '<div class="ag-theme-alpine" style="width:100%;height:100%;" id="optionAllHistoryagGrid"></div>'
+        },
+        ]
+    },
+    on: {
+      onShow: function () {
+      }
+    }
+  }).show();
+}
+
+class ActionRenderer {
+  // gets called once before the renderer is used
+  init(params) {
+    // create the cell
+    this.eGui = document.createElement('div');
+    this.eGui.innerHTML = `
+          <span>
+              <button class="btn-simple">Graph</button>
+          </span>
+       `;
+
+    // get references to the elements we want
+    this.eButton = this.eGui.querySelector('.btn-simple');
+    // add event listener to button
+    this.eventListener = () => displayOptionStrikeChart(params.data);
+    this.eButton.addEventListener('click', this.eventListener);
+  }
+
+  getGui() {
+    return this.eGui;
+  }
+
+  // gets called whenever the cell refreshes
+  refresh(params) {
+    this.eValue.innerHTML = this.cellValue;
+    return true;
+  }
+
+  // gets called when the cell is removed from the grid
+  destroy() {
+    // do cleanup, remove event listener from button
+    if (this.eButton) {
+      // check that the button element exists as destroy() can be called before getGui()
+      this.eButton.removeEventListener('click', this.eventListener);
+    }
+  }
+
+  getValueToDisplay(params) {
+    return params.valueFormatted ? params.valueFormatted : params.value;
+  }
+}
+
+let gridOptions = {
+  // each entry here represents one column
+  columnDefs: [
+    { headerName:'Date', field: "sellDate" ,filter: true},
+    { headerName:'Price',field: "niftyPrice" ,filter: false},
+    { field: "niftyClosePrice" ,filter: true},
+    { field: "expiryDate" ,width: 120, filter: true},{ field: "strikePrice" ,width: 100, filter: true},
+    { headerName:'%', field: "percentage", width: 90, type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
+    { field: "sellPrice" ,filter: false},
+    { headerName:'CP', field: "closePrice" , width: 80},{ field: "result" ,width: 90,filter: true},
+    { field: "DTE", width: 60, sortable: true, filter: 'agNumberColumnFilter'},
+    { field: 'action', minWidth: 100, cellRenderer: ActionRenderer },
+  ],
+
+  // default col def properties get applied to all columns
+  defaultColDef: {width: 130, resizable: true,},
+
+  rowSelection: 'multiple', // allow rows to be selected
+  animateRows: true, // have rows animate to new positions when sorted
+
+  // example event handler
+  onCellClicked: params => {
+    console.log('cell was clicked', params)
+  },
+  onGridReady: (event) => event.api.sizeColumnsToFit(),
+  onFilterChanged: function() {
+    console.log('onFilterChanged');
+    filterResult()
+  },
+  onFilterModified: function() {console.log('onFilterModified');}
+};
+
+let optionAllHistoryCalData = []
+async function calculateOptionAllHistory(percentage) {
+  const eGridDiv = document.getElementById("optionAllHistoryagGrid");
+  // new grid instance, passing in the hosting DIV and Grid Options
+  !gridOptions.api && new agGrid.Grid(eGridDiv, gridOptions);
+  gridOptions.api.setRowData([]);
+  optionAllHistoryCalData = await calculateOptionAllHistoryPercent(percentage)
+  gridOptions.api.setRowData(optionAllHistoryCalData);
+  gridOptions.api.setFilterModel(null);
+  filterResult()
+}
+let allData = undefined
+let niftyObj = undefined
+let nifty = []
+async function calculateOptionAllHistoryPercent(percentage) {
+  if(!niftyObj) {
+    let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+    let scriptName = data['NIFTY']
+    let sArr = scriptName.reverse()
+    
+    for(let i=0; i<sArr.length; i++) {
+        let n = sArr[i]
+        nifty.push([n[0], n[4]])
+    }
+    niftyObj = {}
+    nifty.forEach(n => { niftyObj[n[0]] = n[1] })
+  }
+  let result = []
+  allData = allData || await getAllDataSyncOptionHistoryStore();
+  for(let i=0;i<nifty.length;i++) {
+      let n = nifty[i];
+      let tenPer = n[1] - (n[1] * percentage/100);
+      for(let j=0; j<18; j++) {
+          let op = allData[j];
+          let stArr = Object.keys(op)
+          for(let s=0; s<stArr.length; s++) {
+              let v = op[stArr[s]]
+              let data = v['data']
+              if(stArr[s] <= tenPer && data.length > 0) {
+                  for(let d=data.length-1;d>0; d--) {
+                      let odata = data[d]
+                      if(odata['FH_TIMESTAMP'] == n[0] && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 100) {
+                          let fdata = data[0]
+                          let d1 = new Date(n[0])
+                          let d2 = new Date(odata['FH_EXPIRY_DT'])
+                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
+                              sellDate: n[0],
+                              niftyPrice: n[1],
+                              expiryDate: odata['FH_EXPIRY_DT'],
+                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
+                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
+                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
+                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
+                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
+                              DTE: (d2.getTime()-d1.getTime())/(24*60*60*1000)
+                          })
+                          break;
+                      }
+                  }
+              }
+          }
+      }
+  }
+  console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'result'])
+  return result
+}
+
+function filterResult() {
+  let win = 0
+  let loss = 0
+  optionAllHistoryCalData.forEach(v => {
+    if(v['result'] === '👍') {
+      win++
+    } else {
+      loss++
+    }
+  })
+  let h = 'Total Rows ' + optionAllHistoryCalData.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+  let displayCount = gridOptions.api.getDisplayedRowCount()
+  if( displayCount != optionAllHistoryCalData.length) {
+    let d = []
+    for(let i=0;i<displayCount;i++) {
+      d.push(gridOptions.api.getDisplayedRowAtIndex(i)['data'])
+    }
+    let win = 0
+    let loss = 0
+    d.forEach(v => {
+      if(v['result'] === '👍') {
+        win++
+      } else {
+        loss++
+      }
+    })
+    h += ' , Filter Rows: ' + d.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+    $$('optionAllHisTotalId').setHTML(h)
+  } else {
+    $$('optionAllHisTotalId').setHTML(h)
+  }
+}
+
+function displayOptionStrikeChart(cData) {
+  console.dir(cData)
+  let sp = cData['strikePrice'] + '.00'
+  let ed = cData['expiryDate']
+  let data = []
+  for(let i=0;i<allData.length;i++){
+    let obj = allData[i]
+    let spData = obj[sp]
+    if(spData) {
+      let meta = spData['meta']
+      if(meta['expiryDate'] == ed) {
+        data = spData['data'].reverse()
+        break
+      }
+    }
+  }
+  let chartData = []
+  for(let i=0;i<data.length;i++) {
+    if(data[i]['FH_CHANGE_IN_OI'] > 10) {
+      chartData.push({ price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)), date: data[i]['FH_TIMESTAMP'].substring(0, 6)})
+    }
+  }
+
+  let title = 'Expiry Date:' + ed + ' , Strike Price: ' + sp
+
+  webix.ui({
+    view: "window",
+    id: "optionChartId",
+    fullscreen: true,
+    head: {
+      rows: [
+        {
+          view: "toolbar", cols: [
+            {
+              view: "label", label: '', align: 'center', template: "<a target='_blank' href='https://nseindia.com/companytracker/cmtracker.jsp?symbol="
+                + '' + "&cName=cmtracker_nsedef.css'>  </a>"
+            },
+            { view: "button", label: 'X', width: 30, align: 'right', click: "$$('optionChartId').destructor();" }
+          ]
+        }
+      ]
+    }
+    ,
+    body: {
+      cols: [
+        {
+          view: 'template', id: 'optionChartBodyId', template: '<div class="ag-theme-alpine" style="width:100%;height:100%;" id="optionChartBodyDivId"></div>'
+        },
+        ]
+    },
+    on: {
+      onShow: function () {
+        displayOptionChart(chartData, title)
+      }
+    }
+  }).show();
+}
+
+function displayOptionChart(data, title) {
+  const options = {
+    container: document.getElementById('optionChartBodyDivId'),
+    autoSize: true,
+    title: {
+      text: title,
+    },
+    data: data,
+    series: [
+      {
+        xKey: 'date',
+        yKey: 'price',
+      },
+    ],
+  };
+
+  agCharts.AgChart.create(options);
 }
