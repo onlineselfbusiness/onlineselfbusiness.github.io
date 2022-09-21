@@ -4079,11 +4079,10 @@ function displayOptionAllHistoryData() {
         },
         {
           cols: [
-            { 
-              view:"text", value:"10", label:"Enter % : "  , width: 150, format:"1.00", id: 'optionAllPercentageId' 
-           },{
-            view:"button", id:"btn1", label:'Go', width: 50, click:function(id,event){
-              calculateOptionAllHistory($$('optionAllPercentageId').getValue())
+            { view:"text", value:"10", label:"Enter % : "  , width: 150, format:"1.00", id: 'optionAllPercentageId' },
+            { view:"text", value:"100", label:"Price : "  , width: 155, format:"1.00", id: 'optionAllPriceId' },
+            { view:"button", id:"btn1", label:'Go', width: 50, click:function(id,event){
+              calculateOptionAllHistory($$('optionAllPercentageId').getValue(), $$('optionAllPriceId').getValue())
             }
           },
           { view:'template', id: 'optionAllHisTotalId', template: ''},
@@ -4115,19 +4114,21 @@ function displayOptionAllHistoryData() {
 class ActionRenderer {
   // gets called once before the renderer is used
   init(params) {
-    // create the cell
     this.eGui = document.createElement('div');
-    this.eGui.innerHTML = `
-          <span>
-              <button class="btn-simple">Graph</button>
-          </span>
-       `;
+    if(params.data) {
+      // create the cell
+      this.eGui.innerHTML = `
+            <span>
+                <button class="btn-simple">Graph</button>
+            </span>
+        `;
 
-    // get references to the elements we want
-    this.eButton = this.eGui.querySelector('.btn-simple');
-    // add event listener to button
-    this.eventListener = () => displayOptionStrikeChart(params.data);
-    this.eButton.addEventListener('click', this.eventListener);
+      // get references to the elements we want
+      this.eButton = this.eGui.querySelector('.btn-simple');
+      // add event listener to button
+      this.eventListener = () => displayOptionStrikeChart(params.data);
+      this.eButton.addEventListener('click', this.eventListener);
+    }
   }
 
   getGui() {
@@ -4157,42 +4158,50 @@ class ActionRenderer {
 let gridOptions = {
   // each entry here represents one column
   columnDefs: [
+    { headerName:'Year', field: "year" , rowGroup: true, enableRowGroup: true, hide: true},
+    //{ headerName:'MM-YY', field: "monthYear" , rowGroup: true, enableRowGroup: true, hide: true},
     { headerName:'Date', field: "sellDate" ,filter: true},
     { headerName:'Price',field: "niftyPrice" ,filter: false},
-    { field: "niftyClosePrice" ,filter: true},
-    { field: "expiryDate" ,width: 120, filter: true},{ field: "strikePrice" ,width: 100, filter: true},
+    { headerName:'NCP',field: "niftyClosePrice" ,filter: true},
+    { field: "expiryDate" ,width: 120, filter: true, rowGroup: true, enableRowGroup: true},
+    { headerName:'SP', field: "strikePrice" ,width: 100, filter: true},
     { headerName:'%', field: "percentage", width: 90, type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
     { field: "sellPrice" ,filter: false},
-    { headerName:'CP', field: "closePrice" , width: 80},{ field: "result" ,width: 90,filter: true},
+    { headerName:'CP', field: "closePrice" , width: 80},
+    { headerName:'👍' + '/' +  '🔻', field: "result" ,width: 90,filter: true},
     { field: "DTE", width: 60, sortable: true, filter: 'agNumberColumnFilter'},
     { field: 'action', minWidth: 100, cellRenderer: ActionRenderer },
   ],
 
   // default col def properties get applied to all columns
-  defaultColDef: {width: 130, resizable: true,},
-
+  defaultColDef: {width: 130, resizable: true, flex: 1, },
+  autoGroupColumnDef: {
+    minWidth: 150,
+  },
   rowSelection: 'multiple', // allow rows to be selected
   animateRows: true, // have rows animate to new positions when sorted
-
+  rowGroupPanelShow: 'always',
   // example event handler
   onCellClicked: params => {
     console.log('cell was clicked', params)
   },
   onGridReady: (event) => event.api.sizeColumnsToFit(),
   onFilterChanged: function() {
-    console.log('onFilterChanged');
+    //console.log('onFilterChanged')
     filterResult()
   },
-  onFilterModified: function() {console.log('onFilterModified');}
+  onFilterModified: function() {
+    //console.log('onFilterModified')
+  }
 };
 
 let optionAllHistoryCalData = []
-async function calculateOptionAllHistory(percentage) {
+async function calculateOptionAllHistory(percentage, price) {
   const eGridDiv = document.getElementById("optionAllHistoryagGrid");
   // new grid instance, passing in the hosting DIV and Grid Options
   !gridOptions.api && new agGrid.Grid(eGridDiv, gridOptions);
   gridOptions.api.setRowData([]);
-  optionAllHistoryCalData = await calculateOptionAllHistoryPercent(percentage)
+  optionAllHistoryCalData = await calculateOptionAllHistoryPercent(percentage, price)
   gridOptions.api.setRowData(optionAllHistoryCalData);
   gridOptions.api.setFilterModel(null);
   filterResult()
@@ -4200,7 +4209,7 @@ async function calculateOptionAllHistory(percentage) {
 let allData = undefined
 let niftyObj = undefined
 let nifty = []
-async function calculateOptionAllHistoryPercent(percentage) {
+async function calculateOptionAllHistoryPercent(percentage, price) {
   if(!niftyObj) {
     let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
     let scriptName = data['NIFTY']
@@ -4218,7 +4227,7 @@ async function calculateOptionAllHistoryPercent(percentage) {
   for(let i=0;i<nifty.length;i++) {
       let n = nifty[i];
       let tenPer = n[1] - (n[1] * percentage/100);
-      for(let j=0; j<18; j++) {
+      for(let j=0; j<allData.length; j++) {
           let op = allData[j];
           let stArr = Object.keys(op)
           for(let s=0; s<stArr.length; s++) {
@@ -4227,11 +4236,13 @@ async function calculateOptionAllHistoryPercent(percentage) {
               if(stArr[s] <= tenPer && data.length > 0) {
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
-                      if(odata['FH_TIMESTAMP'] == n[0] && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 100) {
+                      if(odata['FH_TIMESTAMP'] == n[0] && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= price) {
                           let fdata = data[0]
                           let d1 = new Date(n[0])
                           let d2 = new Date(odata['FH_EXPIRY_DT'])
                           niftyObj[odata['FH_EXPIRY_DT']] && result.push({
+                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
+                              year: odata['FH_EXPIRY_DT'].substring(7),
                               sellDate: n[0],
                               niftyPrice: n[1],
                               expiryDate: odata['FH_EXPIRY_DT'],
@@ -4267,10 +4278,26 @@ function filterResult() {
   })
   let h = 'Total Rows ' + optionAllHistoryCalData.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
   let displayCount = gridOptions.api.getDisplayedRowCount()
-  if( displayCount != optionAllHistoryCalData.length) {
+  if(gridOptions.api.getDisplayedRowAtIndex(0) && !gridOptions.api.getDisplayedRowAtIndex(0)['data']) {
     let d = []
     for(let i=0;i<displayCount;i++) {
-      d.push(gridOptions.api.getDisplayedRowAtIndex(i)['data'])
+      if(gridOptions.api.getDisplayedRowAtIndex(i)['data']) {
+        d.push(gridOptions.api.getDisplayedRowAtIndex(i)['data'])
+      } else if(gridOptions.api.getDisplayedRowAtIndex(i)['childrenAfterFilter']) {
+        let leafChildren1 = gridOptions.api.getDisplayedRowAtIndex(i)['childrenAfterFilter']
+        for(let j=0;j<leafChildren1.length;j++) {
+          if(leafChildren1[j]['childrenAfterFilter']) {
+            let leafChildren2 = leafChildren1[j]['childrenAfterFilter']
+            for(let k=0;k<leafChildren2.length;k++){
+              if(leafChildren2[k]['data']) {
+                d.push(leafChildren2[k]['data'])
+              }
+            }
+          } else if(leafChildren1[j]['data']) {
+            d.push(leafChildren1[j]['data'])
+          }
+        }
+      }
     }
     let win = 0
     let loss = 0
