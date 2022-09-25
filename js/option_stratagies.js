@@ -911,7 +911,8 @@ function supportResistenceGraph() {
 function initEventListeners() {
   let optionChainResId = document.querySelector('#optionChainResId')
   optionChainResId.addEventListener('change', (e) => {
-    let tempData = webix.storage.session.get('tempData')
+    //let tempData = webix.storage.session.get('tempData')
+    let tempData = JSON.parse(e.target.value)
     let expiryDates = Object.keys(tempData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
     if (expiryDates.length > 4) {
       let near = new Date(expiryDates[0])
@@ -1103,7 +1104,8 @@ function initEventListeners() {
 
   let optionAllHistoryResId = document.querySelector('#optionAllHistoryResId')
   optionAllHistoryResId.addEventListener('change', async (e) => {
-    let json = webix.storage.session.get('optionAllHistoryTemp')
+    //let json = webix.storage.session.get('optionAllHistoryTemp')
+    let json = JSON.parse(e.target.value)
     let ed = json['ed']
     json = json.data
     if (json) {
@@ -4256,7 +4258,7 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
           let stArr = Object.keys(op)
           for(let s=0; s<stArr.length; s++) {
               let v = op[stArr[s]]
-              let data = v['data']
+              let data = v['PE']['data']
               if(stArr[s] <= tenPer && data.length > 0) {
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
@@ -4362,7 +4364,7 @@ function displayOptionStrikeChart(cData) {
   let data = []
   for(let i=0;i<allData.length;i++){
     let obj = allData[i]
-    let spData = obj[sp]
+    let spData = obj[sp]['PE']
     if(spData) {
       let meta = spData['meta']
       if(meta['expiryDate'] == ed) {
