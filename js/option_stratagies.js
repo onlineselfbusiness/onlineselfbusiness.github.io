@@ -4375,7 +4375,7 @@ function displayOptionStrikeChart(cData) {
   }
   let chartData = []
   for(let i=0;i<data.length;i++) {
-    if(data[i]['FH_CHANGE_IN_OI'] > 10) {
+    if(data[i]['FH_CHANGE_IN_OI'] > 10 || data[i]['FH_CHANGE_IN_OI'] < 0) {
       chartData.push({ 
         price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)),
         date: data[i]['FH_TIMESTAMP'].substring(0, 6),
