@@ -1229,12 +1229,12 @@ webix.ready(function () {
             }
           },
           {
-            view: "button", type: "image", image:"/images/ag-grid.png", id: "optionAllHistoryButtonId", width: 30, align: "left", click: function () {
+            view: "button", /*type: "image", image:"/images/ag-grid.png"*/type: "icon", icon: "mdi mdi-view-grid", id: "optionAllHistoryButtonId", width: 30, align: "left", click: function () {
               displayOptionAllHistoryData()
             }
           },
           {
-            view: "button", type: "icon", icon: "mdi mdi-eye-settings", id: "ichartSentimentId", width: 30, align: "left", click: function () {
+            view: "button", type: "icon", icon: "mdi mdi-account-details", id: "ichartSentimentId", width: 30, align: "left", click: function () {
               if (SelectedScript) {
                 dispatchChangeEvent('#ichartSentimentReqId', SelectedScript)
                 //dispatchChangeEvent('#priceApiReqId', SelectedScript)
@@ -1977,7 +1977,6 @@ webix.ready(function () {
                             if (window.confirm('Are you sure to download all sripts')) {
                               dispatchChangeEvent('#ichartScreenerReqId')
                               //dispatchChangeEvent('#economicCalendarReqId')
-                              //fetchOptionAllHistory()
                             }
                           }
                         },
@@ -3968,11 +3967,6 @@ function prepareCashAndCarryData() {
   return [buyCash, sellCash]
 }
 
-function fetchOptionAllHistory() {
-  let ed = '30-Jun-2022'
-  dispatchChangeEvent('#optionAllHistoryReqId', ed + '=' + spArr.join(','))
-}
-
 //let spArr = ["16000.00"]//, "16100.00"]
 let spArr = ["10000.00", "10500.00", "10900.00",
   "11000.00", "11100.00", "11200.00", "11300.00", "11400.00", "11500.00", "11600.00", "11700.00", "11800.00", "11900.00",
@@ -4028,7 +4022,7 @@ function generateExpiryDates() {
 }
 
 function displayOptionAllHistoryData() {
-
+  delete gridOptions['api']
   webix.ui({
     view: "window",
     id: "allOptionHistoryWindowId",
@@ -4117,11 +4111,9 @@ class ActionRenderer {
     this.eGui = document.createElement('div');
     if(params.data) {
       // create the cell
-      this.eGui.innerHTML = `
-            <span>
-                <button class="btn-simple">Graph</button>
-            </span>
-        `;
+      
+      this.eGui.innerHTML = `<span class="webix_icon_btn mdi mdi-chart-areaspline btn-simple" style="max-width:32px;cursor: pointer"></span>`
+      //` <span><button class="btn-simple">Graph</button></span>`;
 
       // get references to the elements we want
       this.eButton = this.eGui.querySelector('.btn-simple');
@@ -4159,31 +4151,46 @@ let gridOptions = {
   // each entry here represents one column
   columnDefs: [
     { headerName:'Year', field: "year" , rowGroup: true, enableRowGroup: true, hide: true},
-    //{ headerName:'MM-YY', field: "monthYear" , rowGroup: true, enableRowGroup: true, hide: true},
     { headerName:'Date', field: "sellDate" ,filter: true},
-    { headerName:'Price',field: "niftyPrice" ,filter: false},
-    { headerName:'NCP',field: "niftyClosePrice" ,filter: true},
-    { field: "expiryDate" ,width: 120, filter: true, rowGroup: true, enableRowGroup: true},
-    { headerName:'SP', field: "strikePrice" ,width: 100, filter: true},
-    { headerName:'%', field: "percentage", width: 90, type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
+    { headerName:'Price',field: "niftyPrice" ,filter: false, suppressMenu: true},
+    { headerName:'NCP',field: "niftyClosePrice" ,filter: true, suppressMenu: true,headerTooltip: 'Nify Close Price'},
+    { field: "expiryDate" , filter: true, rowGroup: true, enableRowGroup: true, hide: true},
+    { headerName:'Strike Price', field: "strikePrice" , filter: true, rowGroup: true, enableRowGroup: true, hide: true},
+    { headerName:'%', field: "percentage", type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
     { field: "sellPrice" ,filter: false},
-    { headerName:'CP', field: "closePrice" , width: 80},
-    { headerName:'👍' + '/' +  '🔻', field: "result" ,width: 90,filter: true},
-    { field: "DTE", width: 60, sortable: true, filter: 'agNumberColumnFilter'},
-    { field: 'action', minWidth: 100, cellRenderer: ActionRenderer },
+    { headerName:'CP', field: "closePrice" , suppressMenu: true,headerTooltip: 'Option Close Price'},
+    { headerName:'👍' + '/' +  '🔻', field: "result" ,filter: true},
+    { field: "DTE", sortable: true, filter: 'agNumberColumnFilter',headerTooltip: 'Days To Expiry'},
+    { headerName:'Chart',field: 'action', minWidth: 100, cellRenderer: ActionRenderer, suppressMenu: true},
   ],
 
   // default col def properties get applied to all columns
-  defaultColDef: {width: 130, resizable: true, flex: 1, },
-  autoGroupColumnDef: {
-    minWidth: 150,
-  },
+  defaultColDef: { resizable: true, flex: 1, minWidth: 120},
   rowSelection: 'multiple', // allow rows to be selected
   animateRows: true, // have rows animate to new positions when sorted
   rowGroupPanelShow: 'always',
+  autoGroupColumnDef: {
+    filter: true,
+    filterValueGetter: params => params.data.year, 
+    minWidth: 200,
+    //headerName: 'Group',//custom header name for group
+    pinned: 'left',//force pinned left. Does not work in columnDef
+    cellRendererParams: {
+        suppressCount: false,//remove number in Group Column
+    }
+  },
+  // set background colour on even rows again, this looks bad, should be using CSS classes
+  getRowStyle: params => {
+    if(!params.data) {
+      return null
+    } else if (params.node.rowIndex % 2 === 0) {
+        //return { background: 'red' };
+    }
+    return null
+  },
   // example event handler
   onCellClicked: params => {
-    console.log('cell was clicked', params)
+    //console.log('cell was clicked', params)
   },
   onGridReady: (event) => event.api.sizeColumnsToFit(),
   onFilterChanged: function() {
@@ -4197,30 +4204,47 @@ let gridOptions = {
 
 let optionAllHistoryCalData = []
 async function calculateOptionAllHistory(percentage, price) {
-  const eGridDiv = document.getElementById("optionAllHistoryagGrid");
-  // new grid instance, passing in the hosting DIV and Grid Options
-  !gridOptions.api && new agGrid.Grid(eGridDiv, gridOptions);
-  gridOptions.api.setRowData([]);
+  if(!gridOptions.api) {
+    const eGridDiv = document.getElementById("optionAllHistoryagGrid");
+    // new grid instance, passing in the hosting DIV and Grid Options
+     new agGrid.Grid(eGridDiv, gridOptions);
+  }
+  
+  //gridOptions.api.setRowData([]);
+  await (async () => { return new Promise((resolve, reject) => { gridOptions.api.showLoadingOverlay(); setTimeout(()=>{ resolve()}, 250); })})()
+  
   optionAllHistoryCalData = await calculateOptionAllHistoryPercent(percentage, price)
-  gridOptions.api.setRowData(optionAllHistoryCalData);
+  gridOptions.api.setRowData(optionAllHistoryCalData)
+  //gridOptions.api.hideOverlay()
   gridOptions.api.setFilterModel(null);
   filterResult()
+  autoSizeAll(false)
 }
 let allData = undefined
 let niftyObj = undefined
 let nifty = []
+
+function autoSizeAll(skipHeader) {
+  const allColumnIds = [];
+  gridOptions.columnApi.getColumns().forEach((column) => {
+    allColumnIds.push(column.getId());
+  });
+
+  gridOptions.columnApi.autoSizeColumns(allColumnIds, skipHeader);
+}
+
 async function calculateOptionAllHistoryPercent(percentage, price) {
   if(!niftyObj) {
     let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
-    let scriptName = data['NIFTY']
-    let sArr = scriptName.reverse()
-    
-    for(let i=0; i<sArr.length; i++) {
+    let sArr = data['NIFTY']
+    for(let i=0; i<sArr.length-1; i++) {
         let n = sArr[i]
-        nifty.push([n[0], n[4]])
+        let pn = sArr[i+1]
+        nifty.push([n[0], n[4], n[4]-pn[4]])
     }
     niftyObj = {}
-    nifty.forEach(n => { niftyObj[n[0]] = n[1] })
+    nifty.forEach(n => { niftyObj[n[0]] = [n[1], n[2]] })
+    nifty.reverse()
   }
   let result = []
   allData = allData || await getAllDataSyncOptionHistoryStore();
@@ -4238,19 +4262,26 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
                       let odata = data[d]
                       if(odata['FH_TIMESTAMP'] == n[0] && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= price) {
                           let fdata = data[0]
+                          let edTemp = odata['FH_EXPIRY_DT']
+                          let edArrTemp = edTemp.split('-')
+                          let edTrim = edArrTemp[0] + '-' + edArrTemp[1] + '-' + edArrTemp[2].substring(2)
                           let d1 = new Date(n[0])
-                          let d2 = new Date(odata['FH_EXPIRY_DT'])
-                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
-                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
-                              year: odata['FH_EXPIRY_DT'].substring(7),
-                              sellDate: n[0],
+                          let d2 = new Date(edTemp)
+
+                          let sdArrTemp = n[0].split('-')
+
+                          niftyObj[edTemp] && result.push({
+                              monthYear: edTemp.substring(3),
+                              year: edTemp.substring(7),
+                              sellDate: sdArrTemp[0] + '-' + sdArrTemp[1] + '-' + sdArrTemp[2].substring(2),
                               niftyPrice: n[1],
-                              expiryDate: odata['FH_EXPIRY_DT'],
+                              expiryDate: edTrim,
+                              expiryDateOrg: edTemp,
                               strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
                               sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
                               closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
                               result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
-                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
+                              niftyClosePrice: niftyObj[edTemp][0],
                               percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
                               lowPrice: odata['FH_TRADE_LOW_PRICE'],
                               DTE: (d2.getTime()-d1.getTime())/(24*60*60*1000)
@@ -4278,7 +4309,7 @@ function filterResult() {
   })
   let h = 'Total Rows ' + optionAllHistoryCalData.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
   let displayCount = gridOptions.api.getDisplayedRowCount()
-  if(gridOptions.api.getDisplayedRowAtIndex(0) && !gridOptions.api.getDisplayedRowAtIndex(0)['data']) {
+  if(gridOptions.api.getDisplayedRowAtIndex(0) && gridOptions.api.getDisplayedRowAtIndex(0)['data'] === undefined) {
     let d = []
     for(let i=0;i<displayCount;i++) {
       if(gridOptions.api.getDisplayedRowAtIndex(i)['data']) {
@@ -4289,7 +4320,14 @@ function filterResult() {
           if(leafChildren1[j]['childrenAfterFilter']) {
             let leafChildren2 = leafChildren1[j]['childrenAfterFilter']
             for(let k=0;k<leafChildren2.length;k++){
-              if(leafChildren2[k]['data']) {
+              if(leafChildren2[k]['childrenAfterFilter']) {
+                let leafChildren3 = leafChildren2[k]['childrenAfterFilter']
+                for(let l=0;l<leafChildren3.length;l++){
+                  if(leafChildren3[l]['data']) {
+                    d.push(leafChildren3[l]['data'])
+                  }
+                }
+              } else if(leafChildren2[k]['data']) {
                 d.push(leafChildren2[k]['data'])
               }
             }
@@ -4308,7 +4346,9 @@ function filterResult() {
         loss++
       }
     })
-    h += ' , Filter Rows: ' + d.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+    if(optionAllHistoryCalData.length != d.length) {
+      h += ' , Filter Rows: ' + d.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+    }
     $$('optionAllHisTotalId').setHTML(h)
   } else {
     $$('optionAllHisTotalId').setHTML(h)
@@ -4318,7 +4358,7 @@ function filterResult() {
 function displayOptionStrikeChart(cData) {
   console.dir(cData)
   let sp = cData['strikePrice'] + '.00'
-  let ed = cData['expiryDate']
+  let ed = cData['expiryDateOrg']
   let data = []
   for(let i=0;i<allData.length;i++){
     let obj = allData[i]
@@ -4326,7 +4366,7 @@ function displayOptionStrikeChart(cData) {
     if(spData) {
       let meta = spData['meta']
       if(meta['expiryDate'] == ed) {
-        data = spData['data'].reverse()
+        data = [...spData['data']].reverse()
         break
       }
     }
@@ -4334,7 +4374,11 @@ function displayOptionStrikeChart(cData) {
   let chartData = []
   for(let i=0;i<data.length;i++) {
     if(data[i]['FH_CHANGE_IN_OI'] > 10) {
-      chartData.push({ price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)), date: data[i]['FH_TIMESTAMP'].substring(0, 6)})
+      chartData.push({ 
+        price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)),
+        date: data[i]['FH_TIMESTAMP'].substring(0, 6),
+        nifty: niftyObj[data[i]['FH_TIMESTAMP']][1]
+      })
     }
   }
 
@@ -4385,9 +4429,89 @@ function displayOptionChart(data, title) {
       {
         xKey: 'date',
         yKey: 'price',
+        yName: 'Premium',
+        label: {
+          //fontWeight: 'bold',
+          color: 'white'
+        },
+      },
+      {
+        xKey: 'date',
+        yKey: 'nifty',
+        yName: 'Nifty',
+        label: {
+          //fontWeight: 'bold',
+          //color: 'white'
+        },
       },
     ],
+    theme: {
+      baseTheme: 'ag-default-dark'
+    }
   };
 
   agCharts.AgChart.create(options);
+}
+
+async function OptionAllHistoryAnalytics() {
+  if(!niftyObj) {
+    let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+    let sArr = data['NIFTY'].reverse()
+    
+    for(let i=0; i<sArr.length; i++) {
+        let n = sArr[i]
+        nifty.push([n[0], n[4]])
+    }
+    niftyObj = {}
+    nifty.forEach(n => { niftyObj[n[0]] = n[1] })
+  }
+  let result = []
+  allData = allData || await getAllDataSyncOptionHistoryStore();
+  for(let i=0;i<nifty.length;i++) {
+      let n = nifty[i]
+      for(let j=0; j<allData.length; j++) {
+          let op = allData[j];
+          let stArr = Object.keys(op)
+          for(let s=0; s<stArr.length; s++) {
+            //Temporary code begin
+            if(stArr[s] !== '17500.00') {
+              continue;
+            }
+            if(op[stArr[s]]['meta']['expiryDate'] != '27-Jan-2022') {
+              continue;
+            }
+            // end
+              let v = op[stArr[s]]
+              let data = v['data']
+              if(data.length > 0) {
+                  for(let d=data.length-1;d>0; d--) {
+                      let odata = data[d]
+                      if(odata['FH_TIMESTAMP'] == n[0]) {// && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 10) {
+                          let fdata = data[0]
+                          let d1 = new Date(n[0])
+                          let d2 = new Date(odata['FH_EXPIRY_DT'])
+                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
+                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
+                              year: odata['FH_EXPIRY_DT'].substring(7),
+                              sellDate: n[0],
+                              niftyPrice: n[1],
+                              expiryDate: odata['FH_EXPIRY_DT'],
+                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
+                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
+                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
+                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
+                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
+                              dte: (d2.getTime()-d1.getTime())/(24*60*60*1000)
+                          })
+                          break;
+                      }
+                  }
+              }
+          }
+      }
+  }
+  console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'dte', 'result'])
+  return result
 }
