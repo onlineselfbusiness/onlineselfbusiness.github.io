@@ -913,6 +913,7 @@ function initEventListeners() {
   optionChainResId.addEventListener('change', (e) => {
     //let tempData = webix.storage.session.get('tempData')
     let tempData = JSON.parse(e.target.value)
+    e.target.value = ''
     let expiryDates = Object.keys(tempData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
     if (expiryDates.length > 4) {
       let near = new Date(expiryDates[0])
@@ -1053,7 +1054,9 @@ function initEventListeners() {
 
   let messageStatusId = document.querySelector('#messageStatusId')
   messageStatusId.addEventListener('change', (e) => {
-    webix.message({ text: e.target.value, type: "info", expire: 500 })
+    let vArr = e.target.value.split('$')
+    let type = vArr[1] || 'info'
+    webix.message({ text: vArr[0], type: type, expire: 1500 })
   })
 
   let ichartSentimentResId = document.querySelector('#ichartSentimentResId')
@@ -1106,6 +1109,7 @@ function initEventListeners() {
   optionAllHistoryResId.addEventListener('change', async (e) => {
     //let json = webix.storage.session.get('optionAllHistoryTemp')
     let json = JSON.parse(e.target.value)
+    e.target.value = ''
     let ed = json['ed']
     json = json.data
     if (json) {
@@ -1977,8 +1981,8 @@ webix.ready(function () {
                           width: 130, align: "left",
                           click: function () {
                             if (window.confirm('Are you sure to download all sripts')) {
-                              dispatchChangeEvent('#ichartScreenerReqId')
-                              //dispatchChangeEvent('#economicCalendarReqId')
+                              //dispatchChangeEvent('#ichartScreenerReqId')
+                              dispatchChangeEvent('#economicCalendarReqId')
                             }
                           }
                         },
@@ -2087,7 +2091,7 @@ webix.ready(function () {
                           let mHeader = $('[view_id="script_calendar"]>.webix_cal_month>.webix_cal_month_name>.day').length
                           if (mHeader == 0 && $$('scriptCalendarId').getValue() != '') {
                             displayMonthWisePer($$('script_calendar').config.date)
-                            console.dir('onAfterRender')
+                            //console.dir('onAfterRender')
                           }
                         },
                       }
@@ -4025,6 +4029,7 @@ function generateExpiryDates() {
 
 function displayOptionAllHistoryData() {
   delete gridOptions['api']
+  let edArr = generateExpiryDates().reverse()
   webix.ui({
     view: "window",
     id: "allOptionHistoryWindowId",
@@ -4035,15 +4040,15 @@ function displayOptionAllHistoryData() {
           view: "toolbar", cols: [
             {
               view: "combo", width: 210, labelWidth: 85, id: "expiryDateHistoryId",
-              label: 'Expiry Date:', placeholder: "Select Date",
-              options: generateExpiryDates().reverse(), on: {
+              label: 'Expiry Date:', placeholder: "Select Date", value:edArr[0],
+              options: edArr, on: {
                 onChange: function (id) {
                   //console.dir(id)
                 }
               }
             },
             {
-              view: "combo", width: 210, labelWidth: 85, id: "strikePriceHistoryId",
+              view: "combo", width: 210, labelWidth: 85, id: "strikePriceHistoryId", value:'All',
               label: 'Strike Price:', placeholder: "Select Date",
               options: ['All', ...spArr], on: {
                 onChange: function (id) {
@@ -4358,7 +4363,7 @@ function filterResult() {
 }
 
 function displayOptionStrikeChart(cData) {
-  console.dir(cData)
+  //console.dir(cData)
   let sp = cData['strikePrice'] + '.00'
   let ed = cData['expiryDateOrg']
   let data = []
