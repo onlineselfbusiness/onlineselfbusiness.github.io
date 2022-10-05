@@ -3974,8 +3974,8 @@ function prepareCashAndCarryData() {
 }
 
 //let spArr = ["16000.00"]//, "16100.00"]
-let spArr = ["10000.00", "10500.00", "10900.00",
-  "11000.00", "11100.00", "11200.00", "11300.00", "11400.00", "11500.00", "11600.00", "11700.00", "11800.00", "11900.00",
+let spArr = [//"10000.00", "10500.00", "10900.00",
+  //"11000.00", "11100.00", "11200.00", "11300.00", "11400.00", "11500.00", "11600.00", "11700.00", "11800.00", "11900.00",
   "12000.00", "12100.00", "12200.00", "12300.00", "12500.00", "12600.00", "12700.00", "12800.00", "12900.00",
   "13000.00", "13100.00", "13200.00", "13300.00", "13400.00", "13500.00", "13800.00", "13850.00", "13900.00", "13950.00",
 
@@ -3998,7 +3998,6 @@ let spArr = ["10000.00", "10500.00", "10900.00",
   "19600.00", "19650.00", "19700.00", "19750.00", "19800.00", "19850.00", "19900.00", "19950.00",
 
   "20000.00"]
-
 
 function generateExpiryDates() {
   let expiryDates = []
@@ -4154,20 +4153,75 @@ class ActionRenderer {
   }
 }
 
+function SparkLineColumn(obj) {
+  if((obj.value + '').indexOf('.') > -1) {
+    if((obj.value+'').split('.')[1].length > 2){
+      return '₹'
+    }
+  }
+  return ''
+}
+
 let gridOptions = {
+  rowHeight: 75,
   // each entry here represents one column
   columnDefs: [
-    { headerName:'Year', field: "year" , rowGroup: true, enableRowGroup: true, hide: true},
+    { headerName:'Year', field: "year" , rowGroup: true, enableRowGroup: true, hide: true, rowGroupIndex: 0},
     { headerName:'Date', field: "sellDate" ,filter: true},
-    { headerName:'Price',field: "niftyPrice" ,filter: false, suppressMenu: true},
-    { headerName:'NCP',field: "niftyClosePrice" ,filter: true, suppressMenu: true,headerTooltip: 'Nify Close Price'},
-    { field: "expiryDate" , filter: true, rowGroup: true, enableRowGroup: true, hide: true},
-    { headerName:'Strike Price', field: "strikePrice" , filter: true, rowGroup: true, enableRowGroup: true, hide: true},
-    { headerName:'%', field: "percentage", type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
+    { headerName:'₹',field: "niftyPrice" ,filter: false, suppressMenu: true},
+    { headerName:'Close ₹',field: "niftyClosePrice" ,filter: true, suppressMenu: true, headerTooltip: 'Nify Close Price'},
+    {
+      field: 'change',
+      cellRenderer: 'agSparklineCellRenderer',
+      minWidth: 350,
+      cellRendererParams: {
+        sparklineOptions: {
+          type: 'column',
+          fill: '#91cc75',
+          stroke: '#91cc75',
+          label: {
+            enabled: true, // show column labels
+            placement: 'outsideEnd',
+            fontWeight: 'bold',
+            color:'orange',
+            formatter: SparkLineColumn
+          },
+          highlightStyle: {
+            fill: 'orange',
+          },
+          paddingInner: 0.3,
+          paddingOuter: 0.1,
+          tooltip: {
+            renderer: (params) => {
+              /*return {
+                title: params.xValue,
+                content: params.yValue.toFixed(1),
+                color: 'orange',
+                backgroundColor: 'rgb(78,78,255)',
+                opacity: 0.7,
+              };*/
+              let d1 = new Date(params.xValue)
+              let d2 = new Date(params.context.data.expiryDate)
+              let dte = (d2.getTime() - d1.getTime())/(24*60*60*1000)
+              return `<div class='ag-sparkline-tooltip'>
+              <div class='ag-sparkline-tooltip-title'>${params.xValue}</div>
+              <div class='ag-sparkline-tooltip-content'>
+                <div>₹ : ${params.yValue.toFixed(1)}</div>
+                <div>DTE : ${dte}</div>
+              </div>
+          </div>`;
+            },
+          },
+        },
+      },
+    },
+    { field: "expiryDate" , filter: true, rowGroup: true, enableRowGroup: true, hide: true, rowGroupIndex: 1},
+    { headerName:'Strike Price', field: "strikePrice" , filter: true, rowGroup: true, enableRowGroup: true, hide: true, rowGroupIndex: 2},
+    { headerName:'%', field: "percentage", hide: true, type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
     { field: "sellPrice" ,filter: false},
-    { headerName:'CP', field: "closePrice" , suppressMenu: true,headerTooltip: 'Option Close Price'},
-    { headerName:'👍' + '/' +  '🔻', field: "result" ,filter: true},
-    { field: "DTE", sortable: true, filter: 'agNumberColumnFilter',headerTooltip: 'Days To Expiry'},
+    { headerName:'CP', field: "closePrice" ,hide: true, suppressMenu: true,headerTooltip: 'Option Close Price'},
+    { headerName:'👍/🔻/₹', field: "result" ,filter: true},
+    { field: "DTE", sortable: true, filter: 'agNumberColumnFilter', hide: true,headerTooltip: 'Days To Expiry'},
     { headerName:'Chart',field: 'action', minWidth: 100, cellRenderer: ActionRenderer, suppressMenu: true},
   ],
 
@@ -4178,6 +4232,7 @@ let gridOptions = {
   rowGroupPanelShow: 'always',
   autoGroupColumnDef: {
     filter: true,
+    sortable: true,
     filterValueGetter: params => params.data.year, 
     minWidth: 200,
     //headerName: 'Group',//custom header name for group
@@ -4276,8 +4331,37 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
                           let d2 = new Date(edTemp)
 
                           let sdArrTemp = n[0].split('-')
-
-                          niftyObj[edTemp] && result.push({
+                          let r = (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' 
+                          let ncp = niftyObj[edTemp] ? niftyObj[edTemp][0] : ''
+                          if(ncp == '') {
+                            r = '₹';
+                          }
+                          let change = []
+                          data.forEach(d => {
+                            if(d['FH_TIMESTAMP'] == odata['FH_TIMESTAMP']) {
+                              change.push([d['FH_TIMESTAMP'], parseFloat(parseFloat(d['FH_LAST_TRADED_PRICE']).toFixed(2) + '01')])
+                            } else {
+                              change.push([d['FH_TIMESTAMP'], parseFloat(parseFloat(d['FH_LAST_TRADED_PRICE']).toFixed(2))])
+                            }
+                          })
+                          
+                          if(r == '👍') {
+                            let dTemp = []
+                            for(let k=change.length-1; k>1; k--) {
+                              if(change[k][1]>10) {
+                                continue;
+                              } else {
+                                dTemp = change.slice(k)
+                                break;
+                              }
+                            }
+                            change = dTemp.reverse()
+                          } else  { //if(r == '₹')
+                            change = change.reverse()
+                          }
+                          
+                          //niftyObj[edTemp] && 
+                          result.push({
                               monthYear: edTemp.substring(3),
                               year: edTemp.substring(7),
                               sellDate: sdArrTemp[0] + '-' + sdArrTemp[1] + '-' + sdArrTemp[2].substring(2),
@@ -4287,11 +4371,12 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
                               strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
                               sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
                               closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
-                              niftyClosePrice: niftyObj[edTemp][0],
-                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
+                              result: r,
+                              niftyClosePrice: ncp,
+                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / n[1] * 100).toFixed(2)) ,
                               lowPrice: odata['FH_TRADE_LOW_PRICE'],
-                              DTE: (d2.getTime()-d1.getTime())/(24*60*60*1000)
+                              DTE: (d2.getTime() - d1.getTime())/(24*60*60*1000),
+                              change: change
                           })
                           break;
                       }
@@ -4307,14 +4392,17 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
 function filterResult() {
   let win = 0
   let loss = 0
+  let waiting = 0
   optionAllHistoryCalData.forEach(v => {
     if(v['result'] === '👍') {
       win++
-    } else {
+    } else if(v['result'] === '🔻') {
       loss++
+    } else {
+      waiting++
     }
   })
-  let h = 'Total Rows ' + optionAllHistoryCalData.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+  let h = 'Total Rows ' + optionAllHistoryCalData.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻' + (waiting > 0 ? ' / ' + waiting + ' ₹ : ' : '') + ')'
   let displayCount = gridOptions.api.getDisplayedRowCount()
   if(gridOptions.api.getDisplayedRowAtIndex(0) && gridOptions.api.getDisplayedRowAtIndex(0)['data'] === undefined) {
     let d = []
@@ -4346,15 +4434,18 @@ function filterResult() {
     }
     let win = 0
     let loss = 0
+    let waiting = 0
     d.forEach(v => {
       if(v['result'] === '👍') {
         win++
-      } else {
+      } else if(v['result'] === '🔻') {
         loss++
+      } else {
+        waiting++
       }
     })
     if(optionAllHistoryCalData.length != d.length) {
-      h += ' , Filter Rows: ' + d.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻)'
+      h += ' , Filter Rows: ' + d.length + ' : (' + win + ' 👍' + ' / ' + loss + ' 🔻' + (waiting > 0 ? ' / ' + waiting + ' ₹ : ' : '') + ')'
     }
     $$('optionAllHisTotalId').setHTML(h)
   } else {
@@ -4380,7 +4471,7 @@ function displayOptionStrikeChart(cData) {
   }
   let chartData = []
   for(let i=0;i<data.length;i++) {
-    if(data[i]['FH_CHANGE_IN_OI'] > 10 || data[i]['FH_CHANGE_IN_OI'] < 0) {
+    if((data[i]['FH_CHANGE_IN_OI'] > 10 || data[i]['FH_CHANGE_IN_OI'] < 0) && niftyObj[data[i]['FH_TIMESTAMP']]) {
       chartData.push({ 
         price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)),
         date: data[i]['FH_TIMESTAMP'].substring(0, 6),
@@ -4522,3 +4613,31 @@ async function OptionAllHistoryAnalytics() {
   console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'dte', 'result'])
   return result
 }
+
+(function niftyAnalysis() {
+  var data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+  var sArr = data['NIFTY']
+  let nifty = []
+  let ed = new Date('01-Jan-2021')
+  for(let i=0; i<sArr.length; i++) {
+      let nd = new Date(sArr[i][0])
+      if(nd.getTime() >= ed.getTime() && sArr[i+1]) {
+          nifty.push({
+              date: sArr[i][0],
+              open: sArr[i][1],
+              high: sArr[i][2],
+              low: sArr[i][3],
+              close: sArr[i][4],
+              per: parseFloat(parseFloat((sArr[i][4] - sArr[i+1][4])/sArr[i][4] * 100).toFixed(2)),
+              year: (sArr[i][0]).substring(7),
+              month: (sArr[i][0]).substring(3),
+              gapOpen: parseFloat(parseFloat((sArr[i][1] - sArr[i+1][4])).toFixed(2)),
+              highLow: parseFloat(parseFloat((sArr[i][2] - sArr[i][3])).toFixed(2)),
+          })
+      } else {
+          break;
+      }
+  }
+  console.table(nifty, ['gapOpen','highLow', 'date', 'open', 'high', 'low', 'close', 'per'])
+  //return nifty
+})
