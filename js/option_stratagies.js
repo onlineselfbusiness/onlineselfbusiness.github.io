@@ -4025,7 +4025,7 @@ function generateExpiryDates() {
 
 function displayOptionAllHistoryData() {
   delete gridOptions['api']
-  let edArr = generateExpiryDates().reverse()
+  let edArr = expiryWisePercentage(generateExpiryDates().reverse())
   webix.ui({
     view: "window",
     id: "allOptionHistoryWindowId",
@@ -4036,7 +4036,7 @@ function displayOptionAllHistoryData() {
           view: "toolbar", cols: [
             {
               view: "combo", width: 210, labelWidth: 85, id: "expiryDateHistoryId",
-              label: 'Expiry Date:', placeholder: "Select Date", value:edArr[0],
+              label: 'Expiry Date:', placeholder: "Select Date", value:edArr[0].id,
               options: edArr, on: {
                 onChange: function (id) {
                   //console.dir(id)
@@ -4220,7 +4220,7 @@ let gridOptions = {
     { headerName:'%', field: "percentage", hide: true, type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter' },
     { field: "sellPrice" ,filter: false},
     { headerName:'CP', field: "closePrice" ,hide: true, suppressMenu: true,headerTooltip: 'Option Close Price'},
-    { headerName:'👍/🔻/₹', field: "result" ,filter: true},
+    { headerName:'👍/🔻/₹', minWidth: 130, field: "result" ,filter: true},
     { field: "DTE", sortable: true, filter: 'agNumberColumnFilter', hide: true,headerTooltip: 'Days To Expiry'},
     { headerName:'Chart',field: 'action', minWidth: 100, cellRenderer: ActionRenderer, suppressMenu: true},
   ],
@@ -4641,3 +4641,56 @@ async function OptionAllHistoryAnalytics() {
   console.table(nifty, ['gapOpen','highLow', 'date', 'open', 'high', 'low', 'close', 'per'])
   //return nifty
 })
+
+function expiryWisePercentage(dArr) {
+  let result = []
+  let niftyObj = {}
+  let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+  let sArr = data['NIFTY']
+  for(let i=0; i<sArr.length-1; i++) {
+    niftyObj[sArr[i][0]] = sArr[i][4]
+  }
+  for(let i=0; i<dArr.length;i++) {
+    let ed = dArr[i]
+    ed = new Date(ed)
+    let sd = new Date(ed)
+    sd.setDate(1)
+    sd.setMonth(sd.getMonth()-2)
+    sd.setDate(sd.getDate()-1)
+    while(true) {
+      if(sd.toDateString().indexOf('Thu')>-1) {
+        sd.setDate(sd.getDate()+1)
+        break;
+      }
+      sd.setDate(sd.getDate()-1)
+    }
+    let sdArr = sd.toDateString().split(' ')
+    sd = sdArr[2] + '-' + sdArr[1] + '-' + sdArr[3]
+    
+    let sp = niftyObj[sd]
+    while(!sp){
+      sd = new Date(sd)
+      sd.setDate(sd.getDate()+1)
+      sdArr = sd.toDateString().split(' ')
+      sd = sdArr[2] + '-' + sdArr[1] + '-' + sdArr[3]
+      sp = niftyObj[sd]
+    }
+    
+    let edArr = ed.toDateString().split(' ')
+    ed = edArr[2] + '-' + edArr[1] + '-' + edArr[3]
+    let ep = niftyObj[ed]
+    while(!ep){
+      ed = new Date(ed)
+      ed.setDate(ed.getDate()-1)
+      edArr = ed.toDateString().split(' ')
+      ed = edArr[2] + '-' + edArr[1] + '-' + edArr[3]
+      ep = niftyObj[ed]
+    }
+    let obj = { sd: sd, ed: ed, sp: sp, ep: ep}
+    obj['diff'] = parseFloat(parseFloat(obj.ep - obj.sp).toFixed(0))
+    obj['per'] = parseFloat(parseFloat((obj.ep - obj.sp)/obj.sp * 100).toFixed(2))
+    result.push({id: dArr[i], value: dArr[i] + ' (' + obj['diff'] + ', ' + obj['per'] + '%)'})
+  }
+    //console.table(result)
+    return result
+  }
