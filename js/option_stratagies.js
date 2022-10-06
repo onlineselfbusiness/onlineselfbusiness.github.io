@@ -1981,8 +1981,8 @@ webix.ready(function () {
                           width: 130, align: "left",
                           click: function () {
                             if (window.confirm('Are you sure to download all sripts')) {
-                              //dispatchChangeEvent('#ichartScreenerReqId')
-                              dispatchChangeEvent('#economicCalendarReqId')
+                              dispatchChangeEvent('#ichartScreenerReqId')
+                              //dispatchChangeEvent('#economicCalendarReqId')
                             }
                           }
                         },
@@ -3130,7 +3130,6 @@ function watchListCal() {
   }
   webix.storage.local.put('WatchList', WatchList)
 }
-
 function displayStrategyLatestDetails(obj) {
   let time_difference = new Date().getTime() - new Date(obj.createDate).getTime()
   let days_difference = parseInt(time_difference / (1000 * 60 * 60 * 24))
@@ -3563,7 +3562,6 @@ function attachBuySellButtons() {
       </div>
   `)
   })
-
 }
 function displayPESell(strikePrice, peSell) {
   prepareStrikeWithPremium()
@@ -3610,7 +3608,6 @@ function displayPESell(strikePrice, peSell) {
       rows: [
         {
           id: 'inputInfoId', height: 70, cols: [
-
             {
               rows: [
                 { view: 'template', template: '' },
@@ -4009,19 +4006,19 @@ function generateExpiryDates() {
   to.setMonth(to.getMonth() + 3)
   
   while(from.getTime() < to.getTime()) {
-      if(from.toDateString().indexOf('Thu')>-1) {
-          //console.dir(from)
-          let tempD = new Date(from)
-          tempD = tempD.toDateString().split(' ')
-          tempD = (tempD[2].length == 1 ? '0' + tempD[2] : tempD[2]) + '-' + tempD[1] + '-' + tempD[3]
-      
-          expiryDates.push(tempD)
-          from.setDate(1)
-          from.setMonth(from.getMonth() + 2)
-          from.setDate(from.getDate()-1)
-      } else {
-          from.setDate(from.getDate()-1)    
-      }
+    if(from.toDateString().indexOf('Thu')>-1) {
+      //console.dir(from)
+      let tempD = new Date(from)
+      tempD = tempD.toDateString().split(' ')
+      tempD = (tempD[2].length == 1 ? '0' + tempD[2] : tempD[2]) + '-' + tempD[1] + '-' + tempD[3]
+
+      expiryDates.push(tempD)
+      from.setDate(1)
+      from.setMonth(from.getMonth() + 2)
+      from.setDate(from.getDate()-1)
+    } else {
+      from.setDate(from.getDate()-1)    
+    }
   }
   return expiryDates
 }
@@ -4200,13 +4197,16 @@ let gridOptions = {
                 backgroundColor: 'rgb(78,78,255)',
                 opacity: 0.7,
               };*/
+              let sp = params.context.data.strikePrice
+              let np = niftyObj[params.xValue][0]
+              let p = parseFloat(parseFloat((sp-np)/np * 100).toFixed(2))
               let d1 = new Date(params.xValue)
               let d2 = new Date(params.context.data.expiryDate)
               let dte = (d2.getTime() - d1.getTime())/(24*60*60*1000)
               return `<div class='ag-sparkline-tooltip'>
-              <div class='ag-sparkline-tooltip-title'>${params.xValue}</div>
+              <div class='ag-sparkline-tooltip-title'>${params.xValue} &nbsp; ${parseFloat(sp-np).toFixed(0)}</div>
               <div class='ag-sparkline-tooltip-content'>
-                <div>₹ : ${params.yValue.toFixed(1)}</div>
+                <div>₹ : ${params.yValue.toFixed(1)} &nbsp; %: ${p}</div>
                 <div>DTE : ${dte}</div>
               </div>
           </div>`;
@@ -4285,6 +4285,18 @@ async function calculateOptionAllHistory(percentage, price) {
 let allData = undefined
 let niftyObj = undefined
 let nifty = []
+if(!niftyObj) {
+  let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+  let sArr = data['NIFTY']
+  for(let i=0; i<sArr.length-1; i++) {
+      let n = sArr[i]
+      let pn = sArr[i+1]
+      nifty.push([n[0], n[4], n[4]-pn[4]])
+  }
+  niftyObj = {}
+  nifty.forEach(n => { niftyObj[n[0]] = [n[1], n[2]] })
+  nifty.reverse()
+}
 
 function autoSizeAll(skipHeader) {
   const allColumnIds = [];
@@ -4296,18 +4308,6 @@ function autoSizeAll(skipHeader) {
 }
 
 async function calculateOptionAllHistoryPercent(percentage, price) {
-  if(!niftyObj) {
-    let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
-    let sArr = data['NIFTY']
-    for(let i=0; i<sArr.length-1; i++) {
-        let n = sArr[i]
-        let pn = sArr[i+1]
-        nifty.push([n[0], n[4], n[4]-pn[4]])
-    }
-    niftyObj = {}
-    nifty.forEach(n => { niftyObj[n[0]] = [n[1], n[2]] })
-    nifty.reverse()
-  }
   let result = []
   allData = allData || await getAllDataSyncOptionHistoryStore();
   for(let i=0;i<nifty.length;i++) {
@@ -4331,7 +4331,7 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
                           let d2 = new Date(edTemp)
 
                           let sdArrTemp = n[0].split('-')
-                          let r = (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' 
+                          let r = (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻'   // 👎  
                           let ncp = niftyObj[edTemp] ? niftyObj[edTemp][0] : ''
                           if(ncp == '') {
                             r = '₹';
