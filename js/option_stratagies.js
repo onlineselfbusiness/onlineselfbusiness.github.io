@@ -4708,18 +4708,4 @@ function expiryWisePercentage(dArr) {
     //console.table(result)
     return result
 }
-(async function highlight10PercentLowerPE() {
-  let edArr = generateExpiryDates().reverse().slice(0,3)
-  let result = await calculateOptionAllHistoryPercent(10, 100, edArr)
-  let r = {}
-  result.forEach(obj => {
-    if(edArr.includes(obj.expiryDateOrg)) {
-      let arr = r[obj.expiryDateOrg] || []
-      if(!arr.includes(obj.strikePrice)) {
-        arr.push(obj.strikePrice)
-      }
-      r[obj.expiryDateOrg] = arr
-    }
-  })
-  webix.storage.local.put('Highlight10PercentPE', r)
-})()
+
