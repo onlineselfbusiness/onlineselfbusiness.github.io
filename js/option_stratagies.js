@@ -1653,6 +1653,7 @@ webix.ready(function () {
                             start = start + r
                           }
                         } else if (Object.keys(obj).length > 0) {
+                          
                           prepareStrikeWithPremium()
                           let [S1, S2, R1, R2] = findSupportResistence()
                           let [PEV1, PEV2, CEV1, CEV2] = findSupportResistence()
@@ -1689,7 +1690,6 @@ webix.ready(function () {
                               }
                             }
 
-
                             let ceIdentifier = ce.identifier
                             let peIdentifier = pe.identifier
                             let ceClass = st <= closest ? 'bg-yellow' : ''
@@ -1697,7 +1697,7 @@ webix.ready(function () {
                             let stPer = DecimalFixed(((st - Underlying_Value) / Underlying_Value * 100)) + '%&#010;(' + DecimalFixed(st - Underlying_Value) + ')'
                             let stRow = `<td width="6.34%"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             if (parseInt(st) > fivePerLower && parseInt(st) < fivePerHigher) {
-                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
+                              stRow = `<td width="6.34%" style="background-color: #c1e7f1"><a class="bold ${parseInt(st) > Underlying_Value && (parseInt(st) - Underlying_Value) < 45 ? 'blink' : ''}" title="${stPer}" onclick="showAllPriceOfStrike('${st}', undefined, '${ceClass}', '${peClass}')" href="javascript:;">${DecimalFixed(st)}</a> <img src="/grficon.gif" style="width: 13px;cursor:pointer;" onclick="showOptionGraph('${ceIdentifier}', '${peIdentifier}', '${parseInt(st)}', '${SelectedExpiryDate}')"/></td>`
                             }
                             let ceChangeTx = ' redTxt'
                             if (ce.change > 0) {
@@ -1795,6 +1795,14 @@ webix.ready(function () {
                               }
                             }
                             let peSellClass = ''
+                            let niftyPE = webix.storage.local.get('Highlight10PercentPE')
+                            if(SelectedScript == 'NIFTY' && niftyPE[SelectedExpiryDate]) {
+                              let spArr = niftyPE[SelectedExpiryDate]
+                              if(spArr.includes(parseInt(st))) {
+                                peSellClass = 'bg-orange'
+                              }
+                            }
+                            
                             if (parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
                               peSellClass = 'bg-purple'
                             }
@@ -4307,7 +4315,7 @@ function autoSizeAll(skipHeader) {
   gridOptions.columnApi.autoSizeColumns(allColumnIds, skipHeader);
 }
 
-async function calculateOptionAllHistoryPercent(percentage, price) {
+async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr) {
   let result = []
   allData = allData || await getAllDataSyncOptionHistoryStore();
   for(let i=0;i<nifty.length;i++) {
@@ -4319,6 +4327,11 @@ async function calculateOptionAllHistoryPercent(percentage, price) {
           for(let s=0; s<stArr.length; s++) {
               let v = op[stArr[s]]
               let data = v['PE']['data']
+              if(currentEdArr) {
+                if(!currentEdArr.includes(v['PE']['meta']['expiryDate'])) {
+                  break;
+                }
+              }
               if(stArr[s] <= tenPer && data.length > 0) {
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
@@ -4693,4 +4706,20 @@ function expiryWisePercentage(dArr) {
   }
     //console.table(result)
     return result
-  }
+}
+
+(async function highlight10PercentLowerPE() {
+  let edArr = generateExpiryDates().reverse().slice(0,3)
+  let result = await calculateOptionAllHistoryPercent(10, 100, edArr)
+  let r = {}
+  result.forEach(obj => {
+    if(edArr.includes(obj.expiryDateOrg)) {
+      let arr = r[obj.expiryDateOrg] || []
+      if(!arr.includes(obj.strikePrice)) {
+        arr.push(obj.strikePrice)
+      }
+      r[obj.expiryDateOrg] = arr
+    }
+  })
+  webix.storage.local.put('Highlight10PercentPE', r)
+})()

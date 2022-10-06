@@ -3655,8 +3655,29 @@ footer .foot-col.last .follow_links li a {
   background-color: rgba(251, 245, 205, 0.41) !important;
 }
 
+.bg-orange {
+  background-color: rgba(218, 197, 13, 0.664) !important;
+}
+
 .bg-purple {
   background-color: rebeccapurple !important;
+  animation: blink 1s infinite;
+}
+
+.blink {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .optionChainTable .bg-yellow {
