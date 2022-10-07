@@ -962,8 +962,9 @@ function initEventListeners() {
     let d = []
     if (!optionHistory || !optionHistory.data) {
       alert('Something went wrong :-)');
+      return;
     }
-    let t = optionHistory.data
+    let t = optionHistory.data || []
     for (let i = 0; i < t.length - 1; i++) {
       let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE']) / t[i + 1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
       d.push({
@@ -4327,8 +4328,11 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
           let stArr = Object.keys(op)
           for(let s=0; s<stArr.length; s++) {
               let v = op[stArr[s]]
+              if(webix.isArray(v['PE'])) {
+                continue;
+              }
               let data = v['PE']['data']
-              if(currentEdArr) {
+              if(currentEdArr && data.length > 0 && v['PE']['meta']) {
                 if(!currentEdArr.includes(v['PE']['meta']['expiryDate'])) {
                   break;
                 }
