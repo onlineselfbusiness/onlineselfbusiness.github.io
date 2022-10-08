@@ -3,7 +3,7 @@ let optionHistoryDB;
 async function initializeDB() {
     let promise = new Promise((resolve, reject) => {
         if ('indexedDB' in window) {
-            console.log("This browser support IndexedDB.");
+            //console.log("This browser support IndexedDB.");
             const request = indexedDB.open('OptionHistoryDB', 1);
             request.onerror = (event) => {
                 console.error("onerror")
@@ -26,7 +26,7 @@ async function initializeDB() {
                 resolve('done')
             };
             request.onsuccess = (event) => {
-                console.log("onsuccess")
+                //console.log("onsuccess")
                 optionHistoryDB = event.target.result
                 resolve('done')
             };

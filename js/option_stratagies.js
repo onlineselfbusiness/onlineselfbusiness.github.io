@@ -1146,7 +1146,7 @@ webix.ready(async function () {
     }
   })
   webix.storage.local.put('Highlight10PercentPE', r)
-  
+
   initEventListeners()
   var menu_strategies = []
   menu_strategies.push({ id: 'customStrategy', value: 'Custom Strategy' })
@@ -1881,7 +1881,7 @@ webix.ready(async function () {
                               }
                             }
                             if (parseFloat(per) < 0) {
-                              currVal = '<span style="color:#fd505c">' + '<b>' + detailsLink + '</b> ' + per + '(' + diff + ')</span>' + '<br>' + obj.timestamp
+                              currVal = '<span class="' + (SelectedScript == 'NIFTY' && parseFloat(per) <= -1.5 ? 'blink' : '') + '" style="color:#fd505c">' + '<b>' + detailsLink + '</b> ' + per + '(' + diff + ')</span>' + '<br>' + obj.timestamp
                             } else {
                               currVal = '<span style="color:#02a68a">' + '<b>' + detailsLink + '</b> ' + per + '(' + diff + ')</span>' + '<br>' + obj.timestamp
                             }
@@ -3685,7 +3685,8 @@ function optionChainPayoffCalCEPE(buyCallArr, sellCallArr, buyPutArr, sellPutArr
   }
   return fullData;
 }
-function openScriptDailyDetails(scriptName) {
+
+function openScriptDailyDetailsBackUp(scriptName) {
   let dd = webix.storage.local.get('ScriptHistoryData')
   let sData = dd[scriptName].slice(0);
   for (var i = 0; i < sData.length - 1; i++) {
@@ -4174,6 +4175,25 @@ class ActionRenderer {
     return params.valueFormatted ? params.valueFormatted : params.value;
   }
 }
+class ProfitLossRenderer {
+  init(params) {
+    this.eGui = document.createElement('div');
+    if(params.data) {
+      if(params.data.per >= 0) {
+        this.eGui.innerHTML = `<span class="green">${params.data.per}</span>`
+      } else {
+        this.eGui.innerHTML = `<span class="red">${params.data.per}</span>`
+      }
+    }
+  }
+  getGui() {
+    return this.eGui;
+  }
+  refresh(params) {
+    this.eValue.innerHTML = this.cellValue;
+    return true;
+  }
+}
 
 function SparkLineColumn(obj) {
   if((obj.value + '').indexOf('.') > -1) {
@@ -4421,7 +4441,6 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
   console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'result'])
   return result
 }
-
 function filterResult() {
   let win = 0
   let loss = 0
@@ -4485,7 +4504,6 @@ function filterResult() {
     $$('optionAllHisTotalId').setHTML(h)
   }
 }
-
 function displayOptionStrikeChart(cData) {
   //console.dir(cData)
   let sp = cData['strikePrice'] + '.00'
@@ -4547,7 +4565,6 @@ function displayOptionStrikeChart(cData) {
     }
   }).show();
 }
-
 function displayOptionChart(data, title) {
   const options = {
     container: document.getElementById('optionChartBodyDivId'),
@@ -4583,21 +4600,21 @@ function displayOptionChart(data, title) {
 
   agCharts.AgChart.create(options);
 }
-
-(function niftyAnalysis() {
+function scriptHistoryAnalysis(scriptName) {
   var data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
-  var sArr = data['NIFTY']
-  let nifty = []
+  var sArr = data[scriptName]
+  let result = []
   let ed = new Date('01-Jan-2021')
   for(let i=0; i<sArr.length; i++) {
       let nd = new Date(sArr[i][0])
       if(nd.getTime() >= ed.getTime() && sArr[i+1]) {
-          nifty.push({
+        result.push({
               date: sArr[i][0],
               open: sArr[i][1],
               high: sArr[i][2],
               low: sArr[i][3],
               close: sArr[i][4],
+              pl: parseFloat(parseFloat((sArr[i][4] - sArr[i+1][4])).toFixed(2)),
               per: parseFloat(parseFloat((sArr[i][4] - sArr[i+1][4])/sArr[i][4] * 100).toFixed(2)),
               year: (sArr[i][0]).substring(7),
               month: (sArr[i][0]).substring(3),
@@ -4608,10 +4625,9 @@ function displayOptionChart(data, title) {
           break;
       }
   }
-  console.table(nifty, ['gapOpen','highLow', 'date', 'open', 'high', 'low', 'close', 'per'])
-  //return nifty
-})
-
+  console.table(result, ['gapOpen','highLow', 'date', 'open', 'high', 'low', 'close', 'per'])
+  return result
+}
 function expiryWisePercentage(dArr) {
   let result = []
   let niftyObj = {}
@@ -4664,7 +4680,84 @@ function expiryWisePercentage(dArr) {
     //console.table(result)
     return result
 }
+let historyGridOptions
+function openScriptDailyDetails(scriptName) {
+  historyGridOptions = {
+    columnDefs: [
+      { headerName:'Year', field: "year" , rowGroup: true, enableRowGroup: true, hide: true, rowGroupIndex: 0},
+      { headerName:'Month', field: "month" , rowGroup: true, enableRowGroup: true, hide: true, rowGroupIndex: 1},
+      { headerName:'Date', field: "date" ,filter: true},
+      { headerName:'%', field: "per" , type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter', cellRenderer: ProfitLossRenderer,},
+      { headerName:'P/L', field: "pl", type: 'numericColumn', sortable: true, filter: 'agNumberColumnFilter'},
+      { headerName:'Close', field: "close" ,filter: false},
+      { headerName:'Gap Open', field: "gapOpen" ,filter: false},
+      { headerName:'Open', field: "open" , type: 'numericColumn', sortable: false, filter: false},
+      { headerName:'High', field: "high" , type: 'numericColumn', sortable: false, filter: false},
+      { headerName:'Low', field: "low" , type: 'numericColumn', sortable: false, filter: false},
+      { headerName:'High-Low', field: "highLow" ,filter: true},
+    ],
+  
+    // default col def properties get applied to all columns
+    defaultColDef: { resizable: true, flex: 1, minWidth: 120},
+    rowSelection: 'multiple', // allow rows to be selected
+    animateRows: true, // have rows animate to new positions when sorted
+    rowGroupPanelShow: 'always',
+    autoGroupColumnDef: {
+      filter: true,
+      sortable: true,
+      filterValueGetter: params => params.data.year, 
+      minWidth: 200,
+      //headerName: 'Group',//custom header name for group
+      pinned: 'left',//force pinned left. Does not work in columnDef
+      cellRendererParams: {
+          suppressCount: false,//remove number in Group Column
+      }
+    },
+    onGridReady: (event) => {
+      event.api.sizeColumnsToFit()
+      $($('.ag-unselectable.ag-column-drop.ag-column-drop-horizontal.ag-focus-managed').not(".ag-hidden").get(0))
+      .append('<div onClick="historyGridOptions.api.setFilterModel(null)"><span class="webix_icon_btn mdi mdi-refresh" style="color: rgb(68, 192, 222)"></span></div>')
+    },
+    onRowGroupOpened  : (event) => {
+      console.log('onRowGroupOpened ')
+    }
+  };
 
+  let result = scriptHistoryAnalysis(scriptName)
+
+  webix.ui({
+    view: "window",
+    id: "scriptWindowId",
+    fullscreen: true,
+    head: {
+      rows: [
+        {
+          view: "toolbar", cols: [
+            {
+              view: "label", label: scriptName, align: 'center', template: "<a target='_blank' href='https://nseindia.com/companytracker/cmtracker.jsp?symbol="
+                + scriptName + "&cName=cmtracker_nsedef.css'> " + scriptName + " </a>"
+            },
+            { view: "button", label: 'X', width: 30, align: 'right', click: " $$('scriptWindowId').destructor(); historyGridOptions = undefined" }
+          ]
+        }
+      ]
+    },
+    body: {
+      cols: [
+        {
+          view: 'template', id: 'optionAllHistoryId', template: '<div class="ag-theme-alpine" style="width:100%;height:100%;" id="scriptHistoryagGrid"></div>'
+        },
+        ]
+    },
+    on: {
+      onShow: function () {
+        const eGridDiv = document.getElementById("scriptHistoryagGrid");
+        new agGrid.Grid(eGridDiv, historyGridOptions);
+        historyGridOptions.api.setRowData(result)
+      }
+    }
+  }).show();
+}
 // TODO: Testing going on
 async function OptionAllHistoryAnalytics() {
   if(!niftyObj) {
