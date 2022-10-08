@@ -1129,7 +1129,24 @@ function initEventListeners() {
 let ViewIds = ['strategyViewId', 'worldMarketViewId', 'calendarWiseViewId', 'optionChainViewId', 'etResultCalendarViewId', 'etEconomicCalendarViewId',
   'continuousWiseViewId', 'yearWiseViewId', 'watchListViewId', 'maxPainForAllViewId', 'nifty50StockViewId',
   'moneycontroRCViewId', 'cashAndCarryViewId']
-webix.ready(function () {
+webix.ready(async function () {
+  let s = await initializeDB()
+  console.dir('Indexed DB initialized.')
+
+  let edArr = generateExpiryDates().reverse().slice(0,3)
+  let result = await calculateOptionAllHistoryPercent(10, 100, edArr)
+  let r = {}
+  result.forEach(obj => {
+    if(edArr.includes(obj.expiryDateOrg)) {
+      let arr = r[obj.expiryDateOrg] || []
+      if(!arr.includes(obj.strikePrice)) {
+        arr.push(obj.strikePrice)
+      }
+      r[obj.expiryDateOrg] = arr
+    }
+  })
+  webix.storage.local.put('Highlight10PercentPE', r)
+  
   initEventListeners()
   var menu_strategies = []
   menu_strategies.push({ id: 'customStrategy', value: 'Custom Strategy' })

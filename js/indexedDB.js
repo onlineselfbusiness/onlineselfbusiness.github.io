@@ -36,39 +36,7 @@ async function initializeDB() {
     })
     return promise;
 }
-(async function() {
-    let s = await initializeDB()
-    console.dir('Indexed DB initialized.')
-})()
 
-/*
-if ('indexedDB' in window) {
-    console.log("This browser support IndexedDB.");
-    const request = indexedDB.open('OptionHistoryDB', 1);
-    request.onerror = (event) => {
-        console.error("onerror");
-    };
-    request.onupgradeneeded = (event) => {
-        console.log("onupgradeneeded");
-        optionHistoryDB = event.target.result;
-        if (!optionHistoryDB.objectStoreNames.contains('optionHistoryStore')) {
-            let objectStore = optionHistoryDB.createObjectStore("optionHistoryStore");
-            objectStore.transaction.oncomplete = (event) => {
-                console.dir('transaction completed successfully')
-            };
-        }
-        optionHistoryDB.onerror = (event) => {
-            console.error(`Database error: ${event.target.errorCode}`);
-            event.preventDefault(); // don't abort the transaction
-            event.stopPropagation(); // don't bubble error up, "chew" it
-        };
-    };
-    request.onsuccess = (event) => {
-        console.log("onsuccess");
-        optionHistoryDB = event.target.result;
-    };
-}
-*/
 function putDataOptionHistoryStore(d, k) {
     const transaction = optionHistoryDB.transaction("optionHistoryStore", "readwrite");
     const dataObjectStore = transaction.objectStore("optionHistoryStore");
