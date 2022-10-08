@@ -37,7 +37,8 @@ async function initializeDB() {
     return promise;
 }
 (async function() {
-    await initializeDB()
+    let s = await initializeDB()
+    console.dir('Indexed DB initialized.')
 })()
 
 /*
