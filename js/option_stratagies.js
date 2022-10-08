@@ -4075,8 +4075,6 @@ function displayOptionAllHistoryData() {
                     dispatchChangeEvent('#optionAllHistoryReqId', ed + '=' + sp)
                   }
                   allData = undefined
-                  niftyObj = undefined
-                  nifty = []
                 }
               }
             },
@@ -4297,7 +4295,7 @@ let niftyObj = undefined
 let nifty = []
 if(!niftyObj) {
   let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
-  let sArr = data['NIFTY']
+  let sArr = data['NIFTY'] || []
   for(let i=0; i<sArr.length-1; i++) {
       let n = sArr[i]
       let pn = sArr[i+1]
@@ -4569,69 +4567,6 @@ function displayOptionChart(data, title) {
   agCharts.AgChart.create(options);
 }
 
-async function OptionAllHistoryAnalytics() {
-  if(!niftyObj) {
-    let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
-    let sArr = data['NIFTY'].reverse()
-    
-    for(let i=0; i<sArr.length; i++) {
-        let n = sArr[i]
-        nifty.push([n[0], n[4]])
-    }
-    niftyObj = {}
-    nifty.forEach(n => { niftyObj[n[0]] = n[1] })
-  }
-  let result = []
-  allData = allData || await getAllDataSyncOptionHistoryStore();
-  for(let i=0;i<nifty.length;i++) {
-      let n = nifty[i]
-      for(let j=0; j<allData.length; j++) {
-          let op = allData[j];
-          let stArr = Object.keys(op)
-          for(let s=0; s<stArr.length; s++) {
-            //Temporary code begin
-            if(stArr[s] !== '17500.00') {
-              continue;
-            }
-            if(op[stArr[s]]['meta']['expiryDate'] != '27-Jan-2022') {
-              continue;
-            }
-            // end
-              let v = op[stArr[s]]
-              let data = v['data']
-              if(data.length > 0) {
-                  for(let d=data.length-1;d>0; d--) {
-                      let odata = data[d]
-                      if(odata['FH_TIMESTAMP'] == n[0]) {// && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 10) {
-                          let fdata = data[0]
-                          let d1 = new Date(n[0])
-                          let d2 = new Date(odata['FH_EXPIRY_DT'])
-                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
-                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
-                              year: odata['FH_EXPIRY_DT'].substring(7),
-                              sellDate: n[0],
-                              niftyPrice: n[1],
-                              expiryDate: odata['FH_EXPIRY_DT'],
-                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
-                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
-                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
-                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
-                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
-                              dte: (d2.getTime()-d1.getTime())/(24*60*60*1000)
-                          })
-                          break;
-                      }
-                  }
-              }
-          }
-      }
-  }
-  console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'dte', 'result'])
-  return result
-}
-
 (function niftyAnalysis() {
   var data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
   var sArr = data['NIFTY']
@@ -4713,3 +4648,66 @@ function expiryWisePercentage(dArr) {
     return result
 }
 
+// TODO: Testing going on
+async function OptionAllHistoryAnalytics() {
+  if(!niftyObj) {
+    let data = JSON.parse(localStorage.getItem('ScriptHistoryData'))
+    let sArr = data['NIFTY'].reverse()
+    
+    for(let i=0; i<sArr.length; i++) {
+        let n = sArr[i]
+        nifty.push([n[0], n[4]])
+    }
+    niftyObj = {}
+    nifty.forEach(n => { niftyObj[n[0]] = n[1] })
+  }
+  let result = []
+  allData = allData || await getAllDataSyncOptionHistoryStore();
+  for(let i=0;i<nifty.length;i++) {
+      let n = nifty[i]
+      for(let j=0; j<allData.length; j++) {
+          let op = allData[j];
+          let stArr = Object.keys(op)
+          for(let s=0; s<stArr.length; s++) {
+            //Temporary code begin
+            if(stArr[s] !== '17500.00') {
+              continue;
+            }
+            if(op[stArr[s]]['meta']['expiryDate'] != '27-Jan-2022') {
+              continue;
+            }
+            // end
+              let v = op[stArr[s]]
+              let data = v['data']
+              if(data.length > 0) {
+                  for(let d=data.length-1;d>0; d--) {
+                      let odata = data[d]
+                      if(odata['FH_TIMESTAMP'] == n[0]) {// && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 10) {
+                          let fdata = data[0]
+                          let d1 = new Date(n[0])
+                          let d2 = new Date(odata['FH_EXPIRY_DT'])
+                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
+                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
+                              year: odata['FH_EXPIRY_DT'].substring(7),
+                              sellDate: n[0],
+                              niftyPrice: n[1],
+                              expiryDate: odata['FH_EXPIRY_DT'],
+                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
+                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
+                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
+                              percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
+                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
+                              dte: (d2.getTime()-d1.getTime())/(24*60*60*1000)
+                          })
+                          break;
+                      }
+                  }
+              }
+          }
+      }
+  }
+  console.table(result, ['sellDate', 'niftyPrice', 'niftyClosePrice', 'expiryDate', 'strikePrice', 'percentage', 'sellPrice', 'closePrice', 'dte', 'result'])
+  return result
+}
