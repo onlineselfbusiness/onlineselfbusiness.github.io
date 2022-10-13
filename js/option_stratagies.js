@@ -1485,6 +1485,7 @@ webix.ready(async function () {
                                   TableFilter = {}
                                   $$('optionChainTemplateId').setValues({ data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp })
                                 }
+                                $$('dteLabelId').refresh();
                               }
                             }
                           }
@@ -1559,6 +1560,16 @@ webix.ready(async function () {
                               }
                             }
                           }
+                        },
+                        { view: 'template', width: 140, id: 'dteLabelId', borderless: true, template: function(obj){
+                          if(SelectedExpiryDate) {
+                            let ed = new Date(SelectedExpiryDate)
+                            let td = new Date()
+                            td = new Date(td.toDateString())
+                            return 'DTE: ' + parseFloat((ed.getTime() - td.getTime())/(24*60*60*1000)).toFixed(0)
+                          }
+                          return ''
+                          },  
                         },
                         {},
                         { view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless: true },
@@ -4719,7 +4730,7 @@ function openScriptDailyDetails(scriptName) {
       .append('<div onClick="historyGridOptions.api.setFilterModel(null)"><span class="webix_icon_btn mdi mdi-refresh" style="color: rgb(68, 192, 222)"></span></div>')
     },
     onRowGroupOpened  : (event) => {
-      console.log('onRowGroupOpened ')
+      //console.log('onRowGroupOpened ')
     }
   };
 

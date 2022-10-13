@@ -400,7 +400,7 @@ function strategyCal(UV, SS, SED, opStArr) {
                       placeholder:"Select Script",
                       options:['NIFTY', 'BANKNIFTY', ...Object.keys(ScriptNames).sort()],
                       on:{
-                        onChange: function(id){
+                        onChange: function(id) {
                             SelectedScript = id
                             SelectedExpiryDate = ''
                             let sData = OptionChainData[SelectedScript]
