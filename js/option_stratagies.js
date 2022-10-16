@@ -1279,7 +1279,7 @@ webix.ready(async function () {
                 let y1 = obj[7] > 0 ? `<span class="green">${obj[7]}%</span>` : `<span class="red">${obj[7]}%</span>`
                 let yearWise = yearWisePercentageCal(SelectedScript)[0]
                 let yearW = yearWise['below52WksPer'] > 0 ? `<span class="green">${yearWise['below52WksPer']}%</span>` : `<span class="red">${yearWise['below52WksPer']}%</span>`
-                let h = `1D: ${d1}  1W: ${w1}  1M: ${m1}  3M: ${m3}  1Y: ${y1} Below 1Y: ${yearW} On Date: ${obj[44]}`
+                let h = `1D: ${d1}  1W: ${w1}  1M: ${m1}  3M: ${m3}  1Y: ${y1} Below 1Y: ${yearW} On Date: ${obj[44]}` 
                 return h
               } else {
                 return ''
@@ -1485,7 +1485,7 @@ webix.ready(async function () {
                                   TableFilter = {}
                                   $$('optionChainTemplateId').setValues({ data: sData.data[SelectedExpiryDate], timestamp: sData.timestamp })
                                 }
-                                $$('dteLabelId').refresh();
+                                $$('dteLabelId') && $$('dteLabelId').refresh();
                               }
                             }
                           }
@@ -1561,17 +1561,16 @@ webix.ready(async function () {
                             }
                           }
                         },
-                        { view: 'template', width: 140, id: 'dteLabelId', borderless: true, template: function(obj){
+                        { view: 'template', id: 'dteLabelId', borderless: true, template: function(obj){
                           if(SelectedExpiryDate) {
                             let ed = new Date(SelectedExpiryDate)
                             let td = new Date()
                             td = new Date(td.toDateString())
-                            return 'DTE: ' + parseFloat((ed.getTime() - td.getTime())/(24*60*60*1000)).toFixed(0)
+                            return 'DTE : ' + parseFloat((ed.getTime() - td.getTime())/(24*60*60*1000)).toFixed(0) 
                           }
                           return ''
                           },  
                         },
-                        {},
                         { view: 'template', width: 140, template: '', id: 'maxPainLabelId', borderless: true },
                         { view: 'template', width: 200, template: '', id: 'underlyingValId', borderless: true },
                         {
@@ -1836,7 +1835,15 @@ webix.ready(async function () {
                             if (parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
                               peSellClass = 'bg-purple'
                             }
-
+                            let ceBidPriceTitle = ''
+                            if(Underlying_Value > st) {
+                              let intrinsic = Underlying_Value - st
+                              let extrinsic = ce.bidprice - intrinsic
+                              ceBidPriceTitle = 'Int: ' + parseFloat(intrinsic).toFixed(0) + ', Ext: ' + parseFloat(extrinsic).toFixed(0)
+                            } else {
+                              let p = parseFloat((ce.bidprice * 100) / Underlying_Value).toFixed(2)
+                              ceBidPriceTitle = 'Ext: ' + parseFloat(ce.bidprice).toFixed(0) + '(' + p + '%)'
+                            }
                             let r = `
                             <tr>
                             <td width="2.34%" style="${ceBuildUp}" title="${ceBuildUpTip}">${ceHis}</td>
@@ -1847,7 +1854,7 @@ webix.ready(async function () {
                             <td width="4.34%" class="${ceClass}"><a class="bold" href="javascript:;">${DecimalFixed(ce.lastPrice)}</a></td>
                             <td width="4.34%" class="${ceClass} ${ceChangeTx}">${DecimalFixed(ce.change)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.bidQty, true)}</td>
-                            <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.bidprice)}</td>
+                            <td width="4.34%" class="${ceClass}" title="${ceBidPriceTitle}">${DecimalFixed(ce.bidprice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askPrice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askQty, true)}</td>`
 
