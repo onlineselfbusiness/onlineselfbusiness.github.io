@@ -1109,7 +1109,6 @@ function initEventListeners() {
 
   let optionAllHistoryResId = document.querySelector('#optionAllHistoryResId')
   optionAllHistoryResId.addEventListener('change', async (e) => {
-    //let json = webix.storage.session.get('optionAllHistoryTemp')
     let json = JSON.parse(e.target.value)
     e.target.value = ''
     let ed = json['ed']
@@ -1118,6 +1117,20 @@ function initEventListeners() {
       let od = await getDataSyncOptionHistoryStore(ed)
       let d = json
       if (od) {
+        Object.keys(od).forEach(sp => {
+          if(json[sp]) {
+            if(json[sp]['CE'] && json[sp]['CE']['data'].length == 0) {
+              delete json[sp]['CE']
+            }
+            if(json[sp]['PE'] && json[sp]['PE']['data'].length == 0) {
+              delete json[sp]['PE']
+            }
+            if(!json[sp]['PE'] && !json[sp]['CE']){
+              delete json[sp]
+            }
+          }
+        })
+
         d = {...od, ...json}
       }
       let flag = await putDataSyncOptionHistoryStore(d, ed)
@@ -1836,13 +1849,24 @@ webix.ready(async function () {
                               peSellClass = 'bg-purple'
                             }
                             let ceBidPriceTitle = ''
+                            let peBidPriceTitle = ''
                             if(Underlying_Value > st) {
                               let intrinsic = Underlying_Value - st
                               let extrinsic = ce.bidprice - intrinsic
-                              ceBidPriceTitle = 'Int: ' + parseFloat(intrinsic).toFixed(0) + ', Ext: ' + parseFloat(extrinsic).toFixed(0)
+                              let p = parseFloat((extrinsic * 100) / Underlying_Value).toFixed(2)
+                              ceBidPriceTitle = 'Int: ' + parseFloat(intrinsic).toFixed(0) + ', Ext: ' + parseFloat(extrinsic).toFixed(0) + '(' + p + '%)'
+
+                              p = parseFloat((pe.bidprice * 100) / Underlying_Value).toFixed(2)
+                              peBidPriceTitle = 'Ext: ' + parseFloat(pe.bidprice).toFixed(0) + '(' + p + '%)'
                             } else {
                               let p = parseFloat((ce.bidprice * 100) / Underlying_Value).toFixed(2)
                               ceBidPriceTitle = 'Ext: ' + parseFloat(ce.bidprice).toFixed(0) + '(' + p + '%)'
+
+                              let intrinsic = st - Underlying_Value
+                              let extrinsic = pe.bidprice - intrinsic
+                              p = parseFloat((extrinsic * 100) / Underlying_Value).toFixed(2)
+                              peBidPriceTitle = 'Int: ' + parseFloat(intrinsic).toFixed(0) + ', Ext: ' + parseFloat(extrinsic).toFixed(0) + '(' + p + '%)'
+
                             }
                             let r = `
                             <tr>
@@ -1861,7 +1885,7 @@ webix.ready(async function () {
                               + stRow +
                               `
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.bidQty, true)}</td>
-                            <td width="4.34%" class="${peClass} ${peSellClass}">${DecimalFixed(pe.bidprice)}</td>
+                            <td width="4.34%" class="${peClass} ${peSellClass}" title="${peBidPriceTitle}">${DecimalFixed(pe.bidprice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askPrice)}</td>
                             <td width="4.34%" class="${peClass}">${DecimalFixed(pe.askQty, true)}</td>
                             <td width="4.34%" class="${peClass} ${peChangeTx}">${DecimalFixed(pe.change)}</td>
@@ -4373,6 +4397,7 @@ function autoSizeAll(skipHeader) {
 async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr) {
   let result = []
   allData = allData || await getAllDataSyncOptionHistoryStore();
+  allData = allData || []
   for(let i=0;i<nifty.length;i++) {
       let n = nifty[i];
       let tenPer = n[1] - (n[1] * percentage/100);
@@ -4384,7 +4409,7 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
               if(webix.isArray(v['PE'])) {
                 continue;
               }
-              let data = v['PE']['data']
+              let data = (v['PE'] && v['PE']['data']) || []
               if(currentEdArr && data.length > 0 && v['PE']['meta']) {
                 if(!currentEdArr.includes(v['PE']['meta']['expiryDate'])) {
                   break;
