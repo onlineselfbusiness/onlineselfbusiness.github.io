@@ -1115,7 +1115,34 @@ function initEventListeners() {
     json = json.data
     if (json) {
       let od = await getDataSyncOptionHistoryStore(ed)
+      
+      Object.keys(json).forEach(sp => {
+        if(json[sp]) {
+          if(json[sp]['CE'] && json[sp]['CE']['data'].length == 0) {
+            delete json[sp]['CE']
+          }
+          if(json[sp]['PE'] && json[sp]['PE']['data'].length == 0) {
+            delete json[sp]['PE']
+          }
+          if(!json[sp]['PE'] && !json[sp]['CE']){
+            delete json[sp]
+          }
+        }
+      })
       let d = json
+      od && Object.keys(od).forEach(sp => {
+        if(od[sp]) {
+          if(od[sp]['CE'] && od[sp]['CE']['data'].length == 0) {
+            delete od[sp]['CE']
+          }
+          if(od[sp]['PE'] && od[sp]['PE']['data'].length == 0) {
+            delete od[sp]['PE']
+          }
+          if(!od[sp]['PE'] && !od[sp]['CE']){
+            delete od[sp]
+          }
+        }
+      })
       if (od) {
         Object.keys(od).forEach(sp => {
           if(json[sp]) {
