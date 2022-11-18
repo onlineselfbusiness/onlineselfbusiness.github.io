@@ -509,12 +509,26 @@ function strategyCal(UV, SS, SED, opStArr) {
               scroll:"y",
               body:{
                 rows:[
-                  {view: 'button', label:'Strangle', click: function() {
-                    StrangleStrategy()
-                  }},
-                  {view: 'button', label:'Iron Condor', click: function() {
-                    IronCondorStrategy()
-                  }},
+                  {
+                    cols: [
+                      {view: 'button', label:'Bull Call SPread', click: function() {
+                        BullCallSpreadStrategy()
+                      }},
+                      {view: 'button', label:'Bear Call Spread', click: function() {
+                        BearCallSpreadStrategy()
+                      }},
+                    ]
+                  },
+                  {
+                    cols: [
+                      {view: 'button', label:'Strangle', click: function() {
+                        StrangleStrategy()
+                      }},
+                      {view: 'button', label:'Iron Condor', click: function() {
+                        IronCondorStrategy()
+                      }},
+                    ]
+                  },
                   {
                     cols: [
                       {view: 'button', label:'Jade Lizard', click: function() {
@@ -828,6 +842,97 @@ function strategyCal(UV, SS, SED, opStArr) {
       } else {
         displayStrategyChart([{}])
       }
+  }
+  function BullCallSpreadStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      clearRows()
+    let cejsonBuy = {
+      buyOrSell: BUY,
+      type: CE_TYPE,
+      strikePrice: CE_ITM[CE_ITM.length - 1][0],
+      premium: CE_ITM[CE_ITM.length - 1][1],
+      lots: 1
+      }
+
+    let cejsonSell = {
+      buyOrSell: SELL,
+      type: CE_TYPE,
+      strikePrice: CE_OTM[0][0],
+      premium: CE_OTM[0][1],
+      lots: 1
+      }
+      let pejson = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let diff = cejsonBuy.premium - cejsonSell.premium;
+      for(let i=0; i<PE_OTM.length; i++) {
+        if(PE_OTM[i][1] > 10 && PE_OTM[i][1] > diff) {
+          pejson.strikePrice = PE_OTM[i][0]
+          pejson.premium = PE_OTM[i][1]
+          break
+        }
+      }
+      if(pejson.strikePrice == '') {
+        //peOTM = PE_OTM[0][1]
+        pejson.strikePrice = PE_OTM[0][0]
+        pejson.premium = PE_OTM[0][1]
+      }
+    addDynamicRow(rowIndex++, cejsonBuy)
+    addDynamicRow(rowIndex++, cejsonSell)
+    addDynamicRow(rowIndex++, pejson)
+    calculatePayOff()
+    } else {
+      alert('Please select the script and expiry date')
+    }
+  }
+  function BearCallSpreadStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      clearRows()
+    let pejsonBuy = {
+      buyOrSell: BUY,
+      type: PE_TYPE,
+      strikePrice: PE_OTM[PE_OTM.length - 1][0],
+      premium: PE_OTM[PE_OTM.length - 1][1],
+      lots: 1
+      }
+
+    let pejsonSell = {
+      buyOrSell: SELL,
+      type: PE_TYPE,
+      strikePrice: PE_OTM[PE_OTM.length - 2][0],
+      premium: PE_OTM[PE_OTM.length - 2][1],
+      lots: 1
+      }
+      let cejson = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let diff = pejsonBuy.premium - pejsonSell.premium;
+      for(let i=CE_OTM.length-1; i>0; i--) {
+        if(CE_OTM[i][1] > 10 && CE_OTM[i][1] > diff) {
+          cejson.strikePrice = CE_OTM[i][0]
+          cejson.premium = CE_OTM[i][1]
+          break
+        }
+      }
+      if(cejson.strikePrice == '') {
+        cejson.strikePrice = CE_OTM[0][0]
+        cejson.premium = CE_OTM[0][1]
+      }
+    addDynamicRow(rowIndex++, pejsonBuy)
+    addDynamicRow(rowIndex++, pejsonSell)
+    addDynamicRow(rowIndex++, cejson)
+    calculatePayOff()
+    } else {
+      alert('Please select the script and expiry date')
+    }
   }
   function StrangleStrategy() {
     if(SelectedScript != '' && SelectedExpiryDate != '') {
