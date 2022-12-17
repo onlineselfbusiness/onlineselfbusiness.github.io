@@ -249,7 +249,7 @@ function strategyCal(UV, SS, SED, opStArr) {
             cData.push(r)
           }
         })
-        if(cData.length > 0) {
+        if(cData.length > 10) {
           fullData = cData
         }
       }
@@ -904,124 +904,123 @@ function strategyCal(UV, SS, SED, opStArr) {
       alert('Please select the script and expiry date')
     }
   }
-function NewStrategy() {
-  if(SelectedScript != '' && SelectedExpiryDate != '') {
-    clearRows()
-    let pejson1 = {
-      buyOrSell: SELL,
-      type: PE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-    let pejson2 = {
-      buyOrSell: SELL,
-      type: PE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-    let pejson3 = {
-      buyOrSell: BUY,
-      type: PE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-    let per = (Underlying_Value * 1 / 100)
-    let pePer = Underlying_Value - per
-    let cePer = Underlying_Value + per
+  function NewStrategy() {
+    if(SelectedScript != '' && SelectedExpiryDate != '') {
+      clearRows()
+      let pejson1 = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let pejson2 = {
+        buyOrSell: SELL,
+        type: PE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let pejson3 = {
+        buyOrSell: BUY,
+        type: PE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let per = (Underlying_Value * 1 / 100)
+      let pePer = Underlying_Value - per
+      let cePer = Underlying_Value + per
 
-    for(let i=PE_OTM.length-1; i>0; i--) {
-      if(PE_OTM[i][0] <= pePer) {
-        pejson3.strikePrice = PE_OTM[i][0]
-        pejson3.premium = PE_OTM[i][1]
-        break
-      }
-    }
-
-    for(let i=PE_OTM.length-1; i>0; i--) {
-      if(PE_OTM[i][0] <= (pejson3.strikePrice - per)) {
-        pejson2.strikePrice = PE_OTM[i][0]
-        pejson2.premium = PE_OTM[i][1]
-        break
-      }
-    }
-
-    for(let i=PE_OTM.length-1; i>0; i--) {
-      if((PE_OTM[i][1] + pejson2.premium) < pejson3.premium) {
-        pejson1.strikePrice = PE_OTM[i][0]
-        pejson1.premium = PE_OTM[i][1]
-        break
-      }
-    }
-    if(pejson1.premium === '') {
-      pejson1.strikePrice = PE_OTM[0][0]
-      pejson1.premium = PE_OTM[0][1]
-    }
-
-    addDynamicRow(rowIndex++, pejson1)
-    addDynamicRow(rowIndex++, pejson2)
-    addDynamicRow(rowIndex++, pejson3)
-
-
-    let cejson1 = {
-      buyOrSell: SELL,
-      type: CE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-    let cejson2 = {
-      buyOrSell: SELL,
-      type: CE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-    let cejson3 = {
-      buyOrSell: BUY,
-      type: CE_TYPE,
-      strikePrice: '',
-      premium: '',
-      lots: 1
-      }
-      for(let i=0; i<CE_OTM.length; i++) {
-        if(CE_OTM[i][0] >= cePer) {
-          cejson3.strikePrice = CE_OTM[i][0]
-          cejson3.premium = CE_OTM[i][1]
+      for(let i=PE_OTM.length-1; i>0; i--) {
+        if(PE_OTM[i][0] <= pePer) {
+          pejson3.strikePrice = PE_OTM[i][0]
+          pejson3.premium = PE_OTM[i][1]
           break
         }
       }
-  
-      for(let i=0; i<CE_OTM.length; i++) {
-        if(CE_OTM[i][0] >= (cejson3.strikePrice + per)) {
-          cejson2.strikePrice = CE_OTM[i][0]
-          cejson2.premium = CE_OTM[i][1]
+
+      for(let i=PE_OTM.length-1; i>0; i--) {
+        if(PE_OTM[i][0] <= (pejson3.strikePrice - per)) {
+          pejson2.strikePrice = PE_OTM[i][0]
+          pejson2.premium = PE_OTM[i][1]
           break
         }
       }
-  
-      for(let i=0; i<CE_OTM.length; i++) {
-        if((CE_OTM[i][1] + cejson2.premium) < cejson3.premium) {
-          cejson1.strikePrice = CE_OTM[i][0]
-          cejson1.premium = CE_OTM[i][1]
+
+      for(let i=PE_OTM.length-1; i>0; i--) {
+        if((PE_OTM[i][1] + pejson2.premium) < pejson3.premium) {
+          pejson1.strikePrice = PE_OTM[i][0]
+          pejson1.premium = PE_OTM[i][1]
           break
         }
       }
-      if(cejson1.premium === '') {
-        cejson1.strikePrice = CE_OTM[CE_OTM.length-1][0]
-        cejson1.premium = CE_OTM[CE_OTM.length-1][1]
+      if(pejson1.premium === '') {
+        pejson1.strikePrice = PE_OTM[0][0]
+        pejson1.premium = PE_OTM[0][1]
       }
-      addDynamicRow(rowIndex++, cejson3)
-      addDynamicRow(rowIndex++, cejson2)
-      addDynamicRow(rowIndex++, cejson1)
-    calculatePayOff()
-  } else {
-    alert('Please select the script and expiry date')
+
+      addDynamicRow(rowIndex++, pejson1)
+      addDynamicRow(rowIndex++, pejson2)
+      addDynamicRow(rowIndex++, pejson3)
+
+
+      let cejson1 = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let cejson2 = {
+        buyOrSell: SELL,
+        type: CE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+      let cejson3 = {
+        buyOrSell: BUY,
+        type: CE_TYPE,
+        strikePrice: '',
+        premium: '',
+        lots: 1
+        }
+        for(let i=0; i<CE_OTM.length; i++) {
+          if(CE_OTM[i][0] >= cePer) {
+            cejson3.strikePrice = CE_OTM[i][0]
+            cejson3.premium = CE_OTM[i][1]
+            break
+          }
+        }
+    
+        for(let i=0; i<CE_OTM.length; i++) {
+          if(CE_OTM[i][0] >= (cejson3.strikePrice + per)) {
+            cejson2.strikePrice = CE_OTM[i][0]
+            cejson2.premium = CE_OTM[i][1]
+            break
+          }
+        }
+    
+        for(let i=0; i<CE_OTM.length; i++) {
+          if((CE_OTM[i][1] + cejson2.premium) < cejson3.premium) {
+            cejson1.strikePrice = CE_OTM[i][0]
+            cejson1.premium = CE_OTM[i][1]
+            break
+          }
+        }
+        if(cejson1.premium === '') {
+          cejson1.strikePrice = CE_OTM[CE_OTM.length-1][0]
+          cejson1.premium = CE_OTM[CE_OTM.length-1][1]
+        }
+        addDynamicRow(rowIndex++, cejson3)
+        addDynamicRow(rowIndex++, cejson2)
+        addDynamicRow(rowIndex++, cejson1)
+      calculatePayOff()
+    } else {
+      alert('Please select the script and expiry date')
+    }
   }
-}
-
   function BearCallSpreadStrategy() {
     if(SelectedScript != '' && SelectedExpiryDate != '') {
       clearRows()
@@ -1426,7 +1425,6 @@ function NewStrategy() {
       addDynamicRow(rowIndex++, d)
     })
     calculatePayOff()
-
   }
   function addToWatchList() {
     let rows = $$('inputRowId').getChildViews()

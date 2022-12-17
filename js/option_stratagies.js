@@ -2456,7 +2456,8 @@ webix.ready(async function () {
                         },
                         {
                           id: 'action', header: 'Action', width: 100, template: function (obj) {
-                            return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
+                            return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>' +
+                            '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="displayWatch(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
                           }
                         },
                       ]
@@ -3250,6 +3251,30 @@ function displayStrategyLatestDetails(obj) {
   html = html + `</div><br>`
   return html
 }
+
+function displayWatch(key) {
+  WatchList = webix.storage.local.get('WatchList')
+  for (let i = 0; i < WatchList.length; i++) {
+    if (WatchList[i].key == key) {
+      let w = WatchList[i]
+      let wList = w.list
+      let pArr = []
+      for(let j=0; j<wList.length;j++) {
+        let p = {
+          buyOrSell: wList[j].buyOrSell == 0 ? SELL : BUY,
+          type: wList[j].type == 0 ? PE_TYPE : CE_TYPE,
+          strikePrice: wList[j].strikePrice,
+          premium: wList[j].premium,
+          lots: wList[j].lots
+        }
+        pArr.push(p)
+      }
+      strategyCal(w.UV, w.script, w.expiryDate, pArr)
+      break;
+    }
+  }
+}
+
 function deleteWatchList(key) {
   if (confirm('Are you sure to delete the strategy?')) {
     WatchList = webix.storage.local.get('WatchList')
