@@ -2457,7 +2457,7 @@ webix.ready(async function () {
                         {
                           id: 'action', header: 'Action', width: 100, template: function (obj) {
                             return '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="deleteWatchList(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>' +
-                            '<span class="webix_icon_btn mdi mdi-delete-forever" onclick="displayWatch(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
+                            '<span class="webix_icon_btn mdi mdi-open-in-app" onclick="displayWatch(\'' + obj.key + '\')" style="max-width:32px;cursor:pointer;"></span>'
                           }
                         },
                       ]
