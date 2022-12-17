@@ -68,11 +68,14 @@ function strategyCal(UV, SS, SED, opStArr) {
       CE_OTM = []
       CE_ITM = []
     
-      let sData = OptionChainData[SelectedScript]
-      let ocArr = sData.data[SelectedExpiryDate]
+      let sData = OptionChainData[SelectedScript] || []
+      let ocArr = sData.data[SelectedExpiryDate] || []
       let allOcs = []
       for (let i = 0; i < ocArr.length; i++) {
         allOcs.push(Object.keys(ocArr[i])[0])
+      }
+      if(allOcs.length === 0) {
+        return;
       }
       closest = allOcs.reduce(function (prev, curr) {
           return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
@@ -250,7 +253,7 @@ function strategyCal(UV, SS, SED, opStArr) {
           fullData = cData
         }
       }
-      console.dir(fullData)
+      //console.dir(fullData)
       return fullData;
   }
   function displayStrategyChart(data) {
@@ -511,6 +514,13 @@ function strategyCal(UV, SS, SED, opStArr) {
                 rows:[
                   {
                     cols: [
+                      {view: 'button', label:'Strategy', click: function() {
+                        NewStrategy()
+                      }}
+                    ]
+                  },
+                  {
+                    cols: [
                       {view: 'button', label:'Bull Call SPread', click: function() {
                         BullCallSpreadStrategy()
                       }},
@@ -615,7 +625,7 @@ function strategyCal(UV, SS, SED, opStArr) {
               })
               $$('StrikePrice'+index).getPopup().getList().clearAll()
               $$('StrikePrice'+index).getPopup().getList().parse(option_data)
-    
+              $$('StrikePrice'+index).refresh()
               if(v) {
                 $$('Premium' + index).blockEvent()
                 if(newValue == 1) {
@@ -651,6 +661,7 @@ function strategyCal(UV, SS, SED, opStArr) {
             let v = $$('StrikePrice'+index).getValue()
             $$('StrikePrice'+index).getPopup().getList().clearAll()
             $$('StrikePrice'+index).getPopup().getList().parse(option_data)
+            $$('StrikePrice'+index).refresh()
             if(v) {
               $$('Premium' + index).blockEvent()
               if(bs == BUY) {
@@ -682,7 +693,7 @@ function strategyCal(UV, SS, SED, opStArr) {
               }
           }
       },
-      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 70, 
+      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 72, 
         on:{
           onChange: function(newValue, oldValue, config){
             let index = this.config.id.replaceAll('Premium', '')
@@ -735,7 +746,7 @@ function strategyCal(UV, SS, SED, opStArr) {
         }},
         { id: 'Type' + rowId, width: 70},
         { id: 'StrikePrice' + rowId, width: 170 },
-      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 70, 
+      { view: "text", id: 'Premium' + rowId, value: json.premium, width: 72, 
         on:{
           onChange: function(newValue, oldValue, config){
             calculatePayOff()
@@ -837,6 +848,10 @@ function strategyCal(UV, SS, SED, opStArr) {
       }
       webix.storage.local.put('StrategyData', tempData)
       if(iData.length > 0) {
+        if($$('supportResShowId').getValue() == 1) {
+          fetchMargin(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr)
+        }
+
         let data = optionChainPayoffCal(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr);
         displayStrategyChart(data)
       } else {
@@ -889,6 +904,124 @@ function strategyCal(UV, SS, SED, opStArr) {
       alert('Please select the script and expiry date')
     }
   }
+function NewStrategy() {
+  if(SelectedScript != '' && SelectedExpiryDate != '') {
+    clearRows()
+    let pejson1 = {
+      buyOrSell: SELL,
+      type: PE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+    let pejson2 = {
+      buyOrSell: SELL,
+      type: PE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+    let pejson3 = {
+      buyOrSell: BUY,
+      type: PE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+    let per = (Underlying_Value * 1 / 100)
+    let pePer = Underlying_Value - per
+    let cePer = Underlying_Value + per
+
+    for(let i=PE_OTM.length-1; i>0; i--) {
+      if(PE_OTM[i][0] <= pePer) {
+        pejson3.strikePrice = PE_OTM[i][0]
+        pejson3.premium = PE_OTM[i][1]
+        break
+      }
+    }
+
+    for(let i=PE_OTM.length-1; i>0; i--) {
+      if(PE_OTM[i][0] <= (pejson3.strikePrice - per)) {
+        pejson2.strikePrice = PE_OTM[i][0]
+        pejson2.premium = PE_OTM[i][1]
+        break
+      }
+    }
+
+    for(let i=PE_OTM.length-1; i>0; i--) {
+      if((PE_OTM[i][1] + pejson2.premium) < pejson3.premium) {
+        pejson1.strikePrice = PE_OTM[i][0]
+        pejson1.premium = PE_OTM[i][1]
+        break
+      }
+    }
+    if(pejson1.premium === '') {
+      pejson1.strikePrice = PE_OTM[0][0]
+      pejson1.premium = PE_OTM[0][1]
+    }
+
+    addDynamicRow(rowIndex++, pejson1)
+    addDynamicRow(rowIndex++, pejson2)
+    addDynamicRow(rowIndex++, pejson3)
+
+
+    let cejson1 = {
+      buyOrSell: SELL,
+      type: CE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+    let cejson2 = {
+      buyOrSell: SELL,
+      type: CE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+    let cejson3 = {
+      buyOrSell: BUY,
+      type: CE_TYPE,
+      strikePrice: '',
+      premium: '',
+      lots: 1
+      }
+      for(let i=0; i<CE_OTM.length; i++) {
+        if(CE_OTM[i][0] >= cePer) {
+          cejson3.strikePrice = CE_OTM[i][0]
+          cejson3.premium = CE_OTM[i][1]
+          break
+        }
+      }
+  
+      for(let i=0; i<CE_OTM.length; i++) {
+        if(CE_OTM[i][0] >= (cejson3.strikePrice + per)) {
+          cejson2.strikePrice = CE_OTM[i][0]
+          cejson2.premium = CE_OTM[i][1]
+          break
+        }
+      }
+  
+      for(let i=0; i<CE_OTM.length; i++) {
+        if((CE_OTM[i][1] + cejson2.premium) < cejson3.premium) {
+          cejson1.strikePrice = CE_OTM[i][0]
+          cejson1.premium = CE_OTM[i][1]
+          break
+        }
+      }
+      if(cejson1.premium === '') {
+        cejson1.strikePrice = CE_OTM[CE_OTM.length-1][0]
+        cejson1.premium = CE_OTM[CE_OTM.length-1][1]
+      }
+      addDynamicRow(rowIndex++, cejson3)
+      addDynamicRow(rowIndex++, cejson2)
+      addDynamicRow(rowIndex++, cejson1)
+    calculatePayOff()
+  } else {
+    alert('Please select the script and expiry date')
+  }
+}
+
   function BearCallSpreadStrategy() {
     if(SelectedScript != '' && SelectedExpiryDate != '') {
       clearRows()
@@ -1303,9 +1436,13 @@ function strategyCal(UV, SS, SED, opStArr) {
     }
     let opList = []
     for(let i=0; i<tempArr.length; i++) {
+      let t = ''
+      if($$('Type'+ tempArr[i]).getValue) {
+        t = $$('Type'+ tempArr[i]).getValue() + ''
+      }
       let json = {
         buyOrSell: $$('BuySell'+ tempArr[i]).getValue(),
-        type: ( $$('Type'+ tempArr[i]).getValue && $$('Type'+ tempArr[i]).getValue()) || '',
+        type: t,
         strikePrice: ($$('StrikePrice'+ tempArr[i]).getValue && $$('StrikePrice'+ tempArr[i]).getValue()) || '',
         premium: parseFloat($$('Premium'+ tempArr[i]).getValue()),
         lots: parseInt($$('Lot'+ tempArr[i]).getValue()),
@@ -1474,3 +1611,49 @@ function showStreakAnalytics() {
   }).show()
 
 }
+
+let tempfd = ''
+function fetchMargin(buyCallArr, sellCallArr, buyPutArr, sellPutArr, buyStockArr, sellStockArr) {
+  let s = $$("inputScriptId").getValue();
+  let formData = []
+  if(s === 'NIFTY' || s === 'BANKNIFTY') {
+    let edArr = $$("inputExpiryDateId").getValue().split('-')
+    let scrip = s + edArr[2].substr(2) + edArr[1].toUpperCase()
+    // exchange[]: NFO
+    // product[]: FUT / OPT
+    // BANKNIFTY22DEC NIFTY22DEC
+    let lot = (s == 'NIFTY') ? 50: 25
+    for(let i=0; i<buyCallArr.length; i++) {
+      formData.push("exchange[]=NFO&product[]=OPT&scrip[]=" + scrip + "&option_type[]=CE&strike_price[]=" 
+        + buyCallArr[i].strikePrice + "&qty[]=" + (buyCallArr[i].lots * lot) + "&trade[]=buy")
+    }
+    for(let i=0; i<sellCallArr.length; i++) {
+      formData.push("exchange[]=NFO&product[]=OPT&scrip[]=" + scrip + "&option_type[]=CE&strike_price[]=" 
+        + sellCallArr[i].strikePrice + "&qty[]=" + (sellCallArr[i].lots * lot) + "&trade[]=sell")
+    }
+    for(let i=0; i<buyPutArr.length; i++) {
+      formData.push("exchange[]=NFO&product[]=OPT&scrip[]=" + scrip + "&option_type[]=PE&strike_price[]=" 
+        + buyPutArr[i].strikePrice + "&qty[]=" + (buyPutArr[i].lots * lot) + "&trade[]=buy")
+    }
+    for(let i=0; i<sellPutArr.length; i++) {
+      formData.push("exchange[]=NFO&product[]=OPT&scrip[]=" + scrip + "&option_type[]=PE&strike_price[]=" 
+        + sellPutArr[i].strikePrice + "&qty[]=" + (sellPutArr[i].lots * lot) + "&trade[]=buy")
+    }
+    console.dir(formData)
+    let fd = formData[0]
+    for(let i=1; i<formData.length; i++) {
+      fd = "&" + formData[i]
+    }
+    if(fd !== tempfd) {
+      dispatchChangeEvent('#marginReqId', fd)
+    }
+
+  }
+}
+
+// marginResId
+let marginResId = document.querySelector('#marginResId')
+marginResId.addEventListener('change', (e) => {
+  let v = e.target.value
+  console.dir(JSON.parse(v))
+})

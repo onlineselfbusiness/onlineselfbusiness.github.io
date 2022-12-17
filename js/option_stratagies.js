@@ -3,6 +3,19 @@ if (!OptionChainData) {
   OptionChainData = {}
   webix.storage.local.put('OptionChainData', OptionChainData)
 }
+
+// Cleanup old option chain script data
+let d = new Date()
+d.setDate(d.getDate() - 5)
+Object.keys(OptionChainData).forEach(s => {
+  let cd = OptionChainData[s]
+  let ocDate = new Date(cd.timestamp)
+  if (ocDate.getTime() < d.getTime()) {
+    delete OptionChainData[s]
+  }
+})
+webix.storage.local.put('OptionChainData', OptionChainData)
+
 let OpstraSD = webix.storage.local.get('OpstraSD')
 if (!OpstraSD) {
   OpstraSD = {}
@@ -40,20 +53,6 @@ if(!PriceApi) {
   webix.storage.local.put('PriceApi', PriceApi)
 }*/
 
-// Cleanup old option chain script data
-(function () {
-  let d = new Date()
-  d.setDate(d.getDate() - 5)
-  Object.keys(OptionChainData).forEach(s => {
-    let cd = OptionChainData[s]
-    let ocDate = new Date(cd.timestamp)
-    if (ocDate.getTime() < d.getTime()) {
-      delete OptionChainData[s]
-    }
-  })
-  webix.storage.local.put('OptionChainData', OptionChainData)
-})()
-
 let TableFilter = {}
 let twoMinutes = 2 * 60 * 1000 + 15 * 1000
 let DefaultTableConfig = {
@@ -75,7 +74,7 @@ let PE_ITM = []
 let CE_OTM = []
 let CE_ITM = []
 let Underlying_Value = 0
-let SelectedScript = ''
+let SelectedScript = DownloadTime['lastViewedScript'] || 'NIFTY'
 let SelectedExpiryDate = ''
 let CalenderUI = {}
 let WatchObj = undefined
@@ -490,6 +489,9 @@ function prepareStrikeWithPremium() {
   let allOcs = []
   for (let i = 0; i < ocArr.length; i++) {
     allOcs.push(Object.keys(ocArr[i])[0])
+  }
+  if(allOcs.length == 0) {
+    return;
   }
   let closest = allOcs.reduce(function (prev, curr) {
     return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
@@ -1726,7 +1728,7 @@ webix.ready(async function () {
                           prepareStrikeWithPremium()
                           let [S1, S2, R1, R2] = findSupportResistence()
                           let [PEV1, PEV2, CEV1, CEV2] = findSupportResistence()
-                          let arr = obj.data
+                          let arr = obj.data || []
 
                           let fivePerLower = Underlying_Value - (Underlying_Value * 5 / 100)
                           let fivePerHigher = Underlying_Value + (Underlying_Value * 5 / 100)
@@ -1734,14 +1736,17 @@ webix.ready(async function () {
                           let pePerLower = Underlying_Value - (Underlying_Value * 10 / 100)
 
                           let sData = OptionChainData[SelectedScript]
-                          let ocArr = sData.data[SelectedExpiryDate]
+                          let ocArr = sData.data[SelectedExpiryDate] || []
                           let allOcs = []
                           for (let i = 0; i < ocArr.length; i++) {
                             allOcs.push(Object.keys(ocArr[i])[0])
                           }
-                          let closest = allOcs.reduce(function (prev, curr) {
-                            return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
-                          })
+                          let closest = 0;
+                          if(allOcs.length > 0) {
+                            closest = allOcs.reduce(function (prev, curr) {
+                              return Math.abs(curr - Underlying_Value) < Math.abs(prev - Underlying_Value) ? curr : prev;
+                            })
+                          }
 
                           for (let i = 0; i < arr.length; i++) {
                             let row = arr[i]
@@ -3232,6 +3237,7 @@ function displayStrategyLatestDetails(obj) {
   let remainingDays = parseInt((new Date(obj.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
   let html = `<div style="width:100%;height:100%;overflow:auto;">Expiry Date: <b>${obj.expiryDate}</b>, Purchased Underlying @ <b>${obj.UV}</b>, `
   html += `DTE: <b>${remainingDays}</b>, Created Date: ${obj.createDate} <br>`
+  html = html + `Profit/Loss: ₹<b><span style="color:${obj.pol < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b><br>`
   let opStArr = obj.list
   for (let i = 0; i < opStArr.length; i++) {
     if (opStArr[i].type == '') {
@@ -3241,7 +3247,7 @@ function displayStrategyLatestDetails(obj) {
     }
     html = html + ` ₹ <b><span style="color:${opStArr[i].pl < 0 ? '#ec6500' : '#18c915'}">${parseFloat(opStArr[i].pl).toFixed(2)}</span></b> <br>`
   }
-  html = html + `Profit/Loss: ₹<b><span style="color:${obj.pol < 0 ? '#ec6500' : '#18c915'}">${obj.pol}</span></b></div>`
+  html = html + `</div><br>`
   return html
 }
 function deleteWatchList(key) {
