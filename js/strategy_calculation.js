@@ -350,10 +350,14 @@ function strategyCal(UV, SS, SED, opStArr) {
     if(!opstraSDResId.flag) {
       opstraSDResId.flag = true
       opstraSDResId.addEventListener('change', (e) => {
-        fetchStandardDeviation()
         let reqId = document.getElementById('opstraSDReqId')
         delete reqId.flag
-        calculatePayOff()
+        if(e.target.value == 'success') {
+          fetchStandardDeviation()
+          calculatePayOff()
+        } else {
+          window.open('https://opstra.definedge.com/')
+        }
       })
     }
       
@@ -1420,6 +1424,7 @@ function strategyCal(UV, SS, SED, opStArr) {
     SelectedScript = SS
     SelectedExpiryDate = SED
     $$("inputScriptId").setValue(SelectedScript)
+    $$("inputExpiryDateId").setValue(SelectedExpiryDate)
     prepareStrikeWithPremium()
     opStArr.forEach(d => {
       addDynamicRow(rowIndex++, d)
