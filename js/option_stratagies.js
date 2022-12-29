@@ -920,13 +920,16 @@ function initEventListeners() {
     let expiryDates = Object.keys(tempData.data).sort((a, b) => { if (new Date(a) > new Date(b)) { return 1 } else { return -1 } })
     if (expiryDates.length > 4) {
       let near = new Date(expiryDates[0])
+      near.setDate(1)
       let nearArr = near.toDateString().split(' ')
 
       let next = new Date(expiryDates[0])
+      next.setDate(1)
       next.setMonth(next.getMonth() + 1)
       let nextArr = next.toDateString().split(' ')
 
       let far = new Date(expiryDates[0])
+      far.setDate(1)
       far.setMonth(far.getMonth() + 2)
       let farArr = far.toDateString().split(' ')
 
