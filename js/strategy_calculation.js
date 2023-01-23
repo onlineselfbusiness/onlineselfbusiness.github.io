@@ -3,7 +3,7 @@ let SELL = 0
 let CE_TYPE = 1
 let PE_TYPE = 0
 
-function strategyCal(UV, SS, SED, opStArr) {
+function strategyCal(UV, SS, SED, opStArr,watchList) {
   let automaticCalStrategy = false
   let OptimizeChart = webix.storage.local.get('OptimizeChart')
   if(!OptimizeChart) {
@@ -611,7 +611,9 @@ function strategyCal(UV, SS, SED, opStArr) {
       let per = parseFloat((obj[0] - Underlying_Value)/Underlying_Value * 100).toFixed(2)
       option_data.push({id: obj[0], value: obj[0] + ' (' + ( json.buyOrSell == 1 ? obj[2] : obj[1]) + ', ' + per + '%)' })
       if(obj[0] == json.strikePrice) {
-        json.premium = json.buyOrSell == 1 ? obj[2] : obj[1]
+        //if(!watchList) {
+          json.premium = json.buyOrSell == 1 ? obj[2] : obj[1]
+        //}
       }
     })
       $$('inputRowId').addView({id: 'input' + rowId,

@@ -3272,7 +3272,7 @@ function displayWatch(key) {
         }
         pArr.push(p)
       }
-      strategyCal(w.UV, w.script, w.expiryDate, pArr)
+      strategyCal(w.UV, w.script, w.expiryDate, pArr, true)
       break;
     }
   }
@@ -4143,6 +4143,11 @@ function generateExpiryDates() {
       tempD = tempD.toDateString().split(' ')
       tempD = (tempD[2].length == 1 ? '0' + tempD[2] : tempD[2]) + '-' + tempD[1] + '-' + tempD[3]
 
+      if(tempD === '26-Jan-2023') {
+        tempD = '25-Jan-2023'
+      } else if(tempD === '30-Mar-2023') {
+        tempD = '29-Mar-2023'
+      }
       expiryDates.push(tempD)
       from.setDate(1)
       from.setMonth(from.getMonth() + 2)
@@ -4884,12 +4889,12 @@ async function OptionAllHistoryAnalytics() {
           let stArr = Object.keys(op)
           for(let s=0; s<stArr.length; s++) {
             //Temporary code begin
-            if(stArr[s] !== '17500.00') {
+            /*if(stArr[s] !== '17500.00') {
               continue;
             }
             if(op[stArr[s]]['meta']['expiryDate'] != '27-Jan-2022') {
               continue;
-            }
+            }*/
             // end
               let v = op[stArr[s]]
               let data = v['data']
