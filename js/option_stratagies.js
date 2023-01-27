@@ -971,11 +971,11 @@ function initEventListeners() {
     }
     let t = optionHistory.data || []
     for (let i = 0; i < t.length - 1; i++) {
-      let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE']) / t[i + 1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
+      let per = parseFloat((t[i]['SETTLE_PRICE'] - t[i + 1]['SETTLE_PRICE']) / t[i + 1]['SETTLE_PRICE'] * 100).toFixed(2)
       d.push({
-        'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%',
-        changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE'])).toFixed(2),
-        oi: t[i]['FH_OPEN_INT'], changeOI: parseInt(t[i]['FH_CHANGE_IN_OI'])
+        'dateId': t[i]['TIMESTAMP'], 'priceId': t[i]['SETTLE_PRICE'], 'perId': per + '%',
+        changeId: parseFloat((t[i]['SETTLE_PRICE'] - t[i + 1]['SETTLE_PRICE'])).toFixed(2),
+        oi: t[i]['OPEN_INT'], changeOI: parseInt(t[i]['CHANGE_IN_OI'])
       })
     }
     webix.ui({
@@ -1122,7 +1122,7 @@ function initEventListeners() {
       let od = await getDataSyncOptionHistoryStore(ed)
       
       Object.keys(json).forEach(sp => {
-        if(json[sp]) {
+        if(sp !== 'meta' && json[sp]) {
           if(json[sp]['CE'] && json[sp]['CE']['data'].length == 0) {
             delete json[sp]['CE']
           }
@@ -4142,7 +4142,7 @@ function generateExpiryDates() {
       let tempD = new Date(from)
       tempD = tempD.toDateString().split(' ')
       tempD = (tempD[2].length == 1 ? '0' + tempD[2] : tempD[2]) + '-' + tempD[1] + '-' + tempD[3]
-
+// Due to holiday on the expiry date, it is shifting to previous date
       if(tempD === '26-Jan-2023') {
         tempD = '25-Jan-2023'
       } else if(tempD === '30-Mar-2023') {
@@ -4469,44 +4469,50 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
       let tenPer = n[1] - (n[1] * percentage/100);
       for(let j=0; j<allData.length; j++) {
           let op = allData[j];
+          let meta = op['meta']
+          
           let stArr = Object.keys(op)
           for(let s=0; s<stArr.length; s++) {
+              if(stArr[s] === 'meta'){
+                continue;
+              }
               let v = op[stArr[s]]
+              meta = meta || v['PE']['meta']
               if(webix.isArray(v['PE'])) {
                 continue;
               }
               let data = (v['PE'] && v['PE']['data']) || []
-              if(currentEdArr && data.length > 0 && v['PE']['meta']) {
-                if(!currentEdArr.includes(v['PE']['meta']['expiryDate'])) {
+              if(currentEdArr && data.length > 0 && v['PE']) {
+                if(!currentEdArr.includes(meta['expiryDate'])) {
                   break;
                 }
               }
               if(stArr[s] <= tenPer && data.length > 0) {
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
-                      if(odata['FH_TIMESTAMP'] == n[0] && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= price) {
+                      if(odata['TIMESTAMP'] == n[0] && odata['CHANGE_IN_OI'] > 10 && odata['LAST_TRADED_PRICE'] >= price) {
                           let fdata = data[0]
-                          let edTemp = odata['FH_EXPIRY_DT']
+                          let edTemp = meta['expiryDate'] //odata['EXPIRY_DT']
                           let edArrTemp = edTemp.split('-')
                           let edTrim = edArrTemp[0] + '-' + edArrTemp[1] + '-' + edArrTemp[2].substring(2)
                           let d1 = new Date(n[0])
                           let d2 = new Date(edTemp)
 
                           let sdArrTemp = n[0].split('-')
-                          let r = (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻'   // 👎  
+                          let r = (odata['LAST_TRADED_PRICE'] - fdata['LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻'   // 👎  
                           let ncp = niftyObj[edTemp] ? niftyObj[edTemp][0] : ''
                           if(ncp == '') {
                             r = '₹';
                           }
                           let change = []
                           data.forEach(d => {
-                            if(d['FH_TIMESTAMP'] == odata['FH_TIMESTAMP']) {
-                              change.push([d['FH_TIMESTAMP'], parseFloat(parseFloat(d['FH_LAST_TRADED_PRICE']).toFixed(2) + '01')])
+                            if(d['TIMESTAMP'] == odata['TIMESTAMP']) {
+                              change.push([d['TIMESTAMP'], parseFloat(parseFloat(d['LAST_TRADED_PRICE']).toFixed(2) + '01')])
                             } else {
-                              change.push([d['FH_TIMESTAMP'], parseFloat(parseFloat(d['FH_LAST_TRADED_PRICE']).toFixed(2))])
+                              change.push([d['TIMESTAMP'], parseFloat(parseFloat(d['LAST_TRADED_PRICE']).toFixed(2))])
                             }
                           })
-                          
+
                           if(r == '👍') {
                             let dTemp = []
                             for(let k=change.length-1; k>1; k--) {
@@ -4521,7 +4527,7 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
                           } else  { //if(r == '₹')
                             change = change.reverse()
                           }
-                          
+
                           //niftyObj[edTemp] && 
                           result.push({
                               monthYear: edTemp.substring(3),
@@ -4530,13 +4536,13 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
                               niftyPrice: n[1],
                               expiryDate: edTrim,
                               expiryDateOrg: edTemp,
-                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
-                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
+                              strikePrice: parseFloat(parseFloat(odata['STRIKE_PRICE']).toFixed(2)),
+                              sellPrice: parseFloat(parseFloat(odata['LAST_TRADED_PRICE']).toFixed(2)),
+                              closePrice:  parseFloat(parseFloat(fdata['LAST_TRADED_PRICE']).toFixed(2)),
                               result: r,
                               niftyClosePrice: ncp,
                               percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / n[1] * 100).toFixed(2)) ,
-                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
+                              lowPrice: odata['TRADE_LOW_PRICE'],
                               DTE: (d2.getTime() - d1.getTime())/(24*60*60*1000),
                               change: change
                           })
@@ -4631,11 +4637,11 @@ function displayOptionStrikeChart(cData) {
   }
   let chartData = []
   for(let i=0;i<data.length;i++) {
-    if((data[i]['FH_CHANGE_IN_OI'] > 10 || data[i]['FH_CHANGE_IN_OI'] < 0) && niftyObj[data[i]['FH_TIMESTAMP']]) {
+    if((data[i]['CHANGE_IN_OI'] > 10 || data[i]['CHANGE_IN_OI'] < 0) && niftyObj[data[i]['TIMESTAMP']]) {
       chartData.push({ 
-        price: parseFloat(parseFloat(data[i]['FH_LAST_TRADED_PRICE']).toFixed(2)),
-        date: data[i]['FH_TIMESTAMP'].substring(0, 6),
-        nifty: niftyObj[data[i]['FH_TIMESTAMP']][1]
+        price: parseFloat(parseFloat(data[i]['LAST_TRADED_PRICE']).toFixed(2)),
+        date: data[i]['TIMESTAMP'].substring(0, 6),
+        nifty: niftyObj[data[i]['TIMESTAMP']][1]
       })
     }
   }
@@ -4901,23 +4907,23 @@ async function OptionAllHistoryAnalytics() {
               if(data.length > 0) {
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
-                      if(odata['FH_TIMESTAMP'] == n[0]) {// && odata['FH_CHANGE_IN_OI'] > 10 && odata['FH_LAST_TRADED_PRICE'] >= 10) {
+                      if(odata['TIMESTAMP'] == n[0]) {// && odata['CHANGE_IN_OI'] > 10 && odata['LAST_TRADED_PRICE'] >= 10) {
                           let fdata = data[0]
                           let d1 = new Date(n[0])
-                          let d2 = new Date(odata['FH_EXPIRY_DT'])
-                          niftyObj[odata['FH_EXPIRY_DT']] && result.push({
-                              monthYear: odata['FH_EXPIRY_DT'].substring(3),
-                              year: odata['FH_EXPIRY_DT'].substring(7),
+                          let d2 = new Date(odata['EXPIRY_DT'])
+                          niftyObj[odata['EXPIRY_DT']] && result.push({
+                              monthYear: odata['EXPIRY_DT'].substring(3),
+                              year: odata['EXPIRY_DT'].substring(7),
                               sellDate: n[0],
                               niftyPrice: n[1],
-                              expiryDate: odata['FH_EXPIRY_DT'],
-                              strikePrice: parseFloat(parseFloat(odata['FH_STRIKE_PRICE']).toFixed(2)),
-                              sellPrice: parseFloat(parseFloat(odata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              closePrice:  parseFloat(parseFloat(fdata['FH_LAST_TRADED_PRICE']).toFixed(2)),
-                              result: (odata['FH_LAST_TRADED_PRICE'] - fdata['FH_LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
-                              niftyClosePrice: niftyObj[odata['FH_EXPIRY_DT']],
+                              expiryDate: odata['EXPIRY_DT'],
+                              strikePrice: parseFloat(parseFloat(odata['STRIKE_PRICE']).toFixed(2)),
+                              sellPrice: parseFloat(parseFloat(odata['LAST_TRADED_PRICE']).toFixed(2)),
+                              closePrice:  parseFloat(parseFloat(fdata['LAST_TRADED_PRICE']).toFixed(2)),
+                              result: (odata['LAST_TRADED_PRICE'] - fdata['LAST_TRADED_PRICE']) > 0 ? '👍' : '🔻' ,
+                              niftyClosePrice: niftyObj[odata['EXPIRY_DT']],
                               percentage: -1 * parseFloat(parseFloat((n[1] - stArr[s]) / stArr[s] * 100).toFixed(2)) ,
-                              lowPrice: odata['FH_TRADE_LOW_PRICE'],
+                              lowPrice: odata['TRADE_LOW_PRICE'],
                               dte: (d2.getTime()-d1.getTime())/(24*60*60*1000)
                           })
                           break;
