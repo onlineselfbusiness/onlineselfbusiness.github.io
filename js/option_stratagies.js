@@ -971,11 +971,11 @@ function initEventListeners() {
     }
     let t = optionHistory.data || []
     for (let i = 0; i < t.length - 1; i++) {
-      let per = parseFloat((t[i]['SETTLE_PRICE'] - t[i + 1]['SETTLE_PRICE']) / t[i + 1]['SETTLE_PRICE'] * 100).toFixed(2)
+      let per = parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE']) / t[i + 1]['FH_SETTLE_PRICE'] * 100).toFixed(2)
       d.push({
-        'dateId': t[i]['TIMESTAMP'], 'priceId': t[i]['SETTLE_PRICE'], 'perId': per + '%',
-        changeId: parseFloat((t[i]['SETTLE_PRICE'] - t[i + 1]['SETTLE_PRICE'])).toFixed(2),
-        oi: t[i]['OPEN_INT'], changeOI: parseInt(t[i]['CHANGE_IN_OI'])
+        'dateId': t[i]['FH_TIMESTAMP'], 'priceId': t[i]['FH_SETTLE_PRICE'], 'perId': per + '%',
+        changeId: parseFloat((t[i]['FH_SETTLE_PRICE'] - t[i + 1]['FH_SETTLE_PRICE'])).toFixed(2),
+        oi: t[i]['FH_OPEN_INT'], changeOI: parseInt(t[i]['FH_CHANGE_IN_OI'])
       })
     }
     webix.ui({
@@ -1179,7 +1179,7 @@ webix.ready(async function () {
   console.dir('Indexed DB initialized.')
 
   let edArr = generateExpiryDates().reverse().slice(0,3)
-  let result = await calculateOptionAllHistoryPercent(10, 100, edArr)
+  let result = await calculateOptionAllHistoryPercent(9, 100, edArr)
   let r = {}
   result.forEach(obj => {
     if(edArr.includes(obj.expiryDateOrg)) {
