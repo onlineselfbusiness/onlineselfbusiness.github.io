@@ -4626,9 +4626,9 @@ function displayOptionStrikeChart(cData) {
   let data = []
   for(let i=0;i<allData.length;i++){
     let obj = allData[i]
-    let spData = obj[sp]['PE']
+    let spData = obj[sp] && obj[sp]['PE']
     if(spData) {
-      let meta = spData['meta']
+      let meta = obj['meta']
       if(meta['expiryDate'] == ed) {
         data = [...spData['data']].reverse()
         break
