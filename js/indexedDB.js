@@ -1,5 +1,18 @@
 // Check for support.
 let optionHistoryDB;
+
+let CHANGE_IN_OI = 1
+let CLOSING_PRICE = 2
+let LAST_TRADED_PRICE = 3
+let OPENING_PRICE = 4
+let OPEN_INT = 5
+let SETTLE_PRICE = 6
+let TIMESTAMP = 7
+let TRADE_HIGH_PRICE = 8
+let TRADE_LOW_PRICE = 9
+let UNDERLYING_VALUE = 10
+let EXPIRY_DT = 11
+
 async function initializeDB() {
     let promise = new Promise((resolve, reject) => {
         if ('indexedDB' in window) {
