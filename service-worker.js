@@ -15,6 +15,17 @@ const PRECACHE_URLS = [
   'https://code.jquery.com/jquery-3.6.0.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/highstock/6.0.3/highstock.js',
   'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js',
+  'https://cdn.webix.com/materialdesignicons/5.8.95/fonts/materialdesignicons-webfont.woff2?v=5.8.55',
+  'https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700|Roboto:300,400,500,700',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.woff2?v=4.7.0',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+  'https://cdn.webix.com/8.3/fonts/webixmdi-webfont.woff2',
+  'https://cdn.webix.com/8.3/fonts/Roboto-Regular-webfont.woff2',
+  'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc4.woff2',
+  'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fChc4EsA.woff2',
+  'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc4.woff2',
+  'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2',
+  'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu7GxKOzY.woff2',
   'js/ag-grid-enterprise.min.noStyle.js',
   'js/ag-charts-community.min.js',
   'css/ag-grid.css',
@@ -26,9 +37,9 @@ const PRECACHE_URLS = [
   './assets/images/close.png',
   './assets/images/breadcrumb_bg.jpg',
   './images/banner-tradeinfo.jpg',
-  'https://cdn.webix.com/materialdesignicons/5.8.95/fonts/materialdesignicons-webfont.woff2?v=5.8.55',
   './grficon.gif',
-  './icon.png'
+  './icon.png',
+  './favicon.ico'
 ];
 
 // The install handler takes care of precaching the resources we always need.
