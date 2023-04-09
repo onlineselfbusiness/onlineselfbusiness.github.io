@@ -322,9 +322,64 @@ a[title="JavaScript charts"] {
   <script src="js/option_stratagies.js" type="text/javascript"></script>
   <script src="js/strategy_calculation.js" type="text/javascript"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
+  /*
+  // https://whatwebcando.today/articles/handling-service-worker-updates/
+
+  function invokeServiceWorkerUpdateFlow(registration) {
+    // TODO implement your own UI notification element
+    notification.show("New version of the app is available. Refresh now?");
+    notification.addEventListener('click', () => {
+        if (registration.waiting) {
+            // let waiting Service Worker know it should became active
+            registration.waiting.postMessage('SKIP_WAITING')
+        }
+    })
+}*/
+
+window.addEventListener('load', async () => {
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.register('service-worker.js');
+    // ensure the case when the updatefound event was missed is also handled
+        // by re-invoking the prompt when there's a waiting Service Worker
+        if (registration.waiting) {
+            //registration.waiting.postMessage('SKIP_WAITING')
+        }
+
+        // detect Service Worker update available and wait for it to become installed
+        /*registration.addEventListener('updatefound', () => {
+            console.dir('updatefound detected')
+            if (registration.installing) {
+                // wait until the new Service worker is actually installed (ready to take over)
+                registration.installing.addEventListener('statechange', () => {
+                    console.dir('statechange detected')
+                    if (registration.waiting) {
+                        // if there's an existing controller (previous Service Worker), show the prompt
+                        if (navigator.serviceWorker.controller) {
+                            //invokeServiceWorkerUpdateFlow(registration)
+                            registration.waiting.postMessage('SKIP_WAITING')
+                        } else {
+                            // otherwise it's the first install, nothing to do
+                            console.log('Service Worker initialized for the first time')
+                        }
+                    }
+                })
+            }
+        })*/
+
+        let refreshing = false;
+
+        // detect controller change and refresh the page
+        /*navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.dir('controllerchange detected')
+            if (!refreshing) {
+                window.location.reload()
+                refreshing = true
+            }
+        })*/
+  }
+})
+
+
 $(function() {
   $( document ).on( "click", "div.tgl_vid_aud", function() {
     //alert($(this).data('action'))
@@ -348,40 +403,10 @@ $(function() {
 <!--iframe id="opstraSDiFrameId" hidden style="width:0px;height:0px;" src="https://opstra.definedge.com/"></iframe-->
 <!--iframe id="opstraSDiFrameId" hidden style="width:0px;height:0px;" src="https://opstra.definedge.com/moment.min.js"></iframe-->
 <iframe id="ichartFrameId" hidden style="width:0px;height:0px;" src="https://main.icharts.in/cal.js"></iframe>
-<iframe id="nseindiaFrameId" hidden style="width:0px;height:0px;" src="https://www1.nseindia.com/javaScript/nifty.js"></iframe>
 
-<!--iframe id="nseindiaFrameId" hidden style="width:0px;height:0px;" src="https://www.nseindia.com/get-quotes/derivatives?symbol=NIFTY"></iframe-->
 <!--iframe id="mcFrameId" hidden style="width:0px;height:0px;" src="https://priceapi.moneycontrol.com/techCharts/config"></iframe--> 
 
 <!--iframe id="businesstodayId" hidden style="width:0px;height:0px;" src="https://www.businesstoday.in/service-worker.js"></iframe-->
-<!--  https://main.icharts.in/images/favicon.ico -->
 
-<!--
-  Margin Calculator
-  https://tradesmartonline.in/finance-calculator/margin-calculator/
-
-  fetch("https://spanapi.tradesmartonline.in/calculate-margin?id=0&req_id=6454&json={%220%22:{%22EXCHANGE%22:%22NSE%22,%22SEGMENT%22:%22Futures%22,%22SYMBOL%22:%22TCS%22,%22EXPIRY%22:%222022-04-28%22,%22SIDE%22:%22Buy%22,%22QUANTITY%22:150,%22STRIKE%22:%22%22,%22TYPE%22:%22%22,%22INC_QUANTITY%22:%22150%22,%22PRICE%22:%223666.15%22},%221%22:{%22EXCHANGE%22:%22NSE%22,%22SEGMENT%22:%22Options%22,%22SYMBOL%22:%22TCS%22,%22EXPIRY%22:%222022-04-28%22,%22SIDE%22:%22Sell%22,%22QUANTITY%22:-150,%22STRIKE%22:%223700.00%22,%22TYPE%22:%22CE%22,%22INC_QUANTITY%22:%22150%22,%22PRICE%22:%2250.10%22},%222%22:{%22EXCHANGE%22:%22NSE%22,%22SEGMENT%22:%22Options%22,%22SYMBOL%22:%22TCS%22,%22EXPIRY%22:%222022-04-28%22,%22SIDE%22:%22Sell%22,%22QUANTITY%22:-150,%22STRIKE%22:%223700.00%22,%22TYPE%22:%22CE%22,%22INC_QUANTITY%22:%22150%22,%22PRICE%22:%2250.10%22}}", {
-  "headers": {
-    "accept": "application/json, text/javascript, */*; q=0.01",
-    "accept-language": "en-US,en;q=0.9",
-    "content-type": "application/json",
-    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"100\", \"Google Chrome\";v=\"100\"",
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": "\"Windows\"",
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-site"
-  },
-  "referrer": "https://tradesmartonline.in/",
-  "referrerPolicy": "strict-origin-when-cross-origin",
-  "body": null,
-  "method": "POST",
-  "mode": "cors",
-  "credentials": "omit"
-});
-
-<iframe hidden style="width:0px;height:0px;" src="https://www.nseindia.com/assets/js/jquery.responsivetabs.js"></iframe>
-<iframe hidden style="width:0px;height:0px;" src="https://www.nseindia.com/assets/js/metisMenu.min.js"></iframe>
--->
 </body>
 </html>

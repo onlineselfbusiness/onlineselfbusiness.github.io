@@ -20,6 +20,7 @@ const PRECACHE_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.woff2?v=4.7.0',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
   'https://cdn.webix.com/8.3/fonts/webixmdi-webfont.woff2',
+  'https://cdn.webix.com/8.3/fonts/webixmdi-webfont.woff',
   'https://cdn.webix.com/8.3/fonts/Roboto-Regular-webfont.woff2',
   'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc4.woff2',
   'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fChc4EsA.woff2',
@@ -47,7 +48,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(PRECACHE)
       .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(self.skipWaiting())
+      //.then(self.skipWaiting())
   );
 });
 
@@ -71,7 +72,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Skip cross-origin requests, like those for Google Analytics.
   //if (event.request.url.startsWith(self.location.origin)) {
-    console.dir(event.request.url)
+    //console.dir(event.request.url)
     event.respondWith(
       caches.match(event.request).then(cachedResponse => {
         if (cachedResponse) {
@@ -89,4 +90,10 @@ self.addEventListener('fetch', event => {
       })
     );
   //}
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+      self.skipWaiting();
+  }
 });
