@@ -1287,7 +1287,7 @@ webix.ready(async function () {
               }
             }
           },
-          { view: "button", label: "Test", width: 85, click: function () { shortStrangleWindow() } },
+          { view: "button", label: "Short Strangle", width: 85, click: function () { shortStrangleWindow() } },
           { view: "button", label: "Technical", width: 85, click: function () { showStreakAnalytics() } },
           { view: "button", label: "Open Strategy", width: 120, click: function () { strategyCal() } },
           {
