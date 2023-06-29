@@ -35,6 +35,7 @@ const PRECACHE_URLS = [
   'js/scriptNames.js',
   'js/option_stratagies.js',
   'js/strategy_calculation.js',
+  'js/short-strangle.js.js',
   './assets/images/close.png',
   './assets/images/breadcrumb_bg.jpg',
   './images/banner-tradeinfo.jpg',
