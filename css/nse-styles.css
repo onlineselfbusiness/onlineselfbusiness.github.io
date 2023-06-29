@@ -3669,6 +3669,11 @@ footer .foot-col.last .follow_links li a {
   color: orange !important;
 }
 
+.bg-sell-blink {
+  animation: blink 1s infinite;
+  background-color: rgb(229 38 102) !important;
+}
+
 @keyframes blink {
   0% {
     opacity: 1;

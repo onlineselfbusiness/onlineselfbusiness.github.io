@@ -1287,6 +1287,7 @@ webix.ready(async function () {
               }
             }
           },
+          { view: "button", label: "Test", width: 85, click: function () { shortStrangleWindow() } },
           { view: "button", label: "Technical", width: 85, click: function () { showStreakAnalytics() } },
           { view: "button", label: "Open Strategy", width: 120, click: function () { strategyCal() } },
           {
@@ -1299,7 +1300,8 @@ webix.ready(async function () {
             }
           },
           {
-            view: "button", /*type: "image", image:"/images/ag-grid.png"*/type: "icon", icon: "mdi mdi-view-grid", id: "optionAllHistoryButtonId", width: 30, align: "left", click: function () {
+            view: "button", /*type: "image", image:"/images/ag-grid.png"*/type: "icon", icon: "mdi mdi-view-grid", id: "optionAllHistoryButtonId", width: 30, align: "left",
+             click: function () {
               displayOptionAllHistoryData()
             }
           },
@@ -1883,6 +1885,18 @@ webix.ready(async function () {
                             if (parseInt(st) < pePerLower && pe.bidprice > 100 && pe.askPrice > 100) {
                               peSellClass = 'bg-purple'
                             }
+
+                            let pe9PerLower = Underlying_Value - (Underlying_Value * 9 / 100)
+                            if (parseInt(st) < pe9PerLower && pe.bidprice >= 25) {
+                              peSellClass = peSellClass + ' bg-sell-blink'
+                            }
+
+                            let ce7PerLower = Underlying_Value + (Underlying_Value * 7 / 100)
+                            let ceSellClass = ''
+                            if (parseInt(st) > ce7PerLower && ce.bidprice >= 25) {
+                              ceSellClass = ceSellClass + ' bg-sell-blink'
+                            }
+
                             let ceBidPriceTitle = ''
                             let peBidPriceTitle = ''
                             if(Underlying_Value > st) {
@@ -1913,7 +1927,7 @@ webix.ready(async function () {
                             <td width="4.34%" class="${ceClass}"><a class="bold" href="javascript:;">${DecimalFixed(ce.lastPrice)}</a></td>
                             <td width="4.34%" class="${ceClass} ${ceChangeTx}">${DecimalFixed(ce.change)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.bidQty, true)}</td>
-                            <td width="4.34%" class="${ceClass}" title="${ceBidPriceTitle}">${DecimalFixed(ce.bidprice)}</td>
+                            <td width="4.34%" class="${ceClass} ${ceSellClass}" title="${ceBidPriceTitle}">${DecimalFixed(ce.bidprice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askPrice)}</td>
                             <td width="4.34%" class="${ceClass}">${DecimalFixed(ce.askQty, true)}</td>`
 
@@ -4129,13 +4143,14 @@ let spArr = [//"10000", "10500", "10900",
 
 function generateExpiryDates() {
   let expiryDates = []
-  let from = new Date('01-Jan-2021')
+  let from = new Date('01-Jan-2022')
   from.setMonth(from.getMonth() + 1)
   from.setDate(from.getDate()-1)
-  
+  // TODO: Logic is not perfet
   let to = new Date()
+  to.setDate(1)
   to.setMonth(to.getMonth() + 3)
-  
+  //to = new Date(to.getFullYear(), to.getMonth() + 1, 0) // set month end of date
   while(from.getTime() < to.getTime()) {
     if(from.toDateString().indexOf('Thu')>-1) {
       //console.dir(from)
@@ -4779,6 +4794,12 @@ function expiryWisePercentage(dArr) {
     
     let edArr = ed.toDateString().split(' ')
     ed = edArr[2] + '-' + edArr[1] + '-' + edArr[3]
+
+    /*let maxDate = getMaxDateFromNiftyObj()
+    if(new Date(maxDate).getTime() < new Date(ed).getTime()) {
+      return result;
+    }*/
+
     let ep = niftyObj[ed]
     while(!ep){
       ed = new Date(ed)
@@ -4873,6 +4894,21 @@ function openScriptDailyDetails(scriptName) {
     }
   }).show();
 }
+
+function getMaxDateFromNiftyObj() {
+  let maxDate = undefined
+  Object.keys(niftyObj).forEach(d => {
+    if(maxDate) {
+      if(new Date(d).getTime() > new Date(maxDate).getTime()) {
+        maxDate = d
+      }
+    } else {
+      maxDate = d;
+    }
+  })
+  return maxDate
+}
+
 // TODO: Testing going on
 async function OptionAllHistoryAnalytics() {
   if(!niftyObj) {
