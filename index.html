@@ -321,6 +321,8 @@ a[title="JavaScript charts"] {
   <script src="js/scriptNames.js" type="text/javascript"></script>
   <script src="js/option_stratagies.js" type="text/javascript"></script>
   <script src="js/strategy_calculation.js" type="text/javascript"></script>
+  <script src="js/optionChain.js" type="text/javascript"></script>
+  <script src="js/short-strangle.js" type="text/javascript"></script>
 <script>
   /*
   // https://whatwebcando.today/articles/handling-service-worker-updates/
@@ -335,7 +337,7 @@ a[title="JavaScript charts"] {
         }
     })
 }*/
-
+/*
 window.addEventListener('load', async () => {
   if ('serviceWorker' in navigator) {
     const registration = await navigator.serviceWorker.register('service-worker.js');
@@ -346,39 +348,39 @@ window.addEventListener('load', async () => {
         }
 
         // detect Service Worker update available and wait for it to become installed
-        /*registration.addEventListener('updatefound', () => {
-            console.dir('updatefound detected')
-            if (registration.installing) {
+        //registration.addEventListener('updatefound', () => {
+        //    console.dir('updatefound detected')
+        //    if (registration.installing) {
                 // wait until the new Service worker is actually installed (ready to take over)
-                registration.installing.addEventListener('statechange', () => {
-                    console.dir('statechange detected')
-                    if (registration.waiting) {
+        //        registration.installing.addEventListener('statechange', () => {
+        //            console.dir('statechange detected')
+        //            if (registration.waiting) {
                         // if there's an existing controller (previous Service Worker), show the prompt
-                        if (navigator.serviceWorker.controller) {
+        //               if (navigator.serviceWorker.controller) {
                             //invokeServiceWorkerUpdateFlow(registration)
-                            registration.waiting.postMessage('SKIP_WAITING')
-                        } else {
+        //                    registration.waiting.postMessage('SKIP_WAITING')
+        //                } else {
                             // otherwise it's the first install, nothing to do
-                            console.log('Service Worker initialized for the first time')
-                        }
-                    }
-                })
-            }
-        })*/
+        //                    console.log('Service Worker initialized for the first time')
+        //                }
+        //            }
+        //        })
+        //    }
+        //})
 
         let refreshing = false;
 
         // detect controller change and refresh the page
-        /*navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.dir('controllerchange detected')
-            if (!refreshing) {
-                window.location.reload()
-                refreshing = true
-            }
-        })*/
+        //navigator.serviceWorker.addEventListener('controllerchange', () => {
+        //    console.dir('controllerchange detected')
+        //    if (!refreshing) {
+        //        window.location.reload()
+        //        refreshing = true
+        //    }
+        //})
   }
 })
-
+*/
 
 $(function() {
   $( document ).on( "click", "div.tgl_vid_aud", function() {
