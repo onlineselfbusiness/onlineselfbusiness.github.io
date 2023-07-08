@@ -936,7 +936,7 @@ function initEventListeners() {
       let dsArr = [nearArr[1] + '-' + nearArr[3], nextArr[1] + '-' + nextArr[3], farArr[1] + '-' + farArr[3],]
       for (let i = 0; i < expiryDates.length; i++) {
         if (!dsArr.includes(expiryDates[i].substring(3))) {
-          delete tempData.data[expiryDates[i]]
+          //delete tempData.data[expiryDates[i]]
         }
       }
     }
@@ -1179,7 +1179,7 @@ webix.ready(async function () {
   console.dir('Indexed DB initialized.')
 
   let edArr = generateExpiryDates().reverse().slice(0,3)
-  let result = await calculateOptionAllHistoryPercent(9, 100, edArr)
+  let result = await calculateOptionAllHistoryPercent(9, 25, edArr)
   let r = {}
   result.forEach(obj => {
     if(edArr.includes(obj.expiryDateOrg)) {
@@ -1891,7 +1891,7 @@ webix.ready(async function () {
                               peSellClass = peSellClass + ' bg-sell-blink'
                             }
 
-                            let ce7PerLower = Underlying_Value + (Underlying_Value * 7 / 100)
+                            let ce7PerLower = Underlying_Value + (Underlying_Value * 8 / 100)
                             let ceSellClass = ''
                             if (parseInt(st) > ce7PerLower && ce.bidprice >= 25) {
                               ceSellClass = ceSellClass + ' bg-sell-blink'
@@ -4506,7 +4506,7 @@ async function calculateOptionAllHistoryPercent(percentage, price, currentEdArr)
                   for(let d=data.length-1;d>0; d--) {
                       let odata = data[d]
                       if(odata[TIMESTAMP] == n[0] && odata[CHANGE_IN_OI] > 10 && odata[LAST_TRADED_PRICE] >= price) {
-                          let fdata = data[0]
+                          let fdata = data[data.length-1]
                           let edTemp = meta['expiryDate']
                           let edArrTemp = edTemp.split('-')
                           let edTrim = edArrTemp[0] + '-' + edArrTemp[1] + '-' + edArrTemp[2].substring(2)
