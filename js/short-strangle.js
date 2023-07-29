@@ -1,4 +1,4 @@
-// '👍'  '👎'
+// ₹ 🏆 👍 👎 😂 🔔 🍿 🚨 👌 🎂 
 /*
 <svg id='green' xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 512 512">
 <!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
@@ -355,7 +355,7 @@ async function shortStrangleHistoryCheck() {
                                     }
                                     if (d.ce) {
                                         d.ce_close = ceData[c][LAST_TRADED_PRICE]
-                                        if(edIdArr.slice(0,3).includes(dStr)) {
+                                        if(edIdArr.slice(0,3).includes(dStr) && new Date(dStr) > new Date()) {
                                             d.result = '₹'
                                             d.niftyPrice = ceData[c][UNDERLYING_VALUE]
                                         } else if (d.ce - d.ce_close >= 0  && (d.strikePrice + d.ce) >= ceData[c][UNDERLYING_VALUE]) {
@@ -365,10 +365,11 @@ async function shortStrangleHistoryCheck() {
                                             d.result = '🔻'
                                             d.niftyPrice = ceData[c][UNDERLYING_VALUE]
                                         }
-                                    } else {
+                                    }
+                                    /* else {
                                         d.result = '₹'
                                         d.niftyPrice = ceData[c][UNDERLYING_VALUE]
-                                    }
+                                    }*/
                                 }
                             }
                         }
@@ -391,7 +392,7 @@ async function shortStrangleHistoryCheck() {
                                     }
                                     if (d.pe) {
                                         d.pe_close = peData[p][LAST_TRADED_PRICE]
-                                        if(edIdArr.slice(0,3).includes(dStr)) {
+                                        if(edIdArr.slice(0,3).includes(dStr) && new Date(dStr) > new Date()) {
                                             d.result = '₹'
                                             d.niftyPrice = peData[p][UNDERLYING_VALUE]
                                         } else if (d.pe - d.pe_close >= 0 && (d.strikePrice - d.pe) <= peData[p][UNDERLYING_VALUE]) {
@@ -401,10 +402,11 @@ async function shortStrangleHistoryCheck() {
                                             d.result = '🔻'
                                             d.niftyPrice = peData[p][UNDERLYING_VALUE]
                                         }
-                                    } else {
+                                    }
+                                    /* else {
                                         d.result = '₹'
                                         d.niftyPrice = peData[p][UNDERLYING_VALUE]
-                                    }
+                                    }*/
                                 }
                             }
                         }
